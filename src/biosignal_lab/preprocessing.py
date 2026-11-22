@@ -46,7 +46,7 @@ def preprocess(data_uv: np.ndarray, sfreq: float, config: AnalysisConfig) -> tup
     if config.notch_hz is not None:
         b, a = iirnotch(config.notch_hz, config.notch_quality, fs=sfreq)
         try:
-            out = filtfilt(b, a, out, axis=1)
+            out = filtfilt(b, a, out, axis=1, padtype="odd", padlen=9)
         except ValueError as exc:
             raise ValueError("Not enough samples for notch filtering") from exc
     hp, lp = config.highpass_hz, config.lowpass_hz
@@ -60,7 +60,8 @@ def preprocess(data_uv: np.ndarray, sfreq: float, config: AnalysisConfig) -> tup
         sos = None
     if sos is not None:
         try:
-            out = sosfiltfilt(sos, out, axis=1)
+            out = sosfiltfilt(sos, out, axis=1, padtype="odd",
+                             padlen=27 if hp is not None and lp is not None else 15)
         except ValueError as exc:
             raise ValueError("Not enough samples for band filter") from exc
     return out, warnings

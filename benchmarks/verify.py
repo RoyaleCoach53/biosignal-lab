@@ -21,6 +21,7 @@ from biosignal_lab.models import AnalysisConfig, Recording
 from biosignal_lab.pipeline import analyze
 from biosignal_lab.preprocessing import preprocess
 from biosignal_lab.simulate import synthetic_recording
+from biosignal_lab import __version__
 
 
 def sine(hz, amplitude=10.0, sfreq=250, seconds=60):
@@ -136,7 +137,7 @@ def verify() -> dict:
         analyze(recording)
         timings.append(time.perf_counter() - start)
     return {
-        "schema_version": 1, "version": "0.2.0",
+        "schema_version": 1, "version": __version__,
         "assessment": "Numerical engineering checks on synthetic data; not clinical validation.",
         "environment": {"python": platform.python_version(), "platform": platform.platform(),
                         "dependencies": {name: importlib.metadata.version(name) for name in

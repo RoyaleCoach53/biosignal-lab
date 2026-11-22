@@ -1,0 +1,617 @@
+{
+  "protocol_version": "1.0",
+  "protocol_sha256": "c8463206f7937e54438bff707830c9280bce90814fcf780516cbbd4cbf123697",
+  "manifest_sha256": "405df27c661b2098c8a8fd738816fb2ec5e8275730686a33a8df1beccd5f8d0c",
+  "dataset": "PhysioNet EEG Motor Movement/Imagery Dataset 1.0.0",
+  "dataset_url": "https://physionet.org/content/eegmmidb/1.0.0/",
+  "license_url": "https://physionet.org/content/eegmmidb/view-license/1.0.0/",
+  "attribution": "Contains information from the PhysioNet EEG Motor Movement/Imagery Dataset, made available under the ODC Attribution License.",
+  "environment": {
+    "python": "3.12.14",
+    "packages": {
+      "biosignal-lab": "0.3.0",
+      "mne": "1.13.2",
+      "numpy": "2.5.5",
+      "scipy": "1.18.1"
+    }
+  },
+  "records": [
+    {
+      "id": "S001R01",
+      "subject": 1,
+      "condition": "eyes_open_baseline",
+      "sha256": "4743b736131a7e147c150e8b37711029b6cda5e356c4b3e8261a03cdcaaf8b0c",
+      "samples_per_channel": 9600,
+      "channels": 64,
+      "sfreq_hz": 160.0,
+      "passed": true,
+      "errors": {
+        "units_max_abs_uv": 1.1368683772161603e-13,
+        "waveform_relative_l2": 6.574495091573124e-13,
+        "raw_psd_relative_l2": 6.427204240115114e-16,
+        "psd_relative_l2": 1.161300752182644e-13,
+        "band_relative_error": 7.302481714750657e-14,
+        "rounded_qc_max_abs_uv": 4.994808637093229e-05
+      },
+      "natural_artifact_candidate_count": 43,
+      "quality_controls": {
+        "injected_flatline_detected": true,
+        "injected_burst_detected": true
+      },
+      "median_channel_rms_uv": 51.598533568937,
+      "median_channel_alpha_uv2": 162.77362948300834,
+      "sensitivity": {
+        "highpass_1hz": {
+          "median_rms_ratio": 0.7201687022635023,
+          "median_delta_power_ratio": 0.5668951711983967,
+          "median_gamma_power_ratio": 0.9999999959712011
+        },
+        "lowpass_40hz": {
+          "median_rms_ratio": 0.9880114424455613,
+          "median_delta_power_ratio": 0.9998144127909554,
+          "median_gamma_power_ratio": 0.5258825866143881
+        },
+        "no_notch": {
+          "median_rms_ratio": 1.000408549585972,
+          "median_delta_power_ratio": 0.9999947727251989,
+          "median_gamma_power_ratio": 1.0125419216834826
+        },
+        "mne_native_padding": {
+          "whole_record_relative_l2": 0.11676266965599398,
+          "interior_relative_l2": 0.049471717127361294,
+          "qualification": "Different edge policies; not an equivalence gate or physiological ground truth."
+        },
+        "welch_2s": {
+          "reference_relative_l2": 4.042057397736666e-14,
+          "median_alpha_uv2": 163.70878338447324,
+          "median_delta_uv2": 1221.0645326801948
+        },
+        "welch_4s": {
+          "reference_relative_l2": 1.161300752182644e-13,
+          "median_alpha_uv2": 162.77362948300822,
+          "median_delta_uv2": 1181.721343637604
+        },
+        "welch_8s": {
+          "reference_relative_l2": 2.1791502324092616e-13,
+          "median_alpha_uv2": 166.90602579536284,
+          "median_delta_uv2": 1097.302323548347
+        }
+      },
+      "warnings": [
+        "Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    },
+    {
+      "id": "S001R02",
+      "subject": 1,
+      "condition": "eyes_closed_baseline",
+      "sha256": "31a95e0a880e6c3d89960d9d62c144f24cc4e9f5d7e93c7f864ef61cd49e847e",
+      "samples_per_channel": 9600,
+      "channels": 64,
+      "sfreq_hz": 160.0,
+      "passed": true,
+      "errors": {
+        "units_max_abs_uv": 5.684341886080802e-14,
+        "waveform_relative_l2": 6.468723079135958e-13,
+        "raw_psd_relative_l2": 6.29692846227118e-16,
+        "psd_relative_l2": 1.1689497924428196e-13,
+        "band_relative_error": 4.185427025042687e-14,
+        "rounded_qc_max_abs_uv": 4.987763936981082e-05
+      },
+      "natural_artifact_candidate_count": 0,
+      "quality_controls": {
+        "injected_flatline_detected": true,
+        "injected_burst_detected": true
+      },
+      "median_channel_rms_uv": 50.330686678830034,
+      "median_channel_alpha_uv2": 552.3212695149482,
+      "sensitivity": {
+        "highpass_1hz": {
+          "median_rms_ratio": 0.8407855836774902,
+          "median_delta_power_ratio": 0.6112483950011083,
+          "median_gamma_power_ratio": 1.0000000034152148
+        },
+        "lowpass_40hz": {
+          "median_rms_ratio": 0.9998504306383351,
+          "median_delta_power_ratio": 1.0009810922943103,
+          "median_gamma_power_ratio": 0.5262562725483275
+        },
+        "no_notch": {
+          "median_rms_ratio": 1.0012340577846819,
+          "median_delta_power_ratio": 1.000005292080298,
+          "median_gamma_power_ratio": 1.0127752495712576
+        },
+        "mne_native_padding": {
+          "whole_record_relative_l2": 0.10278364081308686,
+          "interior_relative_l2": 0.03885521314755079,
+          "qualification": "Different edge policies; not an equivalence gate or physiological ground truth."
+        },
+        "welch_2s": {
+          "reference_relative_l2": 3.9068990223353195e-14,
+          "median_alpha_uv2": 550.1765085355962,
+          "median_delta_uv2": 868.4168766833393
+        },
+        "welch_4s": {
+          "reference_relative_l2": 1.1689497924428196e-13,
+          "median_alpha_uv2": 552.321269514948,
+          "median_delta_uv2": 874.3463191887965
+        },
+        "welch_8s": {
+          "reference_relative_l2": 2.5447065146652983e-13,
+          "median_alpha_uv2": 573.7298074105588,
+          "median_delta_uv2": 880.289568802491
+        }
+      },
+      "warnings": [
+        "Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    },
+    {
+      "id": "S001R04",
+      "subject": 1,
+      "condition": "left_right_fist_motor_imagery_run",
+      "sha256": "3d161f88e1c00632585287d2ce584c2bc0f08862438eb255ea8723e00fac693d",
+      "samples_per_channel": 9600,
+      "channels": 64,
+      "sfreq_hz": 160.0,
+      "passed": true,
+      "errors": {
+        "units_max_abs_uv": 1.1368683772161603e-13,
+        "waveform_relative_l2": 6.523163260676985e-13,
+        "raw_psd_relative_l2": 6.510098469135964e-16,
+        "psd_relative_l2": 1.2390059216179575e-13,
+        "band_relative_error": 4.5699042705781576e-14,
+        "rounded_qc_max_abs_uv": 4.978341436157052e-05
+      },
+      "natural_artifact_candidate_count": 15,
+      "quality_controls": {
+        "injected_flatline_detected": true,
+        "injected_burst_detected": true
+      },
+      "median_channel_rms_uv": 51.94934529077583,
+      "median_channel_alpha_uv2": 155.95304422260784,
+      "sensitivity": {
+        "highpass_1hz": {
+          "median_rms_ratio": 0.724175069570929,
+          "median_delta_power_ratio": 0.523881018578069,
+          "median_gamma_power_ratio": 1.0000000012465273
+        },
+        "lowpass_40hz": {
+          "median_rms_ratio": 0.9903603296931012,
+          "median_delta_power_ratio": 0.9999813037659124,
+          "median_gamma_power_ratio": 0.5215157218310076
+        },
+        "no_notch": {
+          "median_rms_ratio": 1.0016578732722174,
+          "median_delta_power_ratio": 1.0000061048700841,
+          "median_gamma_power_ratio": 1.0128846015334103
+        },
+        "mne_native_padding": {
+          "whole_record_relative_l2": 0.13580652911830987,
+          "interior_relative_l2": 0.06673339930573498,
+          "qualification": "Different edge policies; not an equivalence gate or physiological ground truth."
+        },
+        "welch_2s": {
+          "reference_relative_l2": 4.897244790043678e-14,
+          "median_alpha_uv2": 155.39839521502716,
+          "median_delta_uv2": 1303.541403689817
+        },
+        "welch_4s": {
+          "reference_relative_l2": 1.2390059216179575e-13,
+          "median_alpha_uv2": 155.95304422260776,
+          "median_delta_uv2": 1376.4166971326053
+        },
+        "welch_8s": {
+          "reference_relative_l2": 2.6481007988640246e-13,
+          "median_alpha_uv2": 157.87971599090437,
+          "median_delta_uv2": 1313.6050887121098
+        }
+      },
+      "warnings": [
+        "Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    },
+    {
+      "id": "S002R01",
+      "subject": 2,
+      "condition": "eyes_open_baseline",
+      "sha256": "d542689b31c977838f20b1a2062865b98ecf10a7e9702f56f101000d47f2ec68",
+      "samples_per_channel": 9600,
+      "channels": 64,
+      "sfreq_hz": 160.0,
+      "passed": true,
+      "errors": {
+        "units_max_abs_uv": 5.684341886080802e-14,
+        "waveform_relative_l2": 6.59023896936891e-13,
+        "raw_psd_relative_l2": 6.412964247632911e-16,
+        "psd_relative_l2": 9.222841961584391e-14,
+        "band_relative_error": 2.9398719512496125e-14,
+        "rounded_qc_max_abs_uv": 4.9666121360480986e-05
+      },
+      "natural_artifact_candidate_count": 122,
+      "quality_controls": {
+        "injected_flatline_detected": true,
+        "injected_burst_detected": true
+      },
+      "median_channel_rms_uv": 25.718472391172742,
+      "median_channel_alpha_uv2": 63.40817435869624,
+      "sensitivity": {
+        "highpass_1hz": {
+          "median_rms_ratio": 0.8644970585411117,
+          "median_delta_power_ratio": 0.6894293607558041,
+          "median_gamma_power_ratio": 0.9999999961250843
+        },
+        "lowpass_40hz": {
+          "median_rms_ratio": 0.9663034106372977,
+          "median_delta_power_ratio": 0.9996660764555414,
+          "median_gamma_power_ratio": 0.5426357441994731
+        },
+        "no_notch": {
+          "median_rms_ratio": 1.0025779232213385,
+          "median_delta_power_ratio": 0.9999750116638823,
+          "median_gamma_power_ratio": 1.0123437795998096
+        },
+        "mne_native_padding": {
+          "whole_record_relative_l2": 0.11834715589206174,
+          "interior_relative_l2": 0.0553227684947386,
+          "qualification": "Different edge policies; not an equivalence gate or physiological ground truth."
+        },
+        "welch_2s": {
+          "reference_relative_l2": 3.8658710208887693e-14,
+          "median_alpha_uv2": 62.66940573384409,
+          "median_delta_uv2": 268.9664179701987
+        },
+        "welch_4s": {
+          "reference_relative_l2": 9.222841961584391e-14,
+          "median_alpha_uv2": 63.40817435869623,
+          "median_delta_uv2": 290.10435412149195
+        },
+        "welch_8s": {
+          "reference_relative_l2": 1.4493825935776796e-13,
+          "median_alpha_uv2": 63.655194940819314,
+          "median_delta_uv2": 295.39501363997067
+        }
+      },
+      "warnings": [
+        "Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    },
+    {
+      "id": "S002R02",
+      "subject": 2,
+      "condition": "eyes_closed_baseline",
+      "sha256": "666a9299341ece77522df050b1ddd128179a540548d82642ba975a65b4f6d84e",
+      "samples_per_channel": 9600,
+      "channels": 64,
+      "sfreq_hz": 160.0,
+      "passed": true,
+      "errors": {
+        "units_max_abs_uv": 2.842170943040401e-14,
+        "waveform_relative_l2": 6.356573522323966e-13,
+        "raw_psd_relative_l2": 6.370801683543939e-16,
+        "psd_relative_l2": 7.117994771257454e-14,
+        "band_relative_error": 6.01561689185622e-14,
+        "rounded_qc_max_abs_uv": 4.9982069839416e-05
+      },
+      "natural_artifact_candidate_count": 1,
+      "quality_controls": {
+        "injected_flatline_detected": true,
+        "injected_burst_detected": true
+      },
+      "median_channel_rms_uv": 28.110501348867444,
+      "median_channel_alpha_uv2": 235.1191103855109,
+      "sensitivity": {
+        "highpass_1hz": {
+          "median_rms_ratio": 0.9143717167933432,
+          "median_delta_power_ratio": 0.5816561331977808,
+          "median_gamma_power_ratio": 1.0000000016215296
+        },
+        "lowpass_40hz": {
+          "median_rms_ratio": 0.9777163126886903,
+          "median_delta_power_ratio": 1.0001279013448716,
+          "median_gamma_power_ratio": 0.5504614011583038
+        },
+        "no_notch": {
+          "median_rms_ratio": 1.0036039973031803,
+          "median_delta_power_ratio": 1.0000707192891185,
+          "median_gamma_power_ratio": 1.0123132764464053
+        },
+        "mne_native_padding": {
+          "whole_record_relative_l2": 0.10763024303526361,
+          "interior_relative_l2": 0.0477976844013894,
+          "qualification": "Different edge policies; not an equivalence gate or physiological ground truth."
+        },
+        "welch_2s": {
+          "reference_relative_l2": 2.2854425406734455e-14,
+          "median_alpha_uv2": 226.511734459879,
+          "median_delta_uv2": 120.68348584036566
+        },
+        "welch_4s": {
+          "reference_relative_l2": 7.117994771257454e-14,
+          "median_alpha_uv2": 235.11911038551074,
+          "median_delta_uv2": 128.77107028365904
+        },
+        "welch_8s": {
+          "reference_relative_l2": 1.9493530660855186e-13,
+          "median_alpha_uv2": 235.44895180251663,
+          "median_delta_uv2": 121.60524334564163
+        }
+      },
+      "warnings": [
+        "Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    },
+    {
+      "id": "S002R04",
+      "subject": 2,
+      "condition": "left_right_fist_motor_imagery_run",
+      "sha256": "fcd37831378c411d50c223d97ffbc00949be2271d093f1d8e56bbe7c02bd1539",
+      "samples_per_channel": 9600,
+      "channels": 64,
+      "sfreq_hz": 160.0,
+      "passed": true,
+      "errors": {
+        "units_max_abs_uv": 5.684341886080802e-14,
+        "waveform_relative_l2": 6.5424153767278e-13,
+        "raw_psd_relative_l2": 6.352560086197717e-16,
+        "psd_relative_l2": 1.0977670301825464e-13,
+        "band_relative_error": 4.6619639521448793e-14,
+        "rounded_qc_max_abs_uv": 4.970665722225931e-05
+      },
+      "natural_artifact_candidate_count": 102,
+      "quality_controls": {
+        "injected_flatline_detected": true,
+        "injected_burst_detected": true
+      },
+      "median_channel_rms_uv": 21.948326092260196,
+      "median_channel_alpha_uv2": 52.797727736974544,
+      "sensitivity": {
+        "highpass_1hz": {
+          "median_rms_ratio": 0.8316159882330099,
+          "median_delta_power_ratio": 0.6376713438798893,
+          "median_gamma_power_ratio": 1.0000000015778547
+        },
+        "lowpass_40hz": {
+          "median_rms_ratio": 0.9314915539072244,
+          "median_delta_power_ratio": 0.9988325563301492,
+          "median_gamma_power_ratio": 0.5727971243520964
+        },
+        "no_notch": {
+          "median_rms_ratio": 1.0020753948004706,
+          "median_delta_power_ratio": 0.9999441983422761,
+          "median_gamma_power_ratio": 1.011677708564641
+        },
+        "mne_native_padding": {
+          "whole_record_relative_l2": 0.2540312689872105,
+          "interior_relative_l2": 0.12968757448400967,
+          "qualification": "Different edge policies; not an equivalence gate or physiological ground truth."
+        },
+        "welch_2s": {
+          "reference_relative_l2": 5.2061115754764825e-14,
+          "median_alpha_uv2": 53.68316517835212,
+          "median_delta_uv2": 153.5379054231763
+        },
+        "welch_4s": {
+          "reference_relative_l2": 1.0977670301825464e-13,
+          "median_alpha_uv2": 52.79772773697452,
+          "median_delta_uv2": 146.98879166901528
+        },
+        "welch_8s": {
+          "reference_relative_l2": 3.165165434343644e-13,
+          "median_alpha_uv2": 54.71249944785029,
+          "median_delta_uv2": 138.86317665574893
+        }
+      },
+      "warnings": [
+        "Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    },
+    {
+      "id": "S003R01",
+      "subject": 3,
+      "condition": "eyes_open_baseline",
+      "sha256": "2af68afa8d4f158a7ae7f3903b66f0947925880639b7a8b5b6bb13b0c6c50f96",
+      "samples_per_channel": 9600,
+      "channels": 64,
+      "sfreq_hz": 160.0,
+      "passed": true,
+      "errors": {
+        "units_max_abs_uv": 1.1368683772161603e-13,
+        "waveform_relative_l2": 6.77344454075618e-13,
+        "raw_psd_relative_l2": 5.846068902391298e-16,
+        "psd_relative_l2": 1.0933129483993252e-13,
+        "band_relative_error": 4.294212811827813e-14,
+        "rounded_qc_max_abs_uv": 4.996678686808309e-05
+      },
+      "natural_artifact_candidate_count": 54,
+      "quality_controls": {
+        "injected_flatline_detected": true,
+        "injected_burst_detected": true
+      },
+      "median_channel_rms_uv": 53.90518772728365,
+      "median_channel_alpha_uv2": 172.8115847713823,
+      "sensitivity": {
+        "highpass_1hz": {
+          "median_rms_ratio": 0.6880038893524477,
+          "median_delta_power_ratio": 0.5922085463326485,
+          "median_gamma_power_ratio": 0.9999999870369645
+        },
+        "lowpass_40hz": {
+          "median_rms_ratio": 0.9874770095800011,
+          "median_delta_power_ratio": 1.0000403400716704,
+          "median_gamma_power_ratio": 0.5159082677496143
+        },
+        "no_notch": {
+          "median_rms_ratio": 1.001297779467313,
+          "median_delta_power_ratio": 1.0000088986158708,
+          "median_gamma_power_ratio": 1.013328184652046
+        },
+        "mne_native_padding": {
+          "whole_record_relative_l2": 0.1604588329217057,
+          "interior_relative_l2": 0.0759343626252116,
+          "qualification": "Different edge policies; not an equivalence gate or physiological ground truth."
+        },
+        "welch_2s": {
+          "reference_relative_l2": 3.605345770294573e-14,
+          "median_alpha_uv2": 171.4596649867098,
+          "median_delta_uv2": 965.0412244614162
+        },
+        "welch_4s": {
+          "reference_relative_l2": 1.0933129483993252e-13,
+          "median_alpha_uv2": 172.8115847713823,
+          "median_delta_uv2": 996.9169941226135
+        },
+        "welch_8s": {
+          "reference_relative_l2": 2.4390145864400224e-13,
+          "median_alpha_uv2": 164.6774577586578,
+          "median_delta_uv2": 950.326338725353
+        }
+      },
+      "warnings": [
+        "Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    },
+    {
+      "id": "S003R02",
+      "subject": 3,
+      "condition": "eyes_closed_baseline",
+      "sha256": "41044fea497e05650c4b1f4009011b44a50a6cefd55d5afa9e1d1b7988afd6e5",
+      "samples_per_channel": 9600,
+      "channels": 64,
+      "sfreq_hz": 160.0,
+      "passed": true,
+      "errors": {
+        "units_max_abs_uv": 1.1368683772161603e-13,
+        "waveform_relative_l2": 6.750720612307825e-13,
+        "raw_psd_relative_l2": 6.454486942565832e-16,
+        "psd_relative_l2": 1.246517180177673e-13,
+        "band_relative_error": 6.731709762541427e-14,
+        "rounded_qc_max_abs_uv": 4.988293217422779e-05
+      },
+      "natural_artifact_candidate_count": 0,
+      "quality_controls": {
+        "injected_flatline_detected": true,
+        "injected_burst_detected": true
+      },
+      "median_channel_rms_uv": 52.2665818215014,
+      "median_channel_alpha_uv2": 364.08240196612087,
+      "sensitivity": {
+        "highpass_1hz": {
+          "median_rms_ratio": 0.7145271489788212,
+          "median_delta_power_ratio": 0.5151744282680839,
+          "median_gamma_power_ratio": 1.0000000024681486
+        },
+        "lowpass_40hz": {
+          "median_rms_ratio": 0.9913058846029721,
+          "median_delta_power_ratio": 0.9999912463438563,
+          "median_gamma_power_ratio": 0.5354999477816459
+        },
+        "no_notch": {
+          "median_rms_ratio": 1.0017150154009173,
+          "median_delta_power_ratio": 1.000011966939344,
+          "median_gamma_power_ratio": 1.0123065741839912
+        },
+        "mne_native_padding": {
+          "whole_record_relative_l2": 0.14229420742077192,
+          "interior_relative_l2": 0.06685520899689347,
+          "qualification": "Different edge policies; not an equivalence gate or physiological ground truth."
+        },
+        "welch_2s": {
+          "reference_relative_l2": 5.957006164101218e-14,
+          "median_alpha_uv2": 382.87708996161706,
+          "median_delta_uv2": 692.1205684962347
+        },
+        "welch_4s": {
+          "reference_relative_l2": 1.246517180177673e-13,
+          "median_alpha_uv2": 364.08240196612064,
+          "median_delta_uv2": 642.7696495484615
+        },
+        "welch_8s": {
+          "reference_relative_l2": 2.865959266098455e-13,
+          "median_alpha_uv2": 374.04479297803493,
+          "median_delta_uv2": 612.2632314774403
+        }
+      },
+      "warnings": [
+        "Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    },
+    {
+      "id": "S003R04",
+      "subject": 3,
+      "condition": "left_right_fist_motor_imagery_run",
+      "sha256": "7d0732eea963488a53153835524e55c2b68220b0a0c7c5be99e535a9f5367e7f",
+      "samples_per_channel": 9600,
+      "channels": 64,
+      "sfreq_hz": 160.0,
+      "passed": true,
+      "errors": {
+        "units_max_abs_uv": 1.1368683772161603e-13,
+        "waveform_relative_l2": 6.740643025301796e-13,
+        "raw_psd_relative_l2": 6.205392308835529e-16,
+        "psd_relative_l2": 1.5438041689262764e-13,
+        "band_relative_error": 4.5132329091696885e-14,
+        "rounded_qc_max_abs_uv": 4.9961833193279404e-05
+      },
+      "natural_artifact_candidate_count": 53,
+      "quality_controls": {
+        "injected_flatline_detected": true,
+        "injected_burst_detected": true
+      },
+      "median_channel_rms_uv": 51.23632488173609,
+      "median_channel_alpha_uv2": 183.8316930994102,
+      "sensitivity": {
+        "highpass_1hz": {
+          "median_rms_ratio": 0.7984333721108894,
+          "median_delta_power_ratio": 0.6007936922284618,
+          "median_gamma_power_ratio": 1.000000002835599
+        },
+        "lowpass_40hz": {
+          "median_rms_ratio": 0.955293504641874,
+          "median_delta_power_ratio": 1.001028141222275,
+          "median_gamma_power_ratio": 0.5193215927697927
+        },
+        "no_notch": {
+          "median_rms_ratio": 1.0057249910103023,
+          "median_delta_power_ratio": 1.0000021455867318,
+          "median_gamma_power_ratio": 1.012477900634258
+        },
+        "mne_native_padding": {
+          "whole_record_relative_l2": 0.14143369618074111,
+          "interior_relative_l2": 0.06095066581765793,
+          "qualification": "Different edge policies; not an equivalence gate or physiological ground truth."
+        },
+        "welch_2s": {
+          "reference_relative_l2": 4.3491920471157255e-14,
+          "median_alpha_uv2": 179.7188448787797,
+          "median_delta_uv2": 770.5488688975171
+        },
+        "welch_4s": {
+          "reference_relative_l2": 1.5438041689262764e-13,
+          "median_alpha_uv2": 183.83169309941013,
+          "median_delta_uv2": 765.4688454661127
+        },
+        "welch_8s": {
+          "reference_relative_l2": 3.6147551907218e-13,
+          "median_alpha_uv2": 183.93175124004523,
+          "median_delta_uv2": 724.7642720579638
+        }
+      },
+      "warnings": [
+        "Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    }
+  ],
+  "failures": [],
+  "passed": true,
+  "interpretation": "Small convenience subset; computational consistency on real EEG, not clinical validation, artifact-classifier performance, or population inference. Task runs include both rest and task intervals; no event-level model. No real EMG validation."
+}

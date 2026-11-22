@@ -1,0 +1,40 @@
+name: Real EEG validation and security
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  physionet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,all]" pip-audit
+          python -m pip check
+      - name: Check source publication boundaries
+        run: python tools/check_publication.py
+      - name: Download official checksum-pinned subset and validate all nine records
+        run: python benchmarks/real_world/validate.py --download --cache "${{ runner.temp }}/eegbci" --output ci-results/real-world.json
+      - name: Check installed dependencies for known advisories
+        run: python -m pip_audit --local --skip-editable --format json --output ci-results/dependency-audit.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: real-eeg-validation
+          path: ci-results/
+          retention-days: 30

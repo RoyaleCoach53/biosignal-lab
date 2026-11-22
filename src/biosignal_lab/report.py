@@ -4,6 +4,7 @@ import html
 import json
 from datetime import datetime, timezone
 from .models import AnalysisResults
+from ._version import __version__
 
 
 def json_report(result: AnalysisResults) -> str:
@@ -32,8 +33,9 @@ table{{border-collapse:collapse;background:#fff;width:100%;font-size:13px}}td,th
 <div class="notice"><strong>Not for clinical use.</strong> This software does not diagnose, screen for, or predict medical conditions. Verify every result independently.</div>
 <h2>Recording</h2><div class="meta">Source: {safe(summary['source'])}<br>Type: {safe(summary['modality'])}<br>Channels: {summary['n_channels']}<br>Sampling rate: {summary['sfreq_hz']} Hz<br>Duration: {summary['duration_s']} s</div>
 <h2>Channel quality metrics</h2>{table(result.channel_metrics)}
+<h2>Raw channel metrics (before filtering)</h2>{table(result.raw_channel_metrics)}
 <h2>EEG band powers</h2>{table(result.band_powers)}
 <h2>Artifact review candidates</h2>{table(result.artifact_intervals)}
 <h2>Warnings</h2><ul>{warning or '<li>None</li>'}</ul>
 <h2>Reproducibility settings</h2><pre>{safe(json.dumps(summary['config'], indent=2))}</pre>
-<p>Generated locally by BioSignal Lab v0.2.0. No recording data is embedded in this report.</p></body></html>"""
+<p>Generated locally by BioSignal Lab v{safe(__version__)}. No recording data is embedded in this report.</p></body></html>"""

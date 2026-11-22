@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 import numpy as np
+from ._version import __version__
+from importlib.metadata import version
 
 Modality = Literal["eeg", "emg"]
 EEG_BANDS: dict[str, tuple[float, float]] = {
@@ -91,14 +93,24 @@ class AnalysisResults:
     artifact_intervals: list[dict[str, float | str]]
     warnings: list[str] = field(default_factory=list)
     config: AnalysisConfig = field(default_factory=AnalysisConfig)
+    raw_frequencies_hz: np.ndarray | None = None
+    raw_psd_uv2_per_hz: np.ndarray | None = None
+    raw_channel_metrics: list[dict] = field(default_factory=list)
 
     def summary(self) -> dict:
         return {
-            "tool": "BioSignal Lab", "version": "0.2.0", "modality": self.recording.modality,
+            "tool": "BioSignal Lab", "version": __version__, "modality": self.recording.modality,
             "source": self.recording.source, "sfreq_hz": self.recording.sfreq,
             "duration_s": round(self.recording.duration_s, 4),
             "n_channels": len(self.recording.channels), "n_samples": self.recording.data_uv.shape[1],
             "config": self.config.__dict__, "channels": self.channel_metrics,
+            "raw_channels": self.raw_channel_metrics,
+            "software": {name: version(name) for name in ("numpy", "scipy", "pandas")},
+            "processing": {"mean_removed": True, "filter_order": 4,
+                           "direction": "forward_backward", "padding": "odd",
+                           "notch_pad_samples": 9 if self.config.notch_hz else None,
+                           "butterworth_pad_samples": (27 if self.config.highpass_hz and self.config.lowpass_hz else 15)
+                           if self.config.highpass_hz or self.config.lowpass_hz else None},
             "bands": self.band_powers, "artifact_candidates": self.artifact_intervals,
             "warnings": self.warnings, "disclaimer": "Research/education only. No medical diagnosis.",
         }

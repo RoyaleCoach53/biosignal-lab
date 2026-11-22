@@ -18,6 +18,7 @@ from biosignal_lab.simulate import synthetic_recording
 from biosignal_lab.pipeline import analyze
 from biosignal_lab.report import html_report, json_report
 from biosignal_lab.analysis import time_frequency_psd, pairwise_coherence
+from biosignal_lab import __version__
 
 st.set_page_config(page_title="BioSignal Lab | EEG & EMG", page_icon="🧠",
                    layout="wide", initial_sidebar_state="expanded")
@@ -29,6 +30,9 @@ st.markdown("""<style>
 st.title("🧠 BioSignal Lab")
 st.caption("Open-source EEG/EMG analysis · Local-first · Reproducible · Research & education only")
 st.warning("Not a medical device. No diagnosis, seizure detection or clinical decisions. Do not upload personal clinical recordings to a hosted copy.")
+with st.expander("Scientific validation scope"):
+    st.write("The v0.3 study checks computational consistency on nine PhysioNet EEG recordings from three participants. It does not establish clinical approval, artifact detection accuracy, or validation on real EMG.")
+    st.markdown("[Read the protocol, results, and limitations](https://github.com/RoyaleCoach53/biosignal-lab/blob/main/docs/real_world/REPORT.md)")
 
 with st.sidebar:
     st.header("Recording")
@@ -156,12 +160,17 @@ with spectrum:
     f = result.frequencies_hz
     p = result.psd_uv2_per_hz[idx]
     plot = go.Figure()
+    plot.add_trace(go.Scatter(x=result.raw_frequencies_hz,
+                              y=10*np.log10(np.maximum(result.raw_psd_uv2_per_hz[idx], 1e-12)),
+                              mode="lines", name="Raw (before filters)",
+                              line=dict(color="#94a3b8", dash="dot")))
     plot.add_trace(go.Scatter(x=f, y=10*np.log10(np.maximum(p, 1e-12)),
-                              mode="lines", name="PSD", fill="tozeroy", line_color="#7c3aed"))
+                              mode="lines", name="Processed", line_color="#7c3aed"))
     plot.update_layout(xaxis_title="Frequency (Hz)", yaxis_title="Power (dB re µV²/Hz)", height=450,
                        margin=dict(l=10,r=10,t=20,b=10))
     plot.update_xaxes(range=[0, min(100, recording.sfreq/2)])
     st.plotly_chart(plot, use_container_width=True)
+    st.caption(f"Welch grid spacing: {f[1]-f[0]:.3g} Hz. Raw and processed spectra use identical window settings; notch filtering removes energy near the selected mains frequency.")
     if result.band_powers:
         table = pd.DataFrame(result.band_powers).set_index("channel")
         band_names = ["delta", "theta", "alpha", "beta", "gamma"]
@@ -210,8 +219,12 @@ with tf_tab:
         st.caption("Coherence is not proof of neural connectivity; common references, volume conduction and artifacts can inflate it.")
 
 with channel_qc:
+    st.subheader("Processed channel metrics")
     st.dataframe(pd.DataFrame(result.channel_metrics), use_container_width=True, hide_index=True)
     st.caption("Metrics describe the processed signal. They do not provide clinical signal suitability approval.")
+    st.subheader("Raw channel metrics")
+    st.dataframe(pd.DataFrame(result.raw_channel_metrics), use_container_width=True, hide_index=True)
+    st.caption("Compare raw and processed line-noise fractions. A low post-notch fraction does not show that the original recording was free of interference.")
 
 with artifacts:
     st.write("Candidates are generated using robust amplitude excursions and flatline windows on **unfiltered** data.")
@@ -236,4 +249,4 @@ with export:
     st.download_button("⬇️ Processing configuration", json.dumps(config.__dict__, indent=2),
                        file_name="processing_config.json", mime="application/json")
 
-st.caption("BioSignal Lab v0.2.0 • MIT license • Research / education only • See docs/SCIENTIFIC_AUDIT.md")
+st.caption(f"BioSignal Lab v{__version__} • MIT license • Research / education only • See docs/SCIENTIFIC_AUDIT.md")
