@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biosignal-lab"
+version = "0.2.0"
+description = "Local-first, reproducible EEG/EMG signal quality and spectral analysis for education and research"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "BioSignal Lab contributors" }]
+keywords = ["eeg", "emg", "neuroscience", "signal-processing", "quality-control", "biomedical-engineering"]
+classifiers = ["Development Status :: 3 - Alpha", "Intended Audience :: Science/Research", "Programming Language :: Python :: 3", "Topic :: Scientific/Engineering :: Medical Science Apps."]
+dependencies = ["numpy>=1.24,<3", "scipy>=1.11,<2", "pandas>=2.0,<3"]
+
+[project.optional-dependencies]
+app = ["streamlit>=1.35,<2", "plotly>=5.18,<7"]
+edf = ["mne>=1.6,<2"]
+dev = ["pytest>=8", "ruff>=0.6", "build>=1.2"]
+all = ["streamlit>=1.35,<2", "plotly>=5.18,<7", "mne>=1.6,<2"]
+
+[project.scripts]
+biosignal-lab = "biosignal_lab.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/RoyaleCoach53/biosignal-lab"
+Repository = "https://github.com/RoyaleCoach53/biosignal-lab"
+Issues = "https://github.com/RoyaleCoach53/biosignal-lab/issues"
+Documentation = "https://github.com/RoyaleCoach53/biosignal-lab/blob/main/README.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

@@ -1,39 +1,34 @@
 # Roadmap
 
-This roadmap describes intended work, not completed implementation or guaranteed dates.
+## Released in v0.2.0
 
-## 1. Recover and verify v0.2
+Local CSV/optional EDF analysis, EEG/EMG defaults, spectral and descriptive metrics,
+Streamlit dashboard, CLI and reports, synthetic samples, reproduced original tests,
+release regressions, executable benchmarks, CI, and provenance records.
 
-- Recover the original source archive, audit report, and verification JSON.
-- Record checksums and inspect every file before execution or publication.
-- Establish a clean environment and reproduce the available test suite.
-- Review architecture, parsers, units, filters, dependency licenses, and security.
-- Reproduce numerical regressions using the protocol in `benchmarks/README.md`.
-- Publish only results tied to a verified commit and environment.
+## Next: independent research evidence
 
-## 2. Make the release usable
+1. Freeze a task-specific protocol and evaluate an appropriately licensed public
+   human dataset. Record channel typing, references, preprocessing, and exclusions.
+2. Compare measurements with matched-setting reference tools and publish failures.
+3. Obtain independent annotations before reporting artifact detection sensitivity,
+   precision, confidence intervals, or cross-subject generalization.
+4. Request review from signal-processing and biomedical engineering researchers.
 
-- Verify installation and actual application commands on supported platforms.
-- Add a compact walkthrough and properly licensed synthetic sample data.
-- Run implementation tests in GitHub Actions and publish the exact results.
-- Add reproducible benchmark scripts and machine-readable output.
-- Create v0.2.0 only after the release gates are met.
+## Usability and engineering
 
-## 3. Build independent evidence
+- Raw-versus-processed PSD and line-noise comparisons.
+- Better acquisition/reference metadata, EDF variant coverage, and BIDS-style exports.
+- Explicit CLI controls to disable each filter and load a configuration file.
+- Streaming/chunked analysis and documented memory/resource budgets.
+- Additional accessibility checks and educational notebooks on leakage and aliasing.
 
-- Ask biomedical engineering and signal processing reviewers to examine assumptions.
-- Compare calculations with a reference implementation using matched settings.
-- Evaluate explicitly defined tasks on appropriately licensed public recordings.
-- Report failure cases and uncertainty alongside successful examples.
-- Evaluate artifact flags against annotations before making performance claims.
+## Genuine adoption
 
-## 4. Support adoption
+Publish a short reproducible tutorial, ask a few students and laboratories to try
+one concrete workflow, turn their friction into focused issues, and review small
+contributions promptly. Track independently reproduced results and solved user
+problems alongside repository activity. Avoid unsupported impact or clinical claims.
 
-- Publish a short tutorial with a reproducible input and a useful interpretation.
-- Invite a few students and researchers to try a concrete workflow and report friction.
-- Label small issues with clear acceptance criteria and review contributions promptly.
-- Track reproducibility, resolved user problems, and useful contributions.
-- Maintain a changelog, support policy, and documented release process.
-
-Community interest, grants, and third-party program acceptance are external
-outcomes. They are not guaranteed by public hosting or a release tag.
+No medical diagnostics or safety-critical control is planned. Dates, external
+program acceptance, grants, and community interest are not guaranteed.

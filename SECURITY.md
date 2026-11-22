@@ -2,8 +2,9 @@
 
 ## Supported versions
 
-No software release is currently published. The `main` branch is in publication
-preparation, and v0.2.0 is not a supported clinical or production release.
+The current release line is 0.2.x, alpha research software. Report security defects
+against the latest tagged release or `main`. No clinical or safety-critical use
+is supported, and no response-time or long-term support guarantee is established.
 
 ## Reporting a vulnerability
 
@@ -32,5 +33,8 @@ public disclosure with maintainers where feasible.
 Incorrect scientific measurements may be reported as correctness defects. If
 the defect also exposes data or permits code execution, use private reporting.
 
-The source code and its dependencies have not yet been recovered or audited in
-this repository. The presence of this policy is not evidence of a security audit.
+Source review, a credential-pattern scan, and an installed-environment advisory
+audit were performed for v0.2.0; see `docs/DEPENDENCIES.md` and the scientific
+audit for scope. These checks are not a penetration test or a guarantee that
+unknown vulnerabilities are absent. Reports include source and channel labels;
+CSV exports should be treated as untrusted data when opened in spreadsheet software.

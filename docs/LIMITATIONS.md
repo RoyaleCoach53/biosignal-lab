@@ -1,36 +1,46 @@
-# Scientific limitations
+# Scientific and operational limitations
 
-## Current evidence
+## What was verified
 
-The historical source archive is not yet recovered into this checkout. No
-implementation-specific calculation, test count, dependency audit, or benchmark
-is independently verified by this repository at this stage.
+The original 73 automated tests were reproduced before changes. The release's
+85-test suite and 12 benchmark checks cover specified synthetic inputs, parsers,
+mathematical targets, matched-setting reference calculations, and dashboard flows.
+See [the audit](SCIENTIFIC_AUDIT.md) and [methods](METHODS.md).
 
-## Numerical validation and clinical validation
+## What remains unvalidated
 
-Tests on known signals can reveal unit, scaling, filter, spectral-integration,
-and parsing defects. Agreement with a second library under matched settings
-checks computational consistency, but both implementations may share assumptions
-or underlying routines. Neither establishes diagnostic performance or clinical safety.
+- No independently acquired human EEG/EMG dataset evaluation.
+- No diagnostic accuracy, seizure detection, patient safety, or regulatory evidence.
+- No artifact sensitivity/specificity, expert labels, or population generalization.
+- No acquisition hardware calibration, analog anti-alias verification, or montage assessment.
+- No guarantee for arbitrary EDF variants, mislabeled channels, huge files, or extreme numeric inputs.
 
-Human recordings introduce acquisition differences, artifacts, reference choices,
-electrode placement, population variation, and annotation uncertainty. Evaluation
-requires a defined task, suitable data, predeclared metrics, and an appropriate
-study design. Performance claims must state their dataset and evaluation limits.
+## Interpretation
 
-## Interpretation requirements
+Filters, references, electrode placement, window length, and units change metrics.
+Preprocessing removes the mean; reported RMS is computed after processing.
+Frequency-band conventions vary. Band-edge leakage, especially near 0.5 Hz, can
+substantially underestimate nominal sinusoid power. Missing/unsupported bands are
+unavailable values, not zero. Interpolation fabricates intermediate samples and
+is bounded and disclosed, but can still alter measurements.
 
-- Document signal units, sensor type, channel type, and acquisition context.
-- State EEG frequency-band boundaries; conventions vary and boundaries are not diagnoses.
-- A filter changes the measured signal. Report its response and transition bands.
-- Forward-backward filtering is an offline operation and does not establish real-time behavior.
-- Sampling rate alone does not prove that a device acquired a usable frequency band.
-- Short recordings and short spectral windows limit frequency resolution.
-- Do not silently treat missing, unsupported, or rejected measurements as zero.
-- EMG RMS depends on the processing window, bandwidth, units, and artifacts.
-- Quality flags are review aids until their behavior is evaluated against suitable labels.
-- Any missing-data interpolation requires explicit limits and disclosure.
+Coherence needs at least two Welch segments and nonconstant channels. That minimum
+is only a guard against a degenerate estimator; it does not establish reliability,
+statistical significance, or neural connectivity. Shared references and artifacts
+can inflate coherence. MNE/SciPy comparisons may share numerical routines.
 
-BioSignal Lab is intended for education and research. It must not be used to make
-diagnosis, treatment, or emergency-care decisions. No regulatory approval,
-medical-device status, or clinical validation is claimed.
+EMG descriptors depend on bandwidth and acquisition. A representable 200 Hz tone
+at 500 Hz sampling is not evidence that broadband surface EMG is fully captured.
+Median frequency alone cannot determine fatigue. Heuristic artifact flags need
+human review and have not been evaluated against independent annotations.
+
+## Operation and privacy
+
+The pipeline is offline, acausal, and in-memory. The dashboard binds locally by
+default and caps uploads at 50 MB; the core CSV API is not a streaming service.
+NumPy arrays in recording objects remain mutable. Reports contain source and
+channel labels and should be reviewed before sharing. Uploaded data are processed
+on the server running the application; a hosted copy does not have local privacy.
+
+Do not use BioSignal Lab to make diagnosis, treatment, emergency-care, or
+safety-critical control decisions.

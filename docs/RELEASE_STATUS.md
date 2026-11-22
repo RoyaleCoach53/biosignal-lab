@@ -1,41 +1,27 @@
-# Release status
+# Release validation record
 
-Status date: 2026-11-22.
+Review date: 2026-11-22. Version: 0.2.0, alpha research software.
 
-**v0.2.0 is not released.** The public repository is being prepared while the
-previous source archive is recovered. The documents currently in this checkout
-were newly authored for publication preparation.
+The original source has been recovered and integrated. The original audit and
+verification JSON are preserved in `docs/archive/`; per-file archive hashes are
+recorded in `SOURCE_PROVENANCE.json`.
 
-| Item | State |
+| Check | Recorded local result |
 | --- | --- |
-| Public project repository | Created under RoyaleCoach53/biosignal-lab |
-| Original v0.2 source archive | Not recovered into this checkout |
-| Original scientific audit report | Not recovered into this checkout |
-| Original verification JSON | Not recovered into this checkout |
-| Claimed historical 73-test suite | Not available or reproduced here |
-| Independent architecture review | Pending original source |
-| Scientific verification of implementation | Pending original source |
-| Dependency and source security audit | Pending original source |
-| Clinical validation | Not established |
-| MIT license and community documentation | Prepared for new repository material |
-| Documentation-only CI | First public run passed; checks local Markdown links only |
-| Private vulnerability reporting | Enabled |
-| Dependency graph and Dependabot alerts | Enabled; original application dependencies remain unavailable |
-| Installable software, original examples, and sample data | Pending recovery and review |
-| Implementation CI and reproducible benchmarks | Pending verified test and execution commands |
-| v0.2.0 tag and GitHub release | Withheld until validation passes |
+| Original archive suite before changes | 73 passed, 0 failed, 0 skipped |
+| Release suite with regression tests | 85 passed, 0 failed, 0 skipped |
+| Executable numerical benchmark | 12/12 passed |
+| Application paths | EEG 10/30/60 s, EMG default, and 0.5 s input exercised with Streamlit AppTest |
+| Source compilation and critical Python lint | Passed |
+| Dependency consistency | `pip check` passed |
+| Installed environment advisory audit | No known vulnerabilities after updating environment pip; local project checked separately |
+| Source provenance/security inspection | Original and newly published files reviewed; no detected credential patterns or unrelated private-project code |
+| Clinical or independent human-data validation | Not performed |
 
-## Release gates
+CI runs Linux and Windows with Python 3.10 and 3.12 and uploads its own results.
+The [Actions page](https://github.com/RoyaleCoach53/biosignal-lab/actions) and
+[release page](https://github.com/RoyaleCoach53/biosignal-lab/releases) are the
+authoritative public records of workflow and publication state.
 
-1. Hash and inventory the original archive and preserve provenance and notices.
-2. Inspect the complete codebase, test definitions, and original audit artifacts.
-3. Install in a clean environment and record actual test collection and outcomes.
-4. Reproduce spectral, RMS, filtering, sampling, parsing, and quality checks.
-5. Fix reproducible defects and rerun the relevant checks.
-6. Check secrets, personal information, dependencies, and redistribution rights.
-7. Verify installation instructions, examples, sample data, and CI against the final commit.
-8. Attach reproducible results and limitations; then tag and publish v0.2.0.
-
-The absence of source prevents an honest claim that these gates have passed.
-Documentation checks, if added, must not be represented as implementation tests
-or scientific validation.
+Read [SCIENTIFIC_AUDIT.md](SCIENTIFIC_AUDIT.md), [DEPENDENCIES.md](DEPENDENCIES.md),
+and [CHANGELOG.md](../CHANGELOG.md) for the evidence, scope, and fixes.

@@ -1,37 +1,50 @@
-# Reproducible benchmark protocol
+# Reproducible numerical benchmarks
 
-No executable benchmark or verified result is available in this checkout yet.
-The historical verification JSON must be recovered and reproduced before any
-historical value is described as verified.
+These are engineering checks on known synthetic signals, not clinical validation.
+Run from a clean checkout with Python 3.10+:
 
-## Required numerical cases
+```sh
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev,all]"
+python -m pytest -ra
+python benchmarks/verify.py --output local-results/verification.json
+```
 
-| Case | Input and expected check |
-| --- | --- |
-| EEG-like reference tones | Separate 2, 10, 35, and 42 Hz sine waves, peak amplitude 10 microvolts; compare unfiltered mean-square power with the analytical 50 microvolts squared target |
-| EMG-like reference tone | 200 Hz sine wave, peak amplitude 100 microvolts, sampling rate comfortably above Nyquist; compare unfiltered RMS with 100/sqrt(2) microvolts |
-| Filter regressions | Measure actual filter gain at each tone; compare processed measurements with the expected filtered response and report edge treatment |
-| Spectral consistency | Match all Welch settings and units with a reference implementation; compare PSD arrays and integrated power |
-| Sampling-rate handling | Reject invalid rates and unsupported ranges; verify boundaries and unavailable outputs |
-| Timestamp and import handling | Test rate mismatch, duplicates, mixed channel types, unit conversion, and synthetic valid EDF input if supported |
-| Missing data | Exercise short gaps, long gaps, nonfinite values, and insufficient recording length |
-| Quality flags | Test known synthetic disturbances and clean negative controls; document thresholds and failure cases |
+The suite retains the original 73 tests and adds 12 release regressions. Install
+both MNE and Streamlit to run all 85 tests without optional skips. The benchmark
+requires MNE and records the environment rather than silently omitting its comparison.
 
-These ideal tones are mathematical fixtures, not realistic EEG or EMG recordings.
-For exact unfiltered RMS targets, use integer-cycle durations. For spectral and
-filtered checks, predeclare sample rate, duration, phase, window, padding, edge
-exclusion, integration rule, and tolerances before inspecting outcomes.
+## Twelve benchmark checks
 
-## Reproduction record
+- EEG 2, 10, 35, and 42 Hz tones: 10 µV peak, 250 Hz sampling, 60 seconds;
+  theoretical power 50 µV², tolerance 3%, default pipeline filters and four-second PSD.
+- EMG 200 Hz tone: 100 µV peak, 10 seconds, sampling at 500 and 2000 Hz;
+  theoretical RMS 100/sqrt(2) µV, tolerance 2%, modality-specific default filters.
+- Welch PSD compared to MNE after explicit unit conversion, Hann window,
+  500-sample segments/FFT, 250-sample overlap, mean averaging; rtol 1e-7, atol 1e-10.
+- Seeded white-noise PSD integral compared with variance, 8% relative tolerance.
+- A 50 Hz notch control: post/pre PSD ratio below 0.01 at the tone bin.
+- Unsupported gamma coverage returns unavailable, not zero.
+- A 0.4-second interior gap is rejected under the 0.1-second default policy.
+- Quality controls detect a known burst and flatline, with a clean negative control.
 
-Publish a command that runs on a clean checkout, the dependency lock or exact
-environment, deterministic seeds where relevant, input provenance and hashes,
-machine-readable measured values, comparison targets, tolerances, and exit status.
-Record the full collected and passed/failed/skipped test counts.
+The script also imports and analyzes both sample CSV files, and times an
+8-channel, 60-second, 250 Hz synthetic recording after one warm-up over five
+repetitions. Timing is environment-specific and is not a production throughput
+or speedup claim. The original report's 0.039-second timing is historical.
 
-Timing results should include hardware, operating system, warm-up policy, input
-size, number of repetitions, and summary statistics. Do not compare runtimes
-under different workloads or claim a speedup without measured evidence.
+## Evidence
 
-Application-specific commands will be added after source recovery; none are
-invented here. This protocol is newly prepared and is not the original audit report.
+[Current results](../docs/VERIFICATION_RESULTS.json) contain settings, targets,
+tolerances, measured errors, warnings, dependency versions, and pass/fail results.
+CI uploads separate results for each environment. The current audit summarizes
+the numerical differences and the source archive's provenance.
+
+[Pinned Windows/Python 3.12 environment](../requirements/validation-py312-windows.txt)
+records the local review environment, including audit/build tools. It is not a
+universal cross-platform lock. For other platforms, resolve the package's declared
+dependencies and compare numerical tolerances, not timings or bit-identical output.
+
+The tests include generated EDF formatting, CSV timebase consistency, unit scaling,
+filter attenuation, missing-gap handling, artifact controls, spectrogram localization,
+and coherence controls. Shared SciPy/MNE numerical dependencies limit independence.

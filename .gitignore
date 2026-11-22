@@ -23,6 +23,14 @@ htmlcov/
 data/private/
 data/raw/
 local-results/
+*.edf
+*.bdf
+*.fif
+*.vhdr
+*.eeg
+*.set
+*.cnt
+*_raw.csv
 
 # Editor and operating-system files
 .DS_Store

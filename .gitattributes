@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.zip binary
+# Preserve the original audit artifacts byte for byte, including Markdown line breaks.
+docs/archive/SCIENTIFIC_AUDIT_v0.2_original.md -text whitespace=-blank-at-eol
+docs/archive/VERIFICATION_RESULTS_v0.2_original.json -text

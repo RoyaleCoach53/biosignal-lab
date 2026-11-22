@@ -1,8 +1,8 @@
 # Contributing to BioSignal Lab
 
 Thank you for helping make biosignal analysis more transparent and reproducible.
-The current publication stage is documented in [release status](docs/RELEASE_STATUS.md).
-The historical v0.2 implementation is not yet available in this checkout.
+The current validation record is documented in [release status](docs/RELEASE_STATUS.md).
+The original v0.2 implementation and release-review fixes are included in this checkout.
 
 ## Discuss a change
 
@@ -20,9 +20,13 @@ using [SECURITY.md](SECURITY.md), not a public issue.
 4. Document parameter choices, units, and relevant limitations.
 5. Open a pull request with reproduction steps and actual validation output.
 
-The supported environment and test commands will be established after source
-recovery. Do not report tests as passing unless you ran them against the stated
-commit. Documentation changes do not need implementation-mirroring tests.
+Use Python 3.10+ and install `python -m pip install -e ".[dev,all]"`.
+Run `python -m pytest -ra`, `python benchmarks/verify.py --output local-results/verification.json`,
+`python -m compileall -q src app.py`, `python tools/check_docs.py`, and
+`python -m build`. MNE and Streamlit must be installed to run all 85 tests without
+optional skips. The core-only environment intentionally skips integration tests.
+Do not report tests as passing unless you ran them against the stated commit.
+Documentation changes do not need implementation-mirroring tests.
 
 ## Scientific and data standards
 

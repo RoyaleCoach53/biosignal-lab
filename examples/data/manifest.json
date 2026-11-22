@@ -1,0 +1,34 @@
+{
+  "license": "MIT",
+  "origin": "synthetic_recording, seed 42; no human data",
+  "generator": "examples/generate_samples.py",
+  "files": {
+    "eeg_demo.csv": {
+      "modality": "eeg",
+      "sampling_rate_hz": 250,
+      "duration_s": 10,
+      "amplitude_unit": "microvolts",
+      "time_unit": "seconds",
+      "channels": [
+        "Ch1",
+        "Ch2"
+      ],
+      "samples_per_channel": 2500,
+      "seed": 42,
+      "sha256": "37cc37ebf6ccad68d51ab28b844615a147ae36b8dc1aa44848c7d972e99e7b09"
+    },
+    "emg_demo.csv": {
+      "modality": "emg",
+      "sampling_rate_hz": 2000,
+      "duration_s": 5,
+      "amplitude_unit": "microvolts",
+      "time_unit": "seconds",
+      "channels": [
+        "Ch1"
+      ],
+      "samples_per_channel": 10000,
+      "seed": 42,
+      "sha256": "397a022a0efccab015edb25b2b46ee5d7c56e1f0e5528a09a5ff9498838f28da"
+    }
+  }
+}
