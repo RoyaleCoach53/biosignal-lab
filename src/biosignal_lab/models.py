@@ -105,6 +105,7 @@ class AnalysisResults:
             "n_channels": len(self.recording.channels), "n_samples": self.recording.data_uv.shape[1],
             "config": self.config.__dict__, "channels": self.channel_metrics,
             "raw_channels": self.raw_channel_metrics,
+            "raw_metrics_note": "Permitted short interior gaps are interpolated; raw metrics precede mean removal/filters, while raw PSD removes each Welch segment mean.",
             "software": {name: version(name) for name in ("numpy", "scipy", "pandas")},
             "processing": {"mean_removed": True, "filter_order": 4,
                            "direction": "forward_backward", "padding": "odd",

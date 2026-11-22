@@ -31,8 +31,9 @@ st.title("🧠 BioSignal Lab")
 st.caption("Open-source EEG/EMG analysis · Local-first · Reproducible · Research & education only")
 st.warning("Not a medical device. No diagnosis, seizure detection or clinical decisions. Do not upload personal clinical recordings to a hosted copy.")
 with st.expander("Scientific validation scope"):
-    st.write("The v0.3 study checks computational consistency on nine PhysioNet EEG recordings from three participants. It does not establish clinical approval, artifact detection accuracy, or validation on real EMG.")
-    st.markdown("[Read the protocol, results, and limitations](https://github.com/RoyaleCoach53/biosignal-lab/blob/main/docs/real_world/REPORT.md)")
+    st.write("The proposed v0.3 pilot checks computational consistency on nine PhysioNet EEG recordings from three participants. It does not establish clinical approval, artifact detection accuracy, or validation on real EMG.")
+    doc_ref = "research/physionet-validation-v03" if ".dev" in __version__ else "main"
+    st.markdown(f"[Read the protocol, results, and limitations](https://github.com/RoyaleCoach53/biosignal-lab/blob/{doc_ref}/docs/real_world/REPORT.md)")
 
 with st.sidebar:
     st.header("Recording")
@@ -171,6 +172,7 @@ with spectrum:
     plot.update_xaxes(range=[0, min(100, recording.sfreq/2)])
     st.plotly_chart(plot, use_container_width=True)
     st.caption(f"Welch grid spacing: {f[1]-f[0]:.3g} Hz. Raw and processed spectra use identical window settings; notch filtering removes energy near the selected mains frequency.")
+    st.caption("Raw PSD uses permitted short-gap interpolation and per-segment mean removal; it is shown before the selected digital filters.")
     if result.band_powers:
         table = pd.DataFrame(result.band_powers).set_index("channel")
         band_names = ["delta", "theta", "alpha", "beta", "gamma"]

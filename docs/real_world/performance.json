@@ -1,0 +1,46 @@
+{
+  "version": "0.3.0.dev0",
+  "python": "3.12.14",
+  "platform": "Windows-11-10.0.26100-SP0",
+  "machine": "AMD64",
+  "logical_cpu_count": 12,
+  "records": [
+    {
+      "channels": 4,
+      "duration_s": 30,
+      "sfreq_hz": 250,
+      "input_bytes": 240000,
+      "warmups": 1,
+      "repetitions": 3,
+      "median_seconds_with_tracing": 0.026448700002219994,
+      "min_seconds": 0.026186999999481486,
+      "max_seconds": 0.029203899997810367,
+      "median_peak_traced_bytes": 1666518
+    },
+    {
+      "channels": 8,
+      "duration_s": 60,
+      "sfreq_hz": 250,
+      "input_bytes": 960000,
+      "warmups": 1,
+      "repetitions": 3,
+      "median_seconds_with_tracing": 0.05855829999927664,
+      "min_seconds": 0.058022699999128236,
+      "max_seconds": 0.058606200000212993,
+      "median_peak_traced_bytes": 6668295
+    },
+    {
+      "channels": 16,
+      "duration_s": 60,
+      "sfreq_hz": 500,
+      "input_bytes": 3840000,
+      "warmups": 1,
+      "repetitions": 3,
+      "median_seconds_with_tracing": 0.14887090000047465,
+      "min_seconds": 0.1461383999994723,
+      "max_seconds": 0.1515185999996902,
+      "median_peak_traced_bytes": 26575142
+    }
+  ],
+  "scope": "Synthetic analyze() only; inputs allocated before measurement. Tracing adds overhead. Peaks are allocator-traced memory, not process RSS, and may miss native allocations. No throughput or cross-machine speedup claim."
+}

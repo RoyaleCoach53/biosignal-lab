@@ -17,7 +17,7 @@ from scipy.signal import iirnotch
 
 from biosignal_lab.analysis import compute_psd, detect_artifacts
 from biosignal_lab.io import read_edf
-from biosignal_lab.models import AnalysisConfig
+from biosignal_lab.models import AnalysisConfig, Recording
 from biosignal_lab.pipeline import analyze
 
 HERE = Path(__file__).resolve().parent
@@ -63,7 +63,7 @@ def fetch_record(record: dict, cache: Path, download: bool) -> Path:
     return path
 
 
-def decode_uniform_edf(path: Path, seconds: float = 60) -> tuple[np.ndarray, float, tuple[str, ...]]:
+def decode_uniform_edf(path: Path, seconds: float | None = 60) -> tuple[np.ndarray, float, tuple[str, ...]]:
     """Independent digital-to-physical EDF decoder for this uniform-rate subset only.
 
     Not a general EDF/EDF+ replacement. Annotation channels and header personal
@@ -92,7 +92,7 @@ def decode_uniform_edf(path: Path, seconds: float = 60) -> tuple[np.ndarray, flo
         raise ValueError("EDF data length mismatch")
     digital = np.frombuffer(blob, dtype="<i2", offset=header_bytes).reshape(records, int(samples.sum()))
     fs = float(samples[picks[0]] / record_seconds)
-    wanted = min(int(round(seconds * fs)), records * samples[picks[0]])
+    wanted = records * samples[picks[0]] if seconds is None else min(int(round(seconds * fs)), records * samples[picks[0]])
     starts = np.r_[0, np.cumsum(samples)]
     rows = []
     for i in picks:
@@ -224,12 +224,26 @@ def validate_record(record, path, protocol):
     flags = detect_artifacts(perturbed, fs, labels[:1], window_s=1, threshold_mad=8, flatline_tolerance_uv=.15)
     flat_found = any(x["start_s"] == 5 and "flatline" in x["reason"] for x in flags)
     burst_found = any(x["start_s"] == 10 and "outlier" in x["reason"] for x in flags)
-    passed = bool(passed and flat_found and burst_found)
+    gapped = rec.data_uv[:1].copy()
+    gapped[0, 100:103] = np.nan
+    repaired = analyze(Recording(gapped, fs, labels[:1]), cfg)
+    short_gap_ok = bool(np.all(np.isfinite(repaired.processed_uv)) and any("interpolated" in x for x in repaired.warnings))
+    rejected = {}
+    for name, start, end in [("long_gap", 100, 132), ("boundary_gap", 0, 1)]:
+        damaged = rec.data_uv[:1].copy()
+        damaged[0, start:end] = np.nan
+        try:
+            analyze(Recording(damaged, fs, labels[:1]), cfg)
+            rejected[name] = False
+        except ValueError:
+            rejected[name] = True
+    passed = bool(passed and flat_found and burst_found and short_gap_ok and all(rejected.values()))
     return {"id": record["id"], "subject": record["subject"], "condition": record["condition"],
             "sha256": record["sha256"], "samples_per_channel": 9600, "channels": len(labels),
             "sfreq_hz": fs, "passed": passed, "errors": errors,
             "natural_artifact_candidate_count": len(result.artifact_intervals),
             "quality_controls": {"injected_flatline_detected": flat_found, "injected_burst_detected": burst_found},
+            "missing_data_controls": {"short_gap_finite_and_disclosed": short_gap_ok, **rejected},
             "median_channel_rms_uv": float(np.median(base_rms)),
             "median_channel_alpha_uv2": float(np.median(bands["alpha"])),
             "sensitivity": sensitivity, "warnings": result.warnings}

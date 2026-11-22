@@ -52,3 +52,29 @@ def test_human_pilot_fails_closed_offline_when_edf_missing(tmp_path, monkeypatch
     assert not report["passed"]
     assert report["records"][0]["subject"] == 1
     assert "FileNotFoundError" in report["records"][0]["error"]
+
+
+def test_pilot_rejects_corrupt_cached_record_before_edf_import(tmp_path, monkeypatch):
+    from tools import physionet_pilot
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    (cache / "S001R01.edf").write_bytes(b"corrupt")
+    monkeypatch.setattr(physionet_pilot, "read_edf", lambda *a, **k: pytest.fail("Corrupt cache reached EDF reader"))
+    destination = tmp_path / "out.json"
+    assert main(["--subjects", "1", "--runs", "1", "--data-dir", str(cache), "--output", str(destination)]) == 1
+    report = json.loads(destination.read_text())
+    assert "ValueError" in report["records"][0]["error"]
+    assert str(tmp_path) not in destination.read_text()
+
+
+@pytest.mark.parametrize("arguments", [["--subjects", "4"], ["--subjects", "1", "1"], ["--runs", "1", "1"]])
+def test_pilot_rejects_unpinned_or_duplicate_selection(arguments):
+    with pytest.raises(SystemExit):
+        main(arguments)
+
+
+def test_negative_psd_cannot_pass_even_inside_absolute_tolerance():
+    recording = Recording(np.zeros((1, 1600)), 160, ("EEG",))
+    result = analyze(recording, AnalysisConfig(highpass_hz=None, lowpass_hz=None, notch_hz=None))
+    result.psd_uv2_per_hz[0, 0] = -1e-12
+    assert not compare_psd(result)["passed"]

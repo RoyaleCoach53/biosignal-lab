@@ -9,7 +9,7 @@
   "environment": {
     "python": "3.12.14",
     "packages": {
-      "biosignal-lab": "0.3.0",
+      "biosignal-lab": "0.3.0.dev0",
       "mne": "1.13.2",
       "numpy": "2.5.5",
       "scipy": "1.18.1"
@@ -37,6 +37,11 @@
       "quality_controls": {
         "injected_flatline_detected": true,
         "injected_burst_detected": true
+      },
+      "missing_data_controls": {
+        "short_gap_finite_and_disclosed": true,
+        "long_gap": true,
+        "boundary_gap": true
       },
       "median_channel_rms_uv": 51.598533568937,
       "median_channel_alpha_uv2": 162.77362948300834,
@@ -104,6 +109,11 @@
         "injected_flatline_detected": true,
         "injected_burst_detected": true
       },
+      "missing_data_controls": {
+        "short_gap_finite_and_disclosed": true,
+        "long_gap": true,
+        "boundary_gap": true
+      },
       "median_channel_rms_uv": 50.330686678830034,
       "median_channel_alpha_uv2": 552.3212695149482,
       "sensitivity": {
@@ -169,6 +179,11 @@
       "quality_controls": {
         "injected_flatline_detected": true,
         "injected_burst_detected": true
+      },
+      "missing_data_controls": {
+        "short_gap_finite_and_disclosed": true,
+        "long_gap": true,
+        "boundary_gap": true
       },
       "median_channel_rms_uv": 51.94934529077583,
       "median_channel_alpha_uv2": 155.95304422260784,
@@ -236,6 +251,11 @@
         "injected_flatline_detected": true,
         "injected_burst_detected": true
       },
+      "missing_data_controls": {
+        "short_gap_finite_and_disclosed": true,
+        "long_gap": true,
+        "boundary_gap": true
+      },
       "median_channel_rms_uv": 25.718472391172742,
       "median_channel_alpha_uv2": 63.40817435869624,
       "sensitivity": {
@@ -301,6 +321,11 @@
       "quality_controls": {
         "injected_flatline_detected": true,
         "injected_burst_detected": true
+      },
+      "missing_data_controls": {
+        "short_gap_finite_and_disclosed": true,
+        "long_gap": true,
+        "boundary_gap": true
       },
       "median_channel_rms_uv": 28.110501348867444,
       "median_channel_alpha_uv2": 235.1191103855109,
@@ -368,6 +393,11 @@
         "injected_flatline_detected": true,
         "injected_burst_detected": true
       },
+      "missing_data_controls": {
+        "short_gap_finite_and_disclosed": true,
+        "long_gap": true,
+        "boundary_gap": true
+      },
       "median_channel_rms_uv": 21.948326092260196,
       "median_channel_alpha_uv2": 52.797727736974544,
       "sensitivity": {
@@ -433,6 +463,11 @@
       "quality_controls": {
         "injected_flatline_detected": true,
         "injected_burst_detected": true
+      },
+      "missing_data_controls": {
+        "short_gap_finite_and_disclosed": true,
+        "long_gap": true,
+        "boundary_gap": true
       },
       "median_channel_rms_uv": 53.90518772728365,
       "median_channel_alpha_uv2": 172.8115847713823,
@@ -500,6 +535,11 @@
         "injected_flatline_detected": true,
         "injected_burst_detected": true
       },
+      "missing_data_controls": {
+        "short_gap_finite_and_disclosed": true,
+        "long_gap": true,
+        "boundary_gap": true
+      },
       "median_channel_rms_uv": 52.2665818215014,
       "median_channel_alpha_uv2": 364.08240196612087,
       "sensitivity": {
@@ -565,6 +605,11 @@
       "quality_controls": {
         "injected_flatline_detected": true,
         "injected_burst_detected": true
+      },
+      "missing_data_controls": {
+        "short_gap_finite_and_disclosed": true,
+        "long_gap": true,
+        "boundary_gap": true
       },
       "median_channel_rms_uv": 51.23632488173609,
       "median_channel_alpha_uv2": 183.8316930994102,

@@ -23,7 +23,7 @@ using [SECURITY.md](SECURITY.md), not a public issue.
 Use Python 3.10+ and install `python -m pip install -e ".[dev,all]"`.
 Run `python -m pytest -ra`, `python benchmarks/verify.py --output local-results/verification.json`,
 `python -m compileall -q src app.py`, `python tools/check_docs.py`, and
-`python -m build`. MNE and Streamlit must be installed to run all 85 tests without
+`python -m build`. MNE and Streamlit must be installed to run all 107 development tests without
 optional skips. The core-only environment intentionally skips integration tests.
 Do not report tests as passing unless you ran them against the stated commit.
 Documentation changes do not need implementation-mirroring tests.
@@ -49,3 +49,7 @@ Maintainers may request a smaller reproduction, independent reference results,
 or clarification of a scientific assumption. Changes affecting interpretation
 should include an example of the previous and resulting behavior. Participation
 is governed by the [code of conduct](CODE_OF_CONDUCT.md).
+
+## Review and release gates
+
+Work on development branches and open a focused PR. Do not overwrite tags, force-push existing work, merge unverified changes, or publish without maintainer approval. Start with the [beginner issues and milestone acceptance criteria](ROADMAP.md). The real-data runner is opt-in; use outside-repository caches and never attach human recordings to an issue or PR. Changes to protocol cohorts/tolerances require a documented amendment, not silent result-dependent tuning.

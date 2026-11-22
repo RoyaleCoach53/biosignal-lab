@@ -1,90 +1,53 @@
-# PhysioNet EEGMMIDB human-data interoperability pilot
+# PhysioNet baseline interoperability pilot
 
-**Status: protocol and executable runner only. Human-data results have NOT yet been
-collected, independently reviewed, or accepted.** This is not a v1.0 clinical
-validation protocol. The work is intentionally isolated from the v0.2.0 release.
+**Development results collected; merge/release approval pending.** This branch
+preserves the original incoming pilot commits and the public v0.2.0 release.
+No independent external scientific or clinical validation is claimed.
 
-## Fixed data source and attribution
+## Frozen baseline protocol
 
-- PhysioNet **EEG Motor Movement/Imagery Database**, release **1.0.0**,
-  DOI **[10.13026/C28G6P](https://doi.org/10.13026/C28G6P)**.
-- Original contributors: Gerwin Schalk and colleagues, BCI R&D Program,
-  Wadsworth Center, New York State Department of Health, and the BCI2000 team.
-- Source: [PhysioNet EEGMMIDB](https://physionet.org/content/eegmmidb/1.0.0/).
-- Dataset terms: **Open Data Commons Attribution License v1.0**. These data do
-  not become MIT-licensed merely because the analysis code is MIT-licensed.
-  Check and preserve dataset attribution in downstream publications.
-- EDF+ recordings: **160 samples/second**; expected **64 EEG channels**.
-  Annotation/event labels are **not** treated as validated clinical labels.
+Subjects 001, 002, 003; runs 01 (eyes open) and 02 (eyes closed), six files.
+Use the full delivered recordings, 64 EEG channels, 160 Hz, original reference,
+mean removal only, no digital notch/high/low pass. Welch: four-second Hann,
+50% overlap, per-segment mean removal, density scaling. MNE and BioSignal Lab
+see identical processed samples for this narrow PSD cross-check.
 
-## Frozen selection (pilot; not representative of the entire population)
+Acceptance remains `abs(error) <= 1e-10 + 1e-7*abs(reference)` in µV²/Hz,
+with equal grids/shapes and finite nonnegative PSD values. All requested cases
+must pass; no file or channel is silently excluded. Current full baseline result:
+**6/6 passed**, with independent EDF unit errors below 1e-8 µV. See
+[baseline-results.json](real_world/baseline-results.json).
 
-Subjects **001, 002, 003**, each with run **01 (eyes open)** and run
-**02 (eyes closed)**, six files total. These are baseline recordings, not
-motor-imagery classification epochs. No participants, channels, or trials may
-be silently dropped. Missing or invalid files are recorded as failures;
-any later exclusion must be logged with a reason before reanalysis.
+## Review fixes
 
-## Processing and quantitative acceptance
-
-1. Read original EDF with MNE via BioSignal Lab `read_edf` and verify
-   EEG-only channel typing, 160 Hz sampling, 64 channels, finite amplitudes,
-   and sample count. Conversion from MNE volts to BioSignal Lab microvolts
-   is explicit.
-2. Retain the reference **as recorded**. The acquisition montage/reference
-   cannot be inferred from channel names alone; no automatic rereferencing
-   or montage interpretation is performed. BioSignal Lab removes channel means.
-   Disable notch, high-pass, and low-pass for this interoperability pilot.
-3. Use **4.0 s Hann Welch segments**, 50% overlap, constant detrending,
-   density scaling. Compare BioSignal Lab output in **µV²/Hz** to
-   `mne.time_frequency.psd_array_welch` on the **identical processed samples**,
-   with reference PSD converted from V²/Hz by multiplying by 10^12.
-4. **Pass:** every requested file is present; metadata invariants hold;
-   PSD frequency grids/shapes match; all PSD values are finite; for every
-   compared frequency/channel bin, `abs(error) <= 1e-10 + 1e-7*abs(reference)`
-   in µV²/Hz. A nonzero failing-bin count fails the case and total run.
-5. Report dataset URL/DOI, original EDF **SHA-256**, subjects and run IDs,
-   sampling rate, channel labels, processing parameters, library versions,
-   error magnitudes, warnings, and pass/fail results. No person-level
-   diagnostic inference, significance testing, classifier metric, or effect
-   direction is inferred from these six files.
-
-**Important independence limitation:** both methods operate on the same
-processed array; the MNE implementation and BioSignal Lab/SciPy may share
-numerical routines. Agreement is therefore an **interoperability and units
-check**, NOT independent ground-truth verification, external peer review,
-proof of physiological validity, or a sensitivity/specificity estimate.
-
-## Reproduce (opt-in external download)
-
-From a clean checkout on Python 3.10+:
+The original script's six cases passed its narrow check before hardening. Review
+found gaps in official-hash verification, input-unit independence, cohort selection,
+negative PSD validation, download/configuration coupling and path disclosure.
+The fixed runner verifies pinned official hashes before import, independently
+decodes digital EDF scaling, restricts to the declared cohort, rejects negative
+PSD, labels partial selections, keeps caches outside the checkout and redacts
+local paths from failure reports. Download remains explicitly opt-in.
 
 ```sh
 python -m pip install -e ".[dev,all]"
-python -m pytest -ra
-python tools/physionet_pilot.py --download --subjects 1 2 3 --runs 1 2 --output local-results/physionet-pilot.json
+python tools/physionet_pilot.py --download --subjects 1 2 3 --runs 1 2 --data-dir ../biosignal-lab-data --output local-results/baseline.json
 ```
 
-The runner **never downloads without `--download`**. Cached EDFs may instead
-be placed under `local-results/physionet-cache/` (nested directories are
-searched for files like `S001R01.edf`). A failure exits nonzero and emits
-a machine-readable JSON report. Raw recordings and reports stay in
-`local-results/` and are excluded by `.gitignore`; review manually before
-sharing any case metadata. Do not publish EDF files or participant-derived
-samples as part of this code repository.
+Older nested MNE caches remain readable if exactly one correctly hashed file is
+found. Unpinned subjects are deliberately unsupported by this frozen pilot;
+extend the manifest/protocol through a reviewed change rather than silently
+changing the cohort. The default cache moved outside the repository for privacy.
 
-## Requirements for further research claims
+## Expanded protocol and limits
 
-- Review the acquisition reference, electrode metadata, annotations, and
-  EDF channel types against primary dataset documentation.
-- Add fully specified, independently implemented spectral references and
-  blind review of any disagreements; account for band edges and filters.
-- For artifact-detection accuracy, obtain independent human annotations and
-  define event matching and uncertainty intervals *before* evaluating.
-- For cross-subject claims, freeze a subject-disjoint split, report
-  per-subject metrics and uncertainty, and prevent preprocessing leakage.
-- Obtain independent biomedical-signal-processing review before any
-  scientific validity language is promoted into the README or release notes.
+The separately predeclared nine-file protocol adds run 04 and uses only the first
+60 seconds, default filtering, independent EDF scaling, explicitly matched MNE
+filters, independent band integration, channel metrics and parameter sensitivity.
+It does not alter the baseline's filter-free full-recording protocol. See
+[the complete report](real_world/REPORT.md), including the non-equivalence finding
+for MNE-native padding, [reproduction](../examples/real_eeg_walkthrough.md), and
+[license/attribution](real_world/DATA_LICENSE.md).
 
-Until then, the project remains research/education software, with no
-diagnostic, clinical, regulatory, or real-time safety-critical capability.
+MNE and SciPy share numerical routines; technical agreement is not independent
+physiological truth. No artifact sensitivity/specificity, human EMG validation,
+clinical outcome, hardware calibration, or external peer review is established.

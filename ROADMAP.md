@@ -1,34 +1,46 @@
-# Roadmap
+# Roadmap and acceptance criteria
 
-## Released in v0.2.0
+Current published release: **v0.2.0 Research Alpha**. Proposed v0.3.0 development
+work is submitted for review; merging and publishing require maintainer approval.
+No milestone is completed solely because a test counter is green.
 
-Local CSV/optional EDF analysis, EEG/EMG defaults, spectral and descriptive metrics,
-Streamlit dashboard, CLI and reports, synthetic samples, reproduced original tests,
-release regressions, executable benchmarks, CI, and provenance records.
+| Milestone | Scope and evidence required |
+| --- | --- |
+| v0.3.0 | Reproducible real-EEG technical interoperability pilot, official hashes/attribution, matched MNE references, retained failures/sensitivity, regression coverage, Windows/Linux CI, reviewed PR and explicit release approval |
+| v0.4.0 | Broader corrupted/mixed-rate/metadata fixtures, stronger input/resource bounds, band-edge and interpolation studies, configuration-driven analysis workflows |
+| v0.5.0 | Student/researcher usability evaluation, accessible keyboard workflows, better comparison/export UI, reviewed educational tutorials |
+| v0.6.0 | Declared performance/memory workloads and budgets, chunking/scaling proposals, repeatable measurements on specified hardware |
+| v0.7.0 | Additional appropriately licensed datasets and acquisition systems, documented EDF/BDF/reference interoperability matrix |
+| v0.8.0 | Independent qualified signal-processing/software review with public findings and responses; unresolved scientific assumptions remain visible |
+| v0.9.0 | API/CLI compatibility freeze candidate, migration/deprecation policy, packaging/security release rehearsal, documentation and reproducibility audit |
+| v1.0.0 | Stable research-software acceptance checklist below, reviewed evidence, and explicit maintainer approval |
 
-## Next: independent research evidence
+## v1.0.0 acceptance checklist — not yet satisfied
 
-1. Freeze a task-specific protocol and evaluate an appropriately licensed public
-   human dataset. Record channel typing, references, preprocessing, and exclusions.
-2. Compare measurements with matched-setting reference tools and publish failures.
-3. Obtain independent annotations before reporting artifact detection sensitivity,
-   precision, confidence intervals, or cross-subject generalization.
-4. Request review from signal-processing and biomedical engineering researchers.
+- Document supported OS/Python versions and run clean-install, unit, integration,
+  numerical, failure-path, and package tests on that matrix.
+- Establish reproducible interoperability benchmarks across more than one
+  acquisition source/dataset; preserve full protocols, exclusions and failures.
+- Obtain independent qualified external review of numerical methods and data
+  handling, and resolve or explicitly bound material findings.
+- Define public API/CLI behavior, compatibility policy, processing metadata,
+  reproducibility limits and a changelog/release process.
+- Define performance and peak-memory budgets for specific workloads/hardware,
+  measure them, and document out-of-memory and unsupported-input behavior.
+- Complete a licensing/privacy/security review, avoid known unmitigated high-risk
+  dependency findings, and establish usable reporting and maintenance policies.
+- Exercise documentation/tutorials with students and researchers; address
+  demonstrated usability/accessibility failures and document known limits.
+- Obtain explicit approval for the stable research release after reviewing the
+  acceptance evidence. Clinical validation, medical-device approval and diagnostic
+  accuracy are separate matters and are not implied by v1.0.0.
 
-## Usability and engineering
+## Beginner contributions
 
-- Raw-versus-processed PSD and line-noise comparisons.
-- Better acquisition/reference metadata, EDF variant coverage, and BIDS-style exports.
-- Explicit CLI controls to disable each filter and load a configuration file.
-- Streaming/chunked analysis and documented memory/resource budgets.
-- Additional accessibility checks and educational notebooks on leakage and aliasing.
+- [PSD units and resolution glossary — #1](https://github.com/RoyaleCoach53/biosignal-lab/issues/1)
+- [Keyboard walkthrough — #2](https://github.com/RoyaleCoach53/biosignal-lab/issues/2)
+- [Synthetic CSV units tutorial — #3](https://github.com/RoyaleCoach53/biosignal-lab/issues/3)
 
-## Genuine adoption
-
-Publish a short reproducible tutorial, ask a few students and laboratories to try
-one concrete workflow, turn their friction into focused issues, and review small
-contributions promptly. Track independently reproduced results and solved user
-problems alongside repository activity. Avoid unsupported impact or clinical claims.
-
-No medical diagnostics or safety-critical control is planned. Dates, external
-program acceptance, grants, and community interest are not guaranteed.
+Each issue has a small scope, acceptance criteria and an offline synthetic start.
+Further scientific work should prioritize an acquisition/reference audit and
+independent annotations before any artifact-performance or physiological claim.

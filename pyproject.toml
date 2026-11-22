@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "biosignal-lab"
-version = "0.3.0"
+version = "0.3.0.dev0"
 description = "Local-first, reproducible EEG/EMG signal quality and spectral analysis for education and research"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -49,7 +49,7 @@
 
 ## Unvalidated domains
 
-- No independently acquired human EEG/EMG dataset has yet been run through this release.
+- The proposed v0.3 development pilot evaluates a small public PhysioNet EEG subset for technical interoperability only; no real EMG or independent physiological/clinical validation is established.
 - No device hardware calibration, analog antialias verification, electrode impedance evaluation, reference montage verification, or inter-device synchronization verification.
 - No clinically annotated artifact labels, blinded expert assessment, statistical performance confidence intervals, classification accuracy, real-time safety evaluation or medical device regulatory review.
 - Do not use it to assess seizures, abnormal EEG, neurological diagnoses, muscle disease, patient treatment or BCI safety-critical control.
@@ -66,3 +66,7 @@
 8. PhysioNet EEG Motor Movement/Imagery database (future independent validation): https://physionet.org/content/eegmmidb/1.0.0/
 9. PhysioNet Sleep-EDF Expanded (future independent validation): https://physionet.org/content/sleep-edfx/1.0.0/
 10. Welch, P. D. (1967), IEEE Transactions on Audio and Electroacoustics, 15(2), 70–73.
+
+## Explicit development-policy metadata
+
+The proposed v0.3 exports software versions, mean-removal status and odd-reflection padding: 9 samples for the notch, 15 for a single fourth-order high/low-pass, and 27 for the combined band-pass. These match the prior SciPy defaults; processing defaults are not silently changed. The [real-data report](real_world/REPORT.md) documents the comparison with independently configured MNE and the material effect of changing padding policy. Raw channel metrics and raw PSD are available separately from processed results.

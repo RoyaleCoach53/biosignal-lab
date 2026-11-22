@@ -26,13 +26,13 @@ relicense third-party packages or future external datasets.
 
 ```sh
 python -m pip install --upgrade pip pip-audit
-python -m pip_audit --local --format json --output dependency-audit.json
+python -m pip_audit --local --skip-editable --format json --output dependency-audit.json
 ```
 
 After updating the review environment's pip from 25.0.1 to 26.3, the final check
 audited **78 installed distributions and found zero known vulnerability entries**.
-The local `biosignal-lab` package was skipped by the advisory database because
-it is not published on PyPI; its source was reviewed separately. The initial
+The editable development package was intentionally omitted with `--skip-editable`;
+its source was reviewed separately, and no PyPI publication is claimed. The initial
 findings concerned the environment's pip, not an application runtime dependency.
 
 The full machine-readable record is [DEPENDENCY_AUDIT.json](DEPENDENCY_AUDIT.json).

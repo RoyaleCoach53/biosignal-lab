@@ -30,6 +30,10 @@ jobs:
         run: python tools/check_publication.py
       - name: Download official checksum-pinned subset and validate all nine records
         run: python benchmarks/real_world/validate.py --download --cache "${{ runner.temp }}/eegbci" --output ci-results/real-world.json
+      - name: Existing six-record baseline pilot and synthetic performance record
+        run: |
+          python tools/physionet_pilot.py --data-dir "${{ runner.temp }}/eegbci" --output ci-results/baseline-pilot.json
+          python benchmarks/performance.py --output ci-results/performance.json
       - name: Check installed dependencies for known advisories
         run: python -m pip_audit --local --skip-editable --format json --output ci-results/dependency-audit.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
