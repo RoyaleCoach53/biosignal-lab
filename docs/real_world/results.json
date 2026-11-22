@@ -658,5 +658,13 @@
   ],
   "failures": [],
   "passed": true,
-  "interpretation": "Small convenience subset; computational consistency on real EEG, not clinical validation, artifact-classifier performance, or population inference. Task runs include both rest and task intervals; no event-level model. No real EMG validation."
+  "interpretation": "Small convenience subset; computational consistency on real EEG, not clinical validation, artifact-classifier performance, or population inference. Task runs include both rest and task intervals; no event-level model. No real EMG validation.",
+  "software_source_sha256": {
+    "benchmarks/real_world/validate.py": "7d6ead3f66660bef74d9477cba506d1cca57c830d23a79e540d04dd094e269c5",
+    "src/biosignal_lab/io.py": "a7dea358b8cc613ac375c3d8488f255b4c1a355d0b5a704c67081d38ada7409e",
+    "src/biosignal_lab/analysis.py": "6b03b6bab668b0444502afa6613ff5f3670058645e0b510c25d9488ee0fa3d9f",
+    "src/biosignal_lab/preprocessing.py": "050d5582ff13da9c0fd4d3ee666776a859ae3df76629e698c01b7e2f8c0be384",
+    "src/biosignal_lab/pipeline.py": "cc131438d1e321bb14bd8a482213bf519937843a0f4a27b0380d66c0e2c6acea",
+    "src/biosignal_lab/models.py": "b7c1a75214b398c775129c86afd01508c743455822b4e170f2587779e6fd3b32"
+  }
 }

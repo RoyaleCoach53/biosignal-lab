@@ -131,6 +131,10 @@ The recorded environment is Python 3.12.14, MNE 1.13.2, NumPy 2.5.5 and SciPy 1.
 Reports include exact versions, protocol/manifest hashes and settings. No metadata
 for acquisition reference, sensor calibration or physiology is invented.
 
+The JSON also records hashes of the benchmark and core processing source files;
+the baseline report records runner/decoder hashes. These avoid reliance on a
+moving branch name or a development version string for code provenance.
+
 ## Review of the three incoming research files
 
 The incoming branch's three commits are preserved by a merge into this development

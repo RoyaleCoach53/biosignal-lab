@@ -31,7 +31,7 @@ approval, or safety-critical control is provided. Quality flags are review aids.
 Use Python 3.10 or newer. Clone this repository and create a virtual environment:
 
 ```sh
-git clone https://github.com/RoyaleCoach53/biosignal-lab.git
+git clone --branch research/physionet-validation-v03 https://github.com/RoyaleCoach53/biosignal-lab.git
 cd biosignal-lab
 python -m venv .venv
 ```

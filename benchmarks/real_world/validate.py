@@ -275,6 +275,12 @@ def run(cache: Path, download: bool, output: Path):
               "records": records, "failures": failures,
               "passed": len(records) == 9 and not failures and all(x["passed"] for x in records),
               "interpretation": protocol["interpretation"]}
+    source_root = HERE.parents[1]
+    source_files = ["benchmarks/real_world/validate.py", "src/biosignal_lab/io.py",
+                    "src/biosignal_lab/analysis.py", "src/biosignal_lab/preprocessing.py",
+                    "src/biosignal_lab/pipeline.py", "src/biosignal_lab/models.py"]
+    report["software_source_sha256"] = {name: hashlib.sha256((source_root / name).read_bytes()).hexdigest()
+                                        for name in source_files}
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, allow_nan=False)+"\n", encoding="utf-8", newline="\n")
     return report

@@ -1,5 +1,7 @@
 {
   "schema_version": 1,
+  "runner_sha256": "73cf823eafb7680f26e05c29c0710fa16991fed6f123febb3f21868347211c0d",
+  "independent_decoder_source_sha256": "7d6ead3f66660bef74d9477cba506d1cca57c830d23a79e540d04dd094e269c5",
   "protocol": "PhysioNet EEGMMIDB eyes-open/eyes-closed baseline interoperability pilot",
   "dataset": "https://physionet.org/content/eegmmidb/1.0.0/",
   "doi": "10.13026/C28G6P",

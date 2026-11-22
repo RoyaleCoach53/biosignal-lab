@@ -196,6 +196,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     payload = {
         "schema_version": 1,
+        "runner_sha256": sha256_file(Path(__file__)),
+        "independent_decoder_source_sha256": sha256_file(REPOSITORY / "benchmarks/real_world/validate.py"),
         "protocol": "PhysioNet EEGMMIDB eyes-open/eyes-closed baseline interoperability pilot",
         "dataset": DATASET_URL,
         "doi": DATASET_DOI,

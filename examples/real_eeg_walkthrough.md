@@ -5,9 +5,13 @@ See [the report](../docs/real_world/REPORT.md) and [data terms](../docs/real_wor
 
 ## Prepare
 
-Use Python 3.10+ and a virtual environment; from the development checkout:
+Use Python 3.10+ and a virtual environment; check out the proposed development branch:
 
 ```sh
+git clone --branch research/physionet-validation-v03 https://github.com/RoyaleCoach53/biosignal-lab.git
+cd biosignal-lab
+python -m venv .venv
+# Activate .venv for your shell before installing:
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev,all]"
 python -m pytest -ra
@@ -33,6 +37,10 @@ Do not place human recordings inside the repository or upload them to GitHub.
 errors. A failure is not silently removed. The baseline retains full recordings;
 the expanded protocol analyzes the first 60 seconds. Their outputs answer different
 questions and should not be pooled as independent participants.
+
+The expanded JSON records hashes of its runner and core processing source files;
+the baseline records runner/decoder hashes. These bind the recorded results to
+exact source content, in addition to the protocol and dataset hashes.
 
 The primary comparison matches filter padding and Welch parameters explicitly.
 The separate `mne_native_padding` results show that changing edge policy can make
