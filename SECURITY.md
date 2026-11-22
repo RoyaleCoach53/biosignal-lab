@@ -7,7 +7,7 @@ preparation, and v0.2.0 is not a supported clinical or production release.
 
 ## Reporting a vulnerability
 
-Use GitHub's private vulnerability reporting interface, when enabled, at:
+Private vulnerability reporting is enabled for this repository. Use:
 
 https://github.com/RoyaleCoach53/biosignal-lab/security/advisories/new
 

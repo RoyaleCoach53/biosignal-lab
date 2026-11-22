@@ -18,7 +18,9 @@ were newly authored for publication preparation.
 | Dependency and source security audit | Pending original source |
 | Clinical validation | Not established |
 | MIT license and community documentation | Prepared for new repository material |
-| Documentation-only CI | Prepared; checks local Markdown links only |
+| Documentation-only CI | First public run passed; checks local Markdown links only |
+| Private vulnerability reporting | Enabled |
+| Dependency graph and Dependabot alerts | Enabled; original application dependencies remain unavailable |
 | Installable software, original examples, and sample data | Pending recovery and review |
 | Implementation CI and reproducible benchmarks | Pending verified test and execution commands |
 | v0.2.0 tag and GitHub release | Withheld until validation passes |
