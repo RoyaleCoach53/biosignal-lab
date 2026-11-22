@@ -1,0 +1,19 @@
+{
+  "protocol_version": "1.0",
+  "registered_date": "2026-11-22",
+  "dataset": "PhysioNet EEG Motor Movement/Imagery Dataset 1.0.0",
+  "dataset_url": "https://physionet.org/content/eegmmidb/1.0.0/",
+  "license_url": "https://physionet.org/content/eegmmidb/view-license/1.0.0/",
+  "subjects": [1, 2, 3],
+  "runs": {"1": "eyes_open_baseline", "2": "eyes_closed_baseline", "4": "left_right_fist_motor_imagery_run"},
+  "analysis_seconds": 60,
+  "channels": "all 64 EEG channels; original reference retained",
+  "primary_config": {"highpass_hz": 0.1, "lowpass_hz": null, "notch_hz": 50.0, "notch_quality": 30.0, "window_s": 4.0},
+  "reference": "Independent EDF digital-to-physical decoding; explicitly configured MNE IIR filtering and Welch; independent piecewise-linear band integration. Shared SciPy numerical routines are acknowledged.",
+  "primary_tolerances": {"units_max_abs_uv": 1e-8, "waveform_relative_l2": 1e-7, "psd_relative_l2": 1e-7, "band_relative_error": 1e-6, "rounded_qc_max_abs_uv": 0.000051},
+  "sensitivity": {"welch_windows_s": [2, 4, 8], "filter_profiles": ["highpass_1hz", "lowpass_40hz", "no_notch", "mne_native_padding"], "edge_exclusion_s": 5},
+  "gates": ["9/9 recordings complete; no post-hoc exclusions", "64 channels and 160 Hz verified", "finite processed samples, PSD, RMS and band powers", "all primary numerical tolerances pass", "raw files absent from repository and release"],
+  "not_gates": ["eyes-closed alpha must exceed eyes-open", "artifact flag count", "agreement between different preprocessing policies"],
+  "interpretation": "Small convenience subset; computational consistency on real EEG, not clinical validation, artifact-classifier performance, or population inference. Task runs include both rest and task intervals; no event-level model. No real EMG validation.",
+  "publication": "Only hashes, protocol, and derived summary statistics are published with dataset attribution; no human waveforms, EDF headers, annotations, or recordings."
+}
