@@ -5,10 +5,10 @@ See [the report](../docs/real_world/REPORT.md) and [data terms](../docs/real_wor
 
 ## Prepare
 
-Use Python 3.10+ and a virtual environment; check out the proposed development branch:
+Use Python 3.10+ and a virtual environment; check out the fixed Research Alpha tag:
 
 ```sh
-git clone --branch research/physionet-validation-v03 https://github.com/RoyaleCoach53/biosignal-lab.git
+git clone --branch v0.3.0 https://github.com/RoyaleCoach53/biosignal-lab.git
 cd biosignal-lab
 python -m venv .venv
 # Activate .venv for your shell before installing:

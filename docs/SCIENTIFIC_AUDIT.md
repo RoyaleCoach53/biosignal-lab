@@ -1,14 +1,15 @@
-# Scientific/software review — proposed v0.3.0
+# Scientific/software review — v0.3.0 Research Alpha
 
-This development candidate is not released or merged. The published v0.2.0 tag
-and source remain unchanged. Historical v0.2 release evidence is preserved in
+The real-data pilot was reviewed and merged in [PR #4](https://github.com/RoyaleCoach53/biosignal-lab/pull/4).
+Release checks are repeated after finalizing metadata as version 0.3.0. The v0.2.0
+tag and source remain unchanged. Historical v0.2 release evidence is preserved in
 [the archived audit](archive/SCIENTIFIC_AUDIT_v0.2_release.md) and
 [measurements](archive/VERIFICATION_RESULTS_v0.2_release.json).
 
 ## Actual evidence
 
 - The original 73-test archive baseline was previously reproduced before v0.2 fixes.
-- Current development suite: **107 passed, 0 failed, 0 skipped** locally.
+- v0.3.0 suite: **107 passed, 0 failed, 0 skipped** locally.
 - Synthetic mathematical benchmark: **12/12 checks passed**.
 - Existing six-record no-filter baseline: **6/6 passed**, now with official hashes
   and independent EDF scaling checks.
@@ -31,7 +32,8 @@ Human recordings remain outside the repository and are checked against official
 hashes before decoding. Reports contain derived summaries and attribution, not
 waveforms or personal headers. Automated publication checks reject recording
 formats, unapproved CSVs and common credential patterns. Dependency advisories,
-clean packaging and CI are checked for the PR, with evidence in its Checks view.
+clean packaging and CI are checked on the release source, with per-environment
+evidence in GitHub Actions and the [release verification record](RELEASE_VERIFICATION_v0.3.0.json).
 No unrelated private-project code is used.
 
 This is an AI-assisted engineering review, not independent external peer review,

@@ -2,8 +2,8 @@
 
 ## What was verified
 
-The original 73 automated tests were reproduced before changes. The release's
-107-test development suite and 12 benchmark checks cover specified synthetic inputs, parsers,
+The original 73 automated tests were reproduced before changes. The v0.3.0
+107-test suite and 12 benchmark checks cover specified synthetic inputs, parsers,
 mathematical targets, matched-setting reference calculations, and dashboard flows.
 See [the audit](SCIENTIFIC_AUDIT.md) and [methods](METHODS.md).
 

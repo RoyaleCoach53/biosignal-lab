@@ -31,8 +31,8 @@ st.title("🧠 BioSignal Lab")
 st.caption("Open-source EEG/EMG analysis · Local-first · Reproducible · Research & education only")
 st.warning("Not a medical device. No diagnosis, seizure detection or clinical decisions. Do not upload personal clinical recordings to a hosted copy.")
 with st.expander("Scientific validation scope"):
-    st.write("The proposed v0.3 pilot checks computational consistency on nine PhysioNet EEG recordings from three participants. It does not establish clinical approval, artifact detection accuracy, or validation on real EMG.")
-    doc_ref = "research/physionet-validation-v03" if ".dev" in __version__ else "main"
+    st.write("The v0.3 Research Alpha pilot checks computational consistency on nine PhysioNet EEG recordings from three participants. It does not establish clinical approval, artifact detection accuracy, or validation on real EMG.")
+    doc_ref = "main" if ".dev" in __version__ else f"v{__version__}"
     st.markdown(f"[Read the protocol, results, and limitations](https://github.com/RoyaleCoach53/biosignal-lab/blob/{doc_ref}/docs/real_world/REPORT.md)")
 
 with st.sidebar:

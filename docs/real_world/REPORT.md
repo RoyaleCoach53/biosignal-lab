@@ -1,7 +1,7 @@
-# Real EEG technical interoperability pilot — proposed v0.3.0
+# Real EEG technical interoperability pilot — v0.3.0 Research Alpha
 
-**Development evidence, not a published v0.3 release.** The public v0.2.0 release
-is preserved. Merge and release require maintainer approval. This is an
+**Research Alpha evidence.** The pilot was reviewed and merged in PR #4;
+the public v0.2.0 release is preserved. This is an
 AI-assisted software/numerical review, not independent external scientific review.
 
 ## Attribution and data rights
