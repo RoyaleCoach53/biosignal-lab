@@ -113,8 +113,8 @@ microvolts internally. See `biosignal-lab analyze --help` for filter overrides.
 The original archive's **73 tests were reproduced unchanged before release fixes**.
 The v0.3.0 suite has **107 passing tests locally with no skips**;
 the v0.2.0 release had 85. The incoming research branch and its original tests are preserved.
-This adoption branch adds nine offline onboarding/privacy/compatibility controls
-for **116 local passes**; current CI is authoritative for the reviewed commit.
+This adoption branch adds ten offline onboarding/privacy/compatibility controls
+for **117 local passes**; current CI is authoritative for the reviewed commit.
 The test suite includes a generated mixed EEG/EMG EDF file and a matched-setting
 MNE PSD comparison. A separate benchmark command passes **12 numerical checks**.
 

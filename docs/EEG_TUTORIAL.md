@@ -80,8 +80,16 @@ redistributed. Attribution accompanies the report/figure. See [data rights](real
 
 ## Reproduce, then challenge the interpretation
 
-Run the same command again without `--download`; it must reuse only valid cached
-data. Compare record/protocol/runner hashes, configuration and numerical errors,
+Use a new output directory for the offline rerun:
+
+```sh
+python examples/eeg_tutorial.py --cache ../biosignal-lab-data --output local-results/eeg-tutorial-offline
+```
+
+It must reuse only valid cached data. A nonempty output directory is rejected
+before fetching; existing files are preserved so a failed attempt cannot quietly
+reuse a prior success report. Choose a new directory for every subsequent attempt.
+Compare record/protocol/runner hashes, configuration and numerical errors,
 not OS text or generated image bytes across arbitrary Matplotlib versions.
 Keep tolerances fixed. A failure is useful evidence; do not remove the record or
 relax the tolerance to make it pass.

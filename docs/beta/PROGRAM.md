@@ -61,6 +61,8 @@ when the participant is ready; record installation/download time separately.
    Optional EDF availability may be false until tutorial dependencies are installed.
 4. **Public EEG:** install `.[tutorial]`; run the exact [EEG lesson](../EEG_TUTORIAL.md)
    with S001R01/channel 0 and an outside-checkout cache. Run it again offline.
+   Use separate new output directories for first/offline/retry attempts; existing
+   nonempty directories are intentionally rejected to prevent stale success reports.
    Inspect PSD/band units and matched-reference errors. Do not add files/channels
    or change tolerances to turn a failure into a pass.
 5. **Accessibility/understanding:** use keyboard navigation and 150% zoom, report
