@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — adoption and beta preparation
+
+- Added a five-minute post-install student exercise, executable checksum-pinned EEG/MNE lesson and real synthetic-dashboard screenshots.
+- Added offline first-use diagnostics, reproducible clean-environment audit tooling and Windows/Linux first-use CI.
+- Replaced deprecated Streamlit width arguments on current APIs and added supported chart/table descriptions, retaining an older-API fallback. No processing defaults changed.
+- Added nine offline regression controls, a five-person beta protocol, privacy-aware feedback/reproduction issue forms and an evidence-ranked v0.4 roadmap.
+- Community audiences researched; outreach drafts remain private and unsent pending owner approval. No independent users or beta outcomes are claimed. No official release is created by these changes.
+
 ## 0.3.0 — 2026-11-23 — Research Alpha
 
 - Preserved and critically reviewed the incoming six-record PhysioNet pilot; added official hash, independent EDF scaling, cohort, negative PSD and privacy protections.
