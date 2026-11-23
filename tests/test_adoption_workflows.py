@@ -63,3 +63,16 @@ def test_tutorial_reference_failure_cannot_export_a_pass(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="Reference gates failed"):
         eeg_tutorial.run(tmp_path / "cache", output)
     assert not output.exists()
+
+
+def test_tutorial_refuses_stale_output_before_fetching_and_preserves_files(tmp_path, monkeypatch):
+    pytest.importorskip("mne")
+    from examples import eeg_tutorial
+    output = tmp_path / "previous"
+    output.mkdir()
+    previous = output / "tutorial-summary.json"
+    previous.write_text('{"passed": true}')
+    monkeypatch.setattr(eeg_tutorial, "fetch_record", lambda *a, **k: pytest.fail("Fetch reached before stale-output guard"))
+    with pytest.raises(ValueError, match="new or empty"):
+        eeg_tutorial.run(tmp_path / "cache", output)
+    assert previous.read_text() == '{"passed": true}'

@@ -61,6 +61,8 @@ def plot_comparison(result, frequencies, reference, reference_bands, channel, re
 def run(cache: Path, output: Path, record_id="S001R01", channel=0, download=False):
     if cache.resolve().is_relative_to(ROOT):
         raise ValueError("Keep the recording cache outside the checkout")
+    if output.exists() and (not output.is_dir() or any(output.iterdir())):
+        raise ValueError("Choose a new or empty output directory to avoid stale reports")
     folder = ROOT / "benchmarks/real_world"
     manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
     protocol = json.loads((folder / "protocol.json").read_text(encoding="utf-8"))
@@ -117,7 +119,7 @@ def main(argv=None):
     try:
         report = run(args.cache, args.output, args.record, args.channel, args.download)
     except (OSError, ValueError, RuntimeError) as exc:
-        parser.exit(1, f"{type(exc).__name__}: tutorial input or reference checks failed. Verify the pinned ID, outside-checkout cache, checksum and --download option.\n")
+        parser.exit(1, f"{type(exc).__name__}: tutorial input or reference checks failed. Verify the pinned ID, outside-checkout cache, checksum, --download and a new/empty --output directory.\n")
     print(f"{report['recording_id']}: matched-reference gates passed; derived plot and tutorial-summary.json written.")
     return 0
 
