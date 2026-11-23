@@ -2,5 +2,5 @@
 from .models import Recording, AnalysisConfig, AnalysisResults
 from .pipeline import analyze
 
-__version__ = "0.2.0"
+from ._version import __version__
 __all__ = ["Recording", "AnalysisConfig", "AnalysisResults", "analyze"]

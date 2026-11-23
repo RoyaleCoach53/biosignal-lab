@@ -11,7 +11,7 @@ python benchmarks/verify.py --output local-results/verification.json
 ```
 
 The suite retains the original 73 tests and adds 12 release regressions. Install
-both MNE and Streamlit to run all 85 tests without optional skips. The benchmark
+both MNE and Streamlit to run all 107 development tests without optional skips. The benchmark
 requires MNE and records the environment rather than silently omitting its comparison.
 
 ## Twelve benchmark checks
@@ -48,3 +48,7 @@ dependencies and compare numerical tolerances, not timings or bit-identical outp
 The tests include generated EDF formatting, CSV timebase consistency, unit scaling,
 filter attenuation, missing-gap handling, artifact controls, spectrogram localization,
 and coherence controls. Shared SciPy/MNE numerical dependencies limit independence.
+
+## Real EEG and performance development benchmarks
+
+See [the expanded protocol/report](../docs/real_world/REPORT.md), [the preserved baseline protocol](../docs/HUMAN_DATA_PILOT.md), and [the walkthrough](../examples/real_eeg_walkthrough.md). `python benchmarks/performance.py --output local-results/performance.json` records three synthetic in-memory workloads, with one warm-up, three timed/traced runs and clear allocator-peak limits. These are not process-RSS measurements or clinical benchmarks.

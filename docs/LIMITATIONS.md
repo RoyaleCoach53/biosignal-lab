@@ -3,13 +3,13 @@
 ## What was verified
 
 The original 73 automated tests were reproduced before changes. The release's
-85-test suite and 12 benchmark checks cover specified synthetic inputs, parsers,
+107-test development suite and 12 benchmark checks cover specified synthetic inputs, parsers,
 mathematical targets, matched-setting reference calculations, and dashboard flows.
 See [the audit](SCIENTIFIC_AUDIT.md) and [methods](METHODS.md).
 
 ## What remains unvalidated
 
-- No independently acquired human EEG/EMG dataset evaluation.
+- Only a small public PhysioNet EEG technical-interoperability pilot is evaluated; no real EMG study or independent physiological validation.
 - No diagnostic accuracy, seizure detection, patient safety, or regulatory evidence.
 - No artifact sensitivity/specificity, expert labels, or population generalization.
 - No acquisition hardware calibration, analog anti-alias verification, or montage assessment.
@@ -44,3 +44,7 @@ on the server running the application; a hosted copy does not have local privacy
 
 Do not use BioSignal Lab to make diagnosis, treatment, emergency-care, or
 safety-critical control decisions.
+
+## Real-data finding
+
+The [nine-record report](real_world/REPORT.md) shows material differences with MNE-native padding even after trimming. Matched-policy numerical agreement is not a claim that different defaults are interchangeable or physiologically optimal. The three-subject convenience subset supports no population, diagnostic, motor-imagery or artifact-classification inference.

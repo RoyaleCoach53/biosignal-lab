@@ -51,6 +51,9 @@ def analyze(recording: Recording, config: AnalysisConfig | None = None) -> Analy
     # detection; we never silently interpret missing samples as 'clean'.
     raw_filled, _ = fill_short_gaps(recording.data_uv, config.max_missing_fraction,
                                     max_gap_samples=int(recording.sfreq * config.max_gap_s))
+    raw_freqs, raw_psd = compute_psd(raw_filled, recording.sfreq, config.window_s)
+    raw_qc = quality_metrics(raw_filled, recording.sfreq, recording.channels,
+                             raw_freqs, raw_psd, config.flatline_tolerance_uv)
     artifacts = detect_artifacts(raw_filled, recording.sfreq, recording.channels,
                                  window_s=min(config.artifact_window_s, recording.duration_s),
                                  threshold_mad=config.artifact_threshold_mad,
@@ -74,8 +77,12 @@ def analyze(recording: Recording, config: AnalysisConfig | None = None) -> Analy
             warnings.append("EEG Welch window <4 s: low-delta (<1 Hz) estimates are particularly sensitive to spectral resolution and band-edge leakage")
         if recording.duration_s < 10:
             warnings.append("Short EEG recording <10 s: low-frequency filter transients and PSD estimates require caution")
+        if config.highpass_hz is not None and config.highpass_hz < .5:
+            warnings.append("Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal")
     if config.notch_hz is not None:
         warnings.append("Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference")
     if any("flatline" in b["reason"] for b in artifacts):
         warnings.append("Possible flatline segments detected: review electrodes, acquisition and recordings")
-    return AnalysisResults(recording, clean, freqs, psd, qc, bands, artifacts, warnings, config)
+    return AnalysisResults(recording, clean, freqs, psd, qc, bands, artifacts, warnings, config,
+                           raw_frequencies_hz=raw_freqs, raw_psd_uv2_per_hz=raw_psd,
+                           raw_channel_metrics=raw_qc)

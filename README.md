@@ -7,8 +7,9 @@
 
 Inspect recordings, compare raw and filtered signals, examine spectral content,
 and export reproducible summaries without an API key or cloud account.
-Version **0.2.0 is an alpha research release**, with synthetic numerical checks
-and explicit scientific limitations. It is not a clinically validated system.
+**Development branch: proposed v0.3.0 (0.3.0.dev0), review pending.** The current
+public release remains **v0.2.0 Research Alpha**. This work adds a real-EEG
+technical interoperability pilot; it does not establish clinical validation.
 
 ## What you can do
 
@@ -30,7 +31,7 @@ approval, or safety-critical control is provided. Quality flags are review aids.
 Use Python 3.10 or newer. Clone this repository and create a virtual environment:
 
 ```sh
-git clone https://github.com/RoyaleCoach53/biosignal-lab.git
+git clone --branch research/physionet-validation-v03 https://github.com/RoyaleCoach53/biosignal-lab.git
 cd biosignal-lab
 python -m venv .venv
 ```
@@ -91,7 +92,8 @@ microvolts internally. See `biosignal-lab analyze --help` for filter overrides.
 ## Verified numerical behavior
 
 The original archive's **73 tests were reproduced unchanged before release fixes**.
-The release adds **12 regression tests**, for **85 passing tests locally with no skips**.
+The current development suite has **107 passing tests locally with no skips**;
+the v0.2.0 release had 85. The incoming research branch and its original tests are preserved.
 The test suite includes a generated mixed EEG/EMG EDF file and a matched-setting
 MNE PSD comparison. A separate benchmark command passes **12 numerical checks**.
 
@@ -121,6 +123,25 @@ links, and package builds on Windows and Linux with Python 3.10 and 3.12.
 It uploads per-environment results. See [benchmark reproduction](benchmarks/README.md),
 [current audit](docs/SCIENTIFIC_AUDIT.md), and [machine-readable measurements](docs/VERIFICATION_RESULTS.json).
 
+## Real EEG interoperability pilot — development evidence
+
+The [full report](docs/real_world/REPORT.md) covers nine checksum-pinned PhysioNet
+recordings from three subjects: eyes-open/closed baselines and motor-imagery runs,
+64 channels, first 60 seconds at 160 Hz. **9/9 records passed** the predeclared
+matched-reference gates; the preserved full-recording baseline also passed **6/6**.
+EDF scaling is checked with a separate digital decoder, filters/PSD with explicitly
+configured MNE, and band integration with a separate implementation.
+
+**Important non-equivalence:** MNE's native padding policy differs by roughly
+10–25% in waveform relative L2 on these recordings; differences remain after
+five-second edge trimming. Shared SciPy routines and matched settings limit the
+independence of the numerical comparison. This is not physiological or clinical validation.
+
+The dashboard now overlays raw/processed spectra, exposes raw channel metrics,
+and records explicit padding/software versions in reports. Human recordings are
+not shipped. Read [data attribution](docs/real_world/DATA_LICENSE.md) and the
+[reproducible walkthrough](examples/real_eeg_walkthrough.md).
+
 ## Scientific boundaries
 
 - EEG defaults use a 0.1 Hz high-pass, no low-pass, and a 50 Hz notch when supported.
@@ -129,8 +150,9 @@ It uploads per-environment results. See [benchmark reproduction](benchmarks/READ
 - Missing-data interpolation is limited to short interior gaps; long and boundary gaps are rejected.
 - Preprocessing removes channel means. RMS describes the processed signal, not an original DC offset.
 - Filtering is offline and acausal. Hardware anti-aliasing and reference choices remain the user's responsibility.
-- No independent human EEG/EMG dataset evaluation, diagnostic accuracy, artifact sensitivity/specificity,
-  hardware validation, or regulatory approval is established.
+- The small PhysioNet EEG pilot verifies technical interoperability under explicit
+  processing settings. No independent physiological/clinical validation, artifact
+  sensitivity/specificity, real EMG benchmark, hardware validation or regulatory approval is established.
 
 Read [scientific limitations](docs/LIMITATIONS.md) before interpreting any output.
 

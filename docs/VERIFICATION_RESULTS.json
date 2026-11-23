@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "0.2.0",
+  "version": "0.3.0.dev0",
   "assessment": "Numerical engineering checks on synthetic data; not clinical validation.",
   "environment": {
     "python": "3.12.14",
@@ -218,9 +218,9 @@
   "runtime_8ch_60s_250hz": {
     "repetitions": 5,
     "warmups": 1,
-    "median_seconds": 0.02041119999921648,
-    "min_seconds": 0.02032619999954477,
-    "max_seconds": 0.020494599999437924,
+    "median_seconds": 0.02496419999806676,
+    "min_seconds": 0.024740100001508836,
+    "max_seconds": 0.026109999998880085,
     "note": "Local timing, not a throughput guarantee."
   }
 }
