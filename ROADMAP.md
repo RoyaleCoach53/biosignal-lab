@@ -1,7 +1,8 @@
 # Roadmap and acceptance criteria
 
-Current published release: **v0.2.0 Research Alpha**. Proposed v0.3.0 development
-work is submitted for review; merging and publishing require maintainer approval.
+Current release line: **v0.3.0 Research Alpha**; the v0.2.0 release is preserved.
+The real-EEG pilot was reviewed and merged in PR #4. Release publication requires
+passing final checks and maintainer approval; see [release status](docs/RELEASE_STATUS.md).
 No milestone is completed solely because a test counter is green.
 
 | Milestone | Scope and evidence required |

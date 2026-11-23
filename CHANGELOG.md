@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — proposed 0.3.0
+## 0.3.0 — 2026-11-23 — Research Alpha
 
 - Preserved and critically reviewed the incoming six-record PhysioNet pilot; added official hash, independent EDF scaling, cohort, negative PSD and privacy protections.
 - Added a separately predeclared nine-record EEG interoperability protocol with independent digital decoding, matched MNE filtering/PSD, band integration, channel metrics, controlled corruptions and parameter sensitivity.
@@ -8,7 +8,8 @@
 - Added raw/processed spectral comparison, raw channel summaries, explicit padding and software-version exports; retained processing defaults.
 - Added offline regression tests, real-data/security CI, synthetic timing/allocation benchmarks, educational documentation and a staged v1.0 acceptance roadmap.
 - Human recordings are not distributed; dataset attribution accompanies derived results. No clinical or independent physiological validation is claimed.
-- Development changes require review and explicit merge/release approval. The published v0.2.0 release is preserved.
+- Reviewed and merged the pilot in PR #4, then finalized version metadata, tagged reproduction instructions and release evidence. The published v0.2.0 release is preserved.
+- Labeled v0.3.0 Research Alpha; no clinical validation, artifact-classifier performance, real EMG validation or external scientific peer review is claimed.
 
 ## 0.2.0 — 2026-11-22
 

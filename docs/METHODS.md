@@ -1,6 +1,6 @@
-# Scientific methods and limitations (v0.2)
+# Scientific methods and limitations (v0.3.0 Research Alpha)
 
-**Status:** algorithm-level numerical verification on known synthetic signals plus independent Welch PSD agreement with MNE-Python. **Not clinical validation.** No sensitivity, specificity, diagnostic thresholds or therapeutic claims have been established.
+**Status:** algorithm-level numerical verification on known synthetic signals plus a small real-EEG interoperability pilot with explicitly configured MNE references. Shared numerical routines limit reference independence. **Not clinical validation.** No sensitivity, specificity, diagnostic thresholds or therapeutic claims have been established.
 
 ## Signal conventions
 
@@ -49,7 +49,7 @@
 
 ## Unvalidated domains
 
-- The proposed v0.3 development pilot evaluates a small public PhysioNet EEG subset for technical interoperability only; no real EMG or independent physiological/clinical validation is established.
+- The v0.3.0 pilot evaluates a small public PhysioNet EEG subset for technical interoperability only; no real EMG or independent physiological/clinical validation is established.
 - No device hardware calibration, analog antialias verification, electrode impedance evaluation, reference montage verification, or inter-device synchronization verification.
 - No clinically annotated artifact labels, blinded expert assessment, statistical performance confidence intervals, classification accuracy, real-time safety evaluation or medical device regulatory review.
 - Do not use it to assess seizures, abnormal EEG, neurological diagnoses, muscle disease, patient treatment or BCI safety-critical control.
@@ -63,10 +63,10 @@
 5. Merletti & Cerone (2020), Surface EMG best practices: https://www.robertomerletti.it/assets/pdfs/publications/2020_Tutorial_Merletti_Cerone.pdf
 6. Surface EMG acquisition and filtering review: https://pmc.ncbi.nlm.nih.gov/articles/PMC7594523/
 7. Reference effects on EEG coherence: https://pmc.ncbi.nlm.nih.gov/articles/PMC2891575/
-8. PhysioNet EEG Motor Movement/Imagery database (future independent validation): https://physionet.org/content/eegmmidb/1.0.0/
+8. PhysioNet EEG Motor Movement/Imagery database (current technical interoperability pilot): https://physionet.org/content/eegmmidb/1.0.0/
 9. PhysioNet Sleep-EDF Expanded (future independent validation): https://physionet.org/content/sleep-edfx/1.0.0/
 10. Welch, P. D. (1967), IEEE Transactions on Audio and Electroacoustics, 15(2), 70–73.
 
-## Explicit development-policy metadata
+## Explicit processing-policy metadata
 
-The proposed v0.3 exports software versions, mean-removal status and odd-reflection padding: 9 samples for the notch, 15 for a single fourth-order high/low-pass, and 27 for the combined band-pass. These match the prior SciPy defaults; processing defaults are not silently changed. The [real-data report](real_world/REPORT.md) documents the comparison with independently configured MNE and the material effect of changing padding policy. Raw channel metrics and raw PSD are available separately from processed results.
+Version 0.3.0 exports software versions, mean-removal status and odd-reflection padding: 9 samples for the notch, 15 for a single fourth-order high/low-pass, and 27 for the combined band-pass. These match the prior SciPy defaults; processing defaults are not silently changed. The [real-data report](real_world/REPORT.md) documents the comparison with independently configured MNE and the material effect of changing padding policy. Raw channel metrics and raw PSD are available separately from processed results.

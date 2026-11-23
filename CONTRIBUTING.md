@@ -23,7 +23,7 @@ using [SECURITY.md](SECURITY.md), not a public issue.
 Use Python 3.10+ and install `python -m pip install -e ".[dev,all]"`.
 Run `python -m pytest -ra`, `python benchmarks/verify.py --output local-results/verification.json`,
 `python -m compileall -q src app.py`, `python tools/check_docs.py`, and
-`python -m build`. MNE and Streamlit must be installed to run all 107 development tests without
+`python -m build`. MNE and Streamlit must be installed to run all 107 tests without
 optional skips. The core-only environment intentionally skips integration tests.
 Do not report tests as passing unless you ran them against the stated commit.
 Documentation changes do not need implementation-mirroring tests.

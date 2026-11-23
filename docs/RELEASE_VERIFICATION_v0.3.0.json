@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "version": "0.3.0",
+  "release_label": "Research Alpha",
+  "verification_date": "2026-11-23",
+  "timezone": "Africa/Tripoli",
+  "reviewed_pilot_merge": "be2a59a49050929167eef4c7a91a337c86b83c3e",
+  "tests": {
+    "passed": 107,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "synthetic_checks": {
+    "passed": 12,
+    "total": 12
+  },
+  "real_eeg": {
+    "expanded_passed": 9,
+    "baseline_passed": 6,
+    "participants": 3,
+    "protocol_sha256": "c8463206f7937e54438bff707830c9280bce90814fcf780516cbbd4cbf123697",
+    "manifest_sha256": "405df27c661b2098c8a8fd738816fb2ec5e8275730686a33a8df1beccd5f8d0c",
+    "record_results_equal_reviewed_development_evidence": true,
+    "no_protocol_or_tolerance_change": true,
+    "processing_source_unchanged": true
+  },
+  "dependency_audit": {
+    "audited_distributions": 78,
+    "known_vulnerability_entries": 0,
+    "editable_source_reviewed_separately": true
+  },
+  "packaging": {
+    "wheel_build": "passed",
+    "sdist_build": "passed",
+    "wheel_rebuilt_from_sdist": "passed",
+    "isolated_installed_wheel_api_cli_and_reports": "passed"
+  },
+  "version_consistency": {
+    "package_metadata": "0.3.0",
+    "runtime": "0.3.0",
+    "scientific_results": "0.3.0"
+  },
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Windows-11-10.0.26100-SP0",
+    "dependencies": {
+      "numpy": "2.5.5",
+      "scipy": "1.18.1",
+      "pandas": "2.3.3",
+      "mne": "1.13.2",
+      "streamlit": "1.67.0",
+      "plotly": "6.9.0"
+    }
+  },
+  "publication_gate": "Final commit and annotated tag CI must pass before GitHub Release publication. Exact commit/run IDs and artifact hashes are attached to the release to avoid self-referential source hashes.",
+  "scope": "Numerical engineering and real EEG interoperability evidence. Not clinical validation, independent physiological truth, an external scientific review or a penetration test."
+}

@@ -1,7 +1,7 @@
 # PhysioNet baseline interoperability pilot
 
-**Development results collected; merge/release approval pending.** This branch
-preserves the original incoming pilot commits and the public v0.2.0 release.
+**v0.3.0 Research Alpha evidence.** The reviewed implementation was merged in
+PR #4, preserving the original incoming pilot commits and the public v0.2.0 release.
 No independent external scientific or clinical validation is claimed.
 
 ## Frozen baseline protocol

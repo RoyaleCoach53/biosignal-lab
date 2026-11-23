@@ -1,7 +1,7 @@
 # Dependency and license review
 
-Review date: 2026-11-22. The local Windows/Python 3.12 environment was created
-fresh for this review. Package analysis requires NumPy, SciPy, and pandas;
+Release refresh: 2026-11-23. The local Windows/Python 3.12 environment was created
+on 2026-11-22 and reused for the final checks. Package analysis requires NumPy, SciPy, and pandas;
 MNE enables EDF import, while Streamlit and Plotly enable the optional dashboard.
 There is no remote model/API service or required credential.
 
@@ -29,7 +29,7 @@ python -m pip install --upgrade pip pip-audit
 python -m pip_audit --local --skip-editable --format json --output dependency-audit.json
 ```
 
-After updating the review environment's pip from 25.0.1 to 26.3, the final check
+After updating the review environment's pip from 25.0.1 to 26.3, the release check
 audited **78 installed distributions and found zero known vulnerability entries**.
 The editable development package was intentionally omitted with `--skip-editable`;
 its source was reviewed separately, and no PyPI publication is claimed. The initial

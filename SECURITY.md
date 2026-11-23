@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-The current release line is 0.2.x, alpha research software. Report security defects
+The current release line is 0.3.x, Research Alpha software. Report security defects
 against the latest tagged release or `main`. No clinical or safety-critical use
 is supported, and no response-time or long-term support guarantee is established.
 
@@ -33,8 +33,8 @@ public disclosure with maintainers where feasible.
 Incorrect scientific measurements may be reported as correctness defects. If
 the defect also exposes data or permits code execution, use private reporting.
 
-Source review, a credential-pattern scan, and an installed-environment advisory
-audit were performed for v0.2.0; see `docs/DEPENDENCIES.md` and the scientific
+Source review, credential/recording-pattern scans, and an installed-environment
+advisory audit were performed for v0.3.0; see `docs/DEPENDENCIES.md` and the scientific
 audit for scope. These checks are not a penetration test or a guarantee that
 unknown vulnerabilities are absent. Reports include source and channel labels;
 CSV exports should be treated as untrusted data when opened in spreadsheet software.

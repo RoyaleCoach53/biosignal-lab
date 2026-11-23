@@ -7,9 +7,11 @@
 
 Inspect recordings, compare raw and filtered signals, examine spectral content,
 and export reproducible summaries without an API key or cloud account.
-**Development branch: proposed v0.3.0 (0.3.0.dev0), review pending.** The current
-public release remains **v0.2.0 Research Alpha**. This work adds a real-EEG
-technical interoperability pilot; it does not establish clinical validation.
+**v0.3.0 — Research Alpha** adds a reproducible real-EEG technical interoperability
+pilot. It does not establish clinical validation or independent physiological
+truth. See the [release notes](docs/RELEASE_NOTES_v0.3.0.md),
+[release page](https://github.com/RoyaleCoach53/biosignal-lab/releases/tag/v0.3.0),
+and [scientific limitations](docs/LIMITATIONS.md). The v0.2.0 release is preserved.
 
 ## What you can do
 
@@ -31,7 +33,7 @@ approval, or safety-critical control is provided. Quality flags are review aids.
 Use Python 3.10 or newer. Clone this repository and create a virtual environment:
 
 ```sh
-git clone --branch research/physionet-validation-v03 https://github.com/RoyaleCoach53/biosignal-lab.git
+git clone --branch v0.3.0 https://github.com/RoyaleCoach53/biosignal-lab.git
 cd biosignal-lab
 python -m venv .venv
 ```
@@ -92,7 +94,7 @@ microvolts internally. See `biosignal-lab analyze --help` for filter overrides.
 ## Verified numerical behavior
 
 The original archive's **73 tests were reproduced unchanged before release fixes**.
-The current development suite has **107 passing tests locally with no skips**;
+The v0.3.0 suite has **107 passing tests locally with no skips**;
 the v0.2.0 release had 85. The incoming research branch and its original tests are preserved.
 The test suite includes a generated mixed EEG/EMG EDF file and a matched-setting
 MNE PSD comparison. A separate benchmark command passes **12 numerical checks**.
@@ -123,7 +125,7 @@ links, and package builds on Windows and Linux with Python 3.10 and 3.12.
 It uploads per-environment results. See [benchmark reproduction](benchmarks/README.md),
 [current audit](docs/SCIENTIFIC_AUDIT.md), and [machine-readable measurements](docs/VERIFICATION_RESULTS.json).
 
-## Real EEG interoperability pilot — development evidence
+## Real EEG interoperability pilot
 
 The [full report](docs/real_world/REPORT.md) covers nine checksum-pinned PhysioNet
 recordings from three subjects: eyes-open/closed baselines and motor-imagery runs,
@@ -170,6 +172,6 @@ See [SECURITY.md](SECURITY.md) for private vulnerability reporting.
 [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md) · [Architecture](docs/ARCHITECTURE.md) ·
 [Release status](docs/RELEASE_STATUS.md) · [Attribution](NOTICE.md)
 
-Useful next contributions include an independent methods review, a small licensed
-human-data benchmark, accessibility feedback, and reproducible issue reports.
+Useful next contributions include an independent methods review, reproduction of
+the existing licensed EEG pilot, accessibility feedback, and synthetic issue reports.
 The project is MIT licensed; dependencies retain their own licenses.

@@ -29,4 +29,4 @@ under this project's MIT license. No patient recordings are included.
 
 ## Real-data pilot attribution
 
-Development reports under docs/real_world contain information derived from the [PhysioNet EEG Motor Movement/Imagery Dataset v1.0.0](https://physionet.org/content/eegmmidb/1.0.0/), made available under the [ODC Attribution License v1.0](https://physionet.org/content/eegmmidb/view-license/1.0.0/). Dataset contents are not relicensed under MIT. No human recording samples or personal EDF headers are distributed. See [data rights](docs/real_world/DATA_LICENSE.md).
+Reports under docs/real_world contain information derived from the [PhysioNet EEG Motor Movement/Imagery Dataset v1.0.0](https://physionet.org/content/eegmmidb/1.0.0/), made available under the [ODC Attribution License v1.0](https://physionet.org/content/eegmmidb/view-license/1.0.0/). Dataset contents are not relicensed under MIT. No human recording samples or personal EDF headers are distributed. See [data rights](docs/real_world/DATA_LICENSE.md).
