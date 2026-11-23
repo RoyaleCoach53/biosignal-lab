@@ -88,6 +88,7 @@ def run(cache: Path, output: Path, record_id="S001R01", channel=0, download=Fals
         "dataset_url": manifest["dataset_url"], "license_url": manifest["license_url"], "attribution": manifest["attribution"],
         "python": platform.python_version(), "packages": {n: importlib.metadata.version(n) for n in ["numpy", "scipy", "mne", "matplotlib"]},
         "protocol_sha256": hashlib.sha256((folder / "protocol.json").read_bytes()).hexdigest(),
+        "manifest_sha256": hashlib.sha256((folder / "manifest.json").read_bytes()).hexdigest(),
         "runner_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "software_source_sha256": {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in
             ["examples/eeg_tutorial.py", "benchmarks/real_world/validate.py", "src/biosignal_lab/io.py",
