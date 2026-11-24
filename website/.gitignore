@@ -1,0 +1,6 @@
+node_modules/
+dist/
+public/scenarios/
+playwright-report/
+test-results/
+public/neural-atlas.svg
