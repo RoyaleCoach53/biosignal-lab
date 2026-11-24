@@ -4,9 +4,9 @@ const surface = (side, u, v) => {
   const ring = Math.sin(u);
   const folds = 1 + .047 * Math.sin(15 * v + 8 * u) + .035 * Math.cos(23 * u - 7 * v);
   return [
-    side * (.65 + ring * Math.cos(v) * .59 * folds),
-    1.33 * Math.cos(u) + .07 * Math.sin(v) * ring,
-    ring * Math.sin(v) * .86 * folds - .13 * Math.cos(u),
+    side * (.57 + .018*Math.sin(3*u) + ring * Math.cos(v) * .61 * folds),
+    1.16 * Math.cos(u) + .12 * Math.sin(v) * ring + .035*side*ring,
+    ring * Math.sin(v) * .70 * folds - .15 * Math.cos(u) - .07*Math.cos(v)*ring,
   ];
 };
 export function filaments() {

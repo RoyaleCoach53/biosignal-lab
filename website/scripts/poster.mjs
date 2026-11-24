@@ -1,14 +1,17 @@
 import { writeFileSync } from "node:fs";
 import { filaments } from "../src/geometry.mjs";
 
-const palette = {"-1": "#719dff", "1": "#a38bff"};
+const palette = {"-1": "#72c9e5", "1": "#a58af6"};
 const project = ([x,y,z]) => {
-  const pitch = .22;
-  const yaw = -.26;
+  const pitch = .29;
+  const yaw = -.37;
   const longitudinal = y * Math.cos(pitch) - z * Math.sin(pitch);
   const depth = y * Math.sin(pitch) + z * Math.cos(pitch);
   const lateral = x * Math.cos(yaw) + depth * Math.sin(yaw);
-  return [lateral * 133 + 260, -longitudinal * 133 + 225, depth * Math.cos(yaw) - x * Math.sin(yaw)];
+    const roll = .27;
+  const px = lateral*Math.cos(roll) + longitudinal*Math.sin(roll);
+  const py = -lateral*Math.sin(roll) + longitudinal*Math.cos(roll);
+  return [px * 168 + 259, -py * 168 + 226, depth * Math.cos(yaw) - x * Math.sin(yaw)];
 };
 const groups = new Map();
 for (const {side,type,points} of filaments()) {

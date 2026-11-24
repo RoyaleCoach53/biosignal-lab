@@ -3,10 +3,10 @@ import { useEffect, useMemo, useRef } from "react";
 import { BufferGeometry, Float32BufferAttribute } from "three";
 import { filaments } from "./geometry.mjs";
 
-function Sculpture() {
+function Sculpture({progress,reduced}) {
   const group = useRef();
   const drag = useRef(null);
-  const { gl, invalidate } = useThree();
+  const { gl, invalidate, camera } = useThree();
   const geometry = useMemo(() => {
     const position = [], color = [];
     for (const line of filaments()) {
@@ -14,7 +14,7 @@ function Sculpture() {
         for (const point of [line.points[i - 1], line.points[i]]) {
           const light = Math.max(.13, (point[2]+.9)/1.8);
           const contrast = (line.type === "tract" ? 1 : .58) * light;
-          const tint = line.side < 0 ? [.28,.54,1] : [.60,.38,1];
+          const tint = line.side < 0 ? [.24,.72,1] : [.66,.42,1];
           position.push(...point);
           color.push(...tint.map(c => c * contrast));
         }
@@ -24,6 +24,17 @@ function Sculpture() {
       .setAttribute("color", new Float32BufferAttribute(color,3));
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(()=>{
+    if(!progress||reduced) return;
+    const shift=value=>{
+      if (value>=.99) return;
+      camera.position.set(value*.64, value*.24, 5.5-value*.53);
+      camera.lookAt(0,0,0);
+      invalidate();
+    };
+    shift(progress.get());
+    return progress.on("change",shift);
+  },[progress,reduced,camera,invalidate]);
   useEffect(() => {
     const canvas = gl.domElement;
     const rotate = (x, y) => {
@@ -54,16 +65,16 @@ function Sculpture() {
     canvas.setAttribute("aria-label", "Interactive brain illustration. Use arrow keys to rotate.");
     return () => Object.entries(events).forEach(([name,fn]) => canvas.removeEventListener(name,fn));
   }, [gl, invalidate]);
-  return <group ref={group} rotation={[-.22,-.26,-.09]}><lineSegments geometry={geometry}>
+  return <group ref={group} rotation={[-.30,-.37,-.33]}><lineSegments geometry={geometry}>
     <lineBasicMaterial vertexColors transparent opacity={.62} depthWrite={false} />
   </lineSegments></group>;
 }
-export default function Atlas({onFailure,onReady}) {
+export default function Atlas({onFailure,onReady,progress,reduced}) {
   return <Canvas aria-label="Drag or use arrow keys to rotate the model" frameloop="demand"
     dpr={[1,1.4]} camera={{position:[0,0,5.7],fov:33}}
     gl={{alpha:true,antialias:true,powerPreference:"low-power"}}
     fallback={<p className="atlas-note">3D unavailable. Static illustration retained.</p>}
     onCreated={({gl}) => { gl.domElement.addEventListener("webglcontextlost", onFailure, {once:true}); onReady(); }}>
-    <Sculpture />
+    <Sculpture progress={progress} reduced={reduced}/>
   </Canvas>;
 }

@@ -1,15 +1,15 @@
-# BioSignal Lab site preview
+# BioSignal Lab web atlas
 
-The website presents BioSignal Lab v0.3.0 Research Alpha and stages the design separately from the package release. See the [public preview](https://royalecoach53.github.io/biosignal-lab/staging/). Changes under this directory are isolated from the Python package and Streamlit application.
+The [public staging site](https://royalecoach53.github.io/biosignal-lab/staging/) is the review build for PR #7. The website draws from the released Python engine. The project's actual release history and experimental-adoption materials remain in [GitHub](https://github.com/RoyaleCoach53/biosignal-lab/releases) and in the [adoption review](https://github.com/RoyaleCoach53/biosignal-lab/pull/6).
 
-## Build and test
+## Build and verification
 
-Use Python 3.12, Node 24 or later, and npm. Run these from the repo root in an isolated Python environment:
+Use Python 3.12 and Node 24 or later. From the repository root, in an isolated Python environment:
 
 ```sh
 python -m pip install -r website/requirements-demo.txt -e . pytest
 python website/scripts/scenarios.py
-python -m pytest website/test/test_scenarios.py
+python -m pytest tests website/test/test_scenarios.py
 cd website
 npm ci
 npm run build
@@ -18,14 +18,26 @@ npm test
 npm run preview
 ```
 
-The last command serves a local preview. The public preview uses the `site/staging-pages` branch as the GitHub Pages source, with the contents of `website/dist/` under `staging/`. The branch serves only the compiled site, generated illustration and synthetic scenario files. The Python application and EDF support are absent from the deployment. The static host has no upload route or Python server. All fetches are internal, with a content security policy limiting connections and prohibiting form submission. The site does not collect analytics or registration data. GitHub Pages follows its own [privacy policy](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages#data-collection).
+Run Playwright on a deployed build by setting `SITE_TEST_URL` to its full URL with a trailing slash. Run `node scripts/capture.mjs` for screenshots. Set `SITE_RECORD=1` to record the journey with Playwright and its FFmpeg browser dependency. The staging branch serves only built static files. No request can invoke the Python engine or upload a recording there.
 
-## Design
+## Interaction and accessibility
 
-The neural atlas uses hand-authored procedural geometry. Its filaments are an illustration with no anatomical or signal interpretation. The static projection and React Three Fiber rendering share the same geometry. The renderer lazy loads when requested, renders on demand, caps pixel ratio at 1.4 and supports arrow keys or pointer drag. The poster is available before the 3D module loads and when WebGL fails. Motion for React handles the hero sequence, scroll transform and animated signal schematic. The diagram is decorative. Reduced-motion mode suppresses its movement and the hero animations. The site offers Arabic navigation and narrative in RTL and clearly identifies the English workbench.
+Desktop uses native scrolling with a sticky stage. Scroll position selects each chapter, drives changes in scale and positioning, and advances acquisition steps. Chapter links and teaching controls also work with a keyboard. The hero brain is interactive on demand, and the desktop acquisition stage loads a separate 3D scalp illustration while in view. Both WebGL views render on demand. On smaller screens, all chapters and visuals appear in reading order. Reduced-motion settings suppress animated transitions and use the illustrated acquisition view. A static brain poster and scalp diagram cover environments without WebGL. The Arabic option translates narrative and navigation. Diagram controls and the scientific console use English.
 
-## Data contract and reproducibility
+All procedural neuroscience illustrations depict concepts. They are artist-built shapes, without source-localization, anatomical or measurement accuracy claims. The chapter on scalp acquisition presents electrode voltage differences and analog conditioning before digitization. The story and workbench label computed plots and exported records as synthetic.
 
-The demonstration serves eight finite preset combinations. EEG uses eight synthetic channels at 250 Hz. The signal condition adds or removes a Gaussian amplitude transient. High-pass settings are 0.1 or 1 Hz. EMG uses one simulated channel at 1,000 Hz, two amplitudes (1× or 2×), and low-pass settings of 450 or 120 Hz. Both modalities use seed 42, 12-second signals and the Python engine's common pipeline. The Welch windows are 4 s for EEG and 2 s for EMG, with 50% overlap. Each trace shows actual samples from the same one-second excerpt starting at 4.5 s. PSD and summary metrics use the entire signal. EEG band powers use BioSignal Lab's band definitions and are omitted for EMG.
+## Synthetic outputs
 
-The browser selects, displays and downloads exact catalogue numbers. It scales axes for presentation and formats values for readability. The eight regression cases require exact JSON round-trip equality against Python within a single build environment for samples, frequencies, spectra, band powers and quality metrics. There is no cross-platform bitwise claim. Axis rescaling and the log lower bound are for display. The downloadable JSON retains numeric precision, simulated provenance, filter settings and dependency versions. Candidate windows are heuristic and intended for review. This demonstration is for research and education. The separate [real-data report](../docs/real_world/REPORT.md) describes the pilot's matched reference, limits on generalization and sensitivity to padding.
+The catalogue has 32 combinations and one teaching example. EEG has eight channels, two transient settings, four filter presets and sampling rates of 128, 250 and 500 Hz. EMG has one channel, two amplitude settings, two filter presets and sampling rates of 1,000 and 2,000 Hz. Changing the rate generates a new series using seed 42. It is not a resample of the same recording. The 12 s recording supplies all spectral and summary calculations. The waveform view draws exact samples from the 4.5–5.5 s excerpt.
+
+The Welch view uses 4 s EEG or 2 s EMG Hann windows, 50% overlap, constant detrending, and density in µV²/Hz. Its teaching stages use the first actual EEG segment, the detrended and Hann-windowed segment, all five engine-derived PSD frames, and the Welch mean. Automated verification compares that mean with the mean of the individual frames at relative tolerance 1e-12 and absolute tolerance 1e-14. It checks the serialized waveforms, spectra, band powers, candidate windows and metrics against direct calls to the existing engine.
+
+The spectrogram uses the existing `time_frequency_psd` function on each processed channel. The display crops frequencies at 60 Hz for EEG and 400 Hz for EMG, using 2 s and 1 s Hann windows respectively, each with 50% overlap. The heatmap uses a log color scale, and inspection and exports retain the underlying float values. The tests check exact serialization within the build environment. Cross-platform bitwise identity is outside the scope of that test.
+
+The project [methods](../docs/METHODS.md), [real-data pilot](../docs/real_world/REPORT.md) and [limitations](../docs/LIMITATIONS.md) document evidence and scope. The public atlas is for research and education.
+
+## Scientific references
+
+- [Buzsáki, Anastassiou and Koch (2012), The origin of extracellular fields and currents](https://pmc.ncbi.nlm.nih.gov/articles/PMC4907333/)
+- [SciPy Welch method](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.welch.html)
+- [Farina, Merletti and Enoka (2014), The extraction of neural strategies from the surface EMG](https://pmc.ncbi.nlm.nih.gov/articles/PMC4254845/)
