@@ -1,0 +1,64 @@
+{
+  "preview": "https://royalecoach53.github.io/biosignal-lab/staging/",
+  "source_commit": "ef1760feff943b455a905268b0592b03661c9f82",
+  "deployment_content_commit": "7d5c0a451f8204efec142a41b09839ad6d3d9d3e",
+  "python_tests_passed": 140,
+  "website_numerical_cases": 33,
+  "playwright_local_passed": 14,
+  "playwright_staging_passed": 14,
+  "axe_tested_wcag_A_AA_violations": 0,
+  "desktop_brain_rotation": "verified",
+  "desktop_acquisition_3d": "verified",
+  "tablet_overflow": "none observed at 900px",
+  "upload_endpoint_GET": 404,
+  "upload_endpoint_POST": 405,
+  "lighthouse_environment": "Windows host, Chrome headless with GPU acceleration disabled. Mobile used simulated throttling and Pixel 7 browser emulation. No physical mobile testing.",
+  "lighthouse": {
+    "desktop": {
+      "lighthouse": "13.6.0",
+      "form_factor": "desktop",
+      "performance": 100,
+      "accessibility": 100,
+      "seo": 100,
+      "lcp_ms": 651.0,
+      "tbt_ms": 9,
+      "cls": 0.00244,
+      "transfer_bytes": 315576,
+      "throttling": {
+        "rttMs": 40,
+        "throughputKbps": 10240,
+        "requestLatencyMs": 0,
+        "downloadThroughputKbps": 0,
+        "uploadThroughputKbps": 0,
+        "cpuSlowdownMultiplier": 1
+      },
+      "throttling_method": "simulate"
+    },
+    "mobile": {
+      "lighthouse": "13.6.0",
+      "form_factor": "mobile",
+      "performance": 95,
+      "accessibility": 100,
+      "seo": 100,
+      "lcp_ms": 2391.0,
+      "tbt_ms": 190,
+      "cls": 0.0,
+      "transfer_bytes": 315578,
+      "throttling": {
+        "rttMs": 150,
+        "throughputKbps": 1638.4,
+        "requestLatencyMs": 562.5,
+        "downloadThroughputKbps": 1474.5600000000002,
+        "uploadThroughputKbps": 675,
+        "cpuSlowdownMultiplier": 4
+      },
+      "throttling_method": "simulate"
+    }
+  },
+  "video": {
+    "seconds": 25,
+    "file": "scroll-journey.webm",
+    "sha256": "a00027de22984f414200f8f4eac4fb9caaa4750c2acc10aae41a6eeaccdf3886",
+    "resolution": "1280x800"
+  }
+}
