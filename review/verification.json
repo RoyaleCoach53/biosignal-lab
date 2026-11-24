@@ -1,0 +1,61 @@
+{
+  "preview": "https://royalecoach53.github.io/biosignal-lab/staging/",
+  "source_commit": "47a3b10d83bfe4cfd459ab437e17a6911ea0212c",
+  "staging_assets_commit": "5bbabd64dcbf2a035b9cbd0bfbe1545e6e6e1c65",
+  "browser": "Chrome 157.0.8103.79, headless on Windows",
+  "environment": "Intel Core i5-10600K, Intel UHD 630. Lighthouse used --disable-gpu. Mobile Playwright used Pixel 7 emulation. No physical mobile or laptop test was available.",
+  "lighthouse": {
+    "desktop": {
+      "timestamp": "2026-11-24T15:52:05.592Z",
+      "lighthouse": "13.6.0",
+      "profile": "desktop",
+      "performance": 100,
+      "accessibility": 100,
+      "seo": 100,
+      "lcp_ms": 546.6,
+      "tbt_ms": 0,
+      "cls": 0.00036,
+      "transfer_bytes": 287027,
+      "throttling_method": "simulate",
+      "throttling": {
+        "rttMs": 40,
+        "throughputKbps": 10240,
+        "requestLatencyMs": 0,
+        "downloadThroughputKbps": 0,
+        "uploadThroughputKbps": 0,
+        "cpuSlowdownMultiplier": 1
+      }
+    },
+    "mobile": {
+      "timestamp": "2026-11-24T15:51:53.29Z",
+      "lighthouse": "13.6.0",
+      "profile": "mobile",
+      "performance": 99,
+      "accessibility": 100,
+      "seo": 100,
+      "lcp_ms": 1830.0,
+      "tbt_ms": 0,
+      "cls": 0.0,
+      "transfer_bytes": 287083,
+      "throttling_method": "simulate",
+      "throttling": {
+        "rttMs": 150,
+        "throughputKbps": 1638.4,
+        "requestLatencyMs": 562.5,
+        "downloadThroughputKbps": 1474.5600000000002,
+        "uploadThroughputKbps": 675,
+        "cpuSlowdownMultiplier": 4
+      }
+    }
+  },
+  "verification": {
+    "python": 115,
+    "python_engine_catalogue_cases": 8,
+    "playwright_local": 10,
+    "playwright_hosted": 10,
+    "axe_wcag_a_aa_violations": 0,
+    "upload_route_get": 404,
+    "upload_route_post": 405,
+    "npm_production_vulnerabilities": 0
+  }
+}
