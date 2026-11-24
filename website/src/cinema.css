@@ -60,6 +60,8 @@ html {scroll-padding-top:86px}
 .stage-progress {position:relative;overflow:hidden;display:flex;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid #344568;color:#aebdd9;font:.74rem var(--mono);letter-spacing:.11em}
 .stage-progress div {height:1px;position:absolute;bottom:0;left:0;right:0;background:#abebd8;transform-origin:left}
 .stage,.inline-scene {border:1px solid #3a4a69;background:#0d1526}
+.stage {position:relative;isolation:isolate}
+.scene-layer[aria-hidden=true] {pointer-events:none;z-index:1}
 .scene {min-width:0;display:grid;grid-template-rows:auto 1fr auto auto;min-height:clamp(365px,66svh,665px)}
 .scene-name {display:flex;gap:10px;justify-content:space-between;align-items:center;padding:11px 14px;border-bottom:1px solid #293952;color:#deebfb;font:600 .79rem var(--mono)}
 .scene-name span:last-child {color:#a8c3e4;font-size:.67rem;letter-spacing:.05em}

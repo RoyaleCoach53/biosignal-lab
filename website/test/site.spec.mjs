@@ -55,6 +55,18 @@ test("scroll journey is reversible and showcases computed stages", async ({page}
   await expect(page.getByRole("button",{name:"Trace the axon"})).toBeVisible();
 });
 
+test("a direct chapter URL restores the position after loading",async({page},info)=>{
+  await page.emulateMedia({reducedMotion:"reduce"});
+  await page.goto("#chapter-spectrum");
+  const chapter=page.locator("#chapter-spectrum");
+  await expect(chapter).toBeVisible();
+  await expect.poll(()=>chapter.evaluate(el=>Math.abs(el.getBoundingClientRect().top-86))).toBeLessThan(4);
+  if(info.project.name==="desktop"){
+    await expect(page.getByRole("navigation",{name:"Jump to a chapter"}).getByRole("link",{name:/Welch estimation/}))
+      .toHaveAttribute("aria-current","location");
+  }
+});
+
 test("workbench dimensions, inspection and modality changes",async({page})=>{
   await page.goto("#lab");
   const lab=page.locator("#lab");

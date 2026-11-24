@@ -1,5 +1,5 @@
-import { Component, lazy, Suspense, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { Component, forwardRef, lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useIsPresent, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { fetchSynthetic } from "./assets";
 import { HeadArt, MuscleArt, NeuronArt } from "./story-art";
 
@@ -149,6 +149,22 @@ function Scene({index,t,story,retry,error,allow3D=false}) {
   </div>;
 }
 
+const sceneVariants = {
+  enter: direction => ({opacity:0, scale:.978, y:22*direction}),
+  current: {opacity:1,scale:1,y:0},
+  exit: direction => ({opacity:0,scale:1.018,y:-18*direction}),
+};
+
+const SceneTransition = forwardRef(function SceneTransition({direction,reduced,children},ref){
+  const present=useIsPresent();
+  return <motion.div ref={ref} className="scene-layer" aria-hidden={present?undefined:true}
+    inert={present?undefined:true} custom={direction} variants={sceneVariants}
+    initial={reduced?false:"enter"} animate="current" exit="exit"
+    transition={{duration:reduced?0:.31,ease:[.22,.61,.36,1]}}>
+    {children}
+  </motion.div>;
+});
+
 export default function Journey({copy}) {
   const root=useRef(null);
   const reduced=useReducedMotion();
@@ -157,17 +173,23 @@ export default function Journey({copy}) {
   const {scrollYProgress}=useScroll({target:root,offset:["start center","end center"]});
   const zoom=useTransform(scrollYProgress,[0,.2,.4,.6,.8,1],[.97,1,.975,1,.975,1]);
   const slide=useTransform(scrollYProgress,[0,.2,.4,.6,.8,1],[7,0,-6,0,-6,0]);
-  const [position,setPosition]=useState(0);
+  const [{position,direction},setScene]=useState({position:0,direction:1});
   const [story,setStory]=useState(null);
   const [error,setError]=useState(false);
   const [load,setLoad]=useState(false);
   const [attempt,setAttempt]=useState(0);
   useMotionValueEvent(scrollYProgress,"change",value=>{
     const next=Math.max(0,Math.min(4.999,value*5));
-    setPosition(p=>Math.floor(p*4)===Math.floor(next*4)?p:next);
+    setScene(previous=>Math.floor(previous.position*4)===Math.floor(next*4)?previous:
+      {position:next,direction:next>previous.position?1:-1});
     if(next>=1.5) setLoad(true);
   });
   const index=Math.floor(position);
+  useLayoutEffect(()=>{
+    if(!location.hash.startsWith("#chapter-")) return;
+    const target=document.getElementById(location.hash.slice(1));
+    if(target&&root.current.contains(target)) target.scrollIntoView({block:"start",behavior:"instant"});
+  },[]);
   useEffect(()=>{
     if(pin) return;
     const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){setLoad(true);observer.disconnect();}},{rootMargin:"360px"});
@@ -194,12 +216,10 @@ export default function Journey({copy}) {
     {pin&&<div className="stage-wrap" lang="en" dir="ltr">
       <div className="stage-progress" aria-hidden="true"><span>FIELD NOTES</span><motion.div style={{scaleX:scrollYProgress}}/><span>0{index+2} / 07</span></div>
       <motion.div className="stage" style={reduced?undefined:{scale:zoom,y:slide}}>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={index} initial={reduced?false:{opacity:0,scale:.975,x:14}}
-            animate={{opacity:1,scale:1,x:0}} exit={reduced?undefined:{opacity:0,scale:1.015,x:-10}}
-            transition={{duration:reduced?0:.24,ease:"easeOut"}}>
+        <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+          <SceneTransition key={index} direction={direction} reduced={reduced}>
             <Scene index={index} t={position-index} {...sceneProps} allow3D/>
-          </motion.div>
+          </SceneTransition>
         </AnimatePresence>
       </motion.div>
       <nav className="chapter-nav" aria-label="Jump to a chapter">{ids.map((id,i)=>

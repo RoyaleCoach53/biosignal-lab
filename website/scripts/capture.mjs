@@ -19,7 +19,6 @@ try {
   await page.screenshot({path:resolve(out,"desktop.jpg"),quality:88});
   await page.getByRole("button",{name:"Explore in 3D"}).click();
   const canvas=page.locator(".opening-art canvas");
-
   await canvas.waitFor({state:"visible",timeout:12000});
   await page.locator('canvas[tabindex="0"]').waitFor();
   await canvas.focus();
@@ -39,12 +38,7 @@ try {
   ]){
     await page.getByRole("navigation",{name:"Jump to a chapter"}).getByRole("link",{name:new RegExp(chapter)}).click();
     await page.locator(".stage "+selector).waitFor();
-    if(chapter==="Scalp acquisition"){
-      await page.emulateMedia({reducedMotion:"no-preference"});
-      await page.locator(".head-live canvas").waitFor({state:"visible",timeout:10000});
-    }
     await page.locator(".stage-wrap").screenshot({path:resolve(out,file),quality:88});
-
   }
   await page.getByRole("navigation",{name:"Main navigation"}).getByRole("link",{name:"Workbench"}).click();
   await page.getByRole("heading",{name:"Channel overview"}).waitFor();
@@ -73,16 +67,49 @@ try {
     const recording=await context.newPage();
     await recording.goto(url);
     await recording.locator(".opening-poster").evaluate(img=>img.decode());
-    await recording.waitForTimeout(950);
-    await recording.getByRole("link",{name:"Begin the journey"}).click();
-    await recording.getByRole("button",{name:"Trace the axon"}).waitFor();
-    for(const chapter of ["Scalp acquisition","Filter response","Welch estimation","Surface EMG"]){
-      await recording.getByRole("navigation",{name:"Jump to a chapter"}).getByRole("link",{name:new RegExp(chapter)}).click();
-      await recording.waitForTimeout(1450);
-    }
-    await recording.getByRole("navigation",{name:"Main navigation"}).getByRole("link",{name:"Workbench"}).click();
+    const scroll=async(selector,milliseconds)=>{
+      await recording.evaluate(async({selector,milliseconds})=>{
+        const element=document.querySelector(selector);
+        const origin=scrollY;
+        const goal=element.getBoundingClientRect().top+origin-90;
+        await new Promise(resolve=>{
+          const start=performance.now();
+          const tick=now=>{
+            const p=Math.min(1,(now-start)/milliseconds);
+            const ease=p*p*(3-2*p);
+            scrollTo({top:origin+(goal-origin)*ease,behavior:"instant"});
+            if(p<1) requestAnimationFrame(tick); else resolve();
+          };
+          requestAnimationFrame(tick);
+        });
+      },{selector,milliseconds});
+    };
+    await recording.waitForTimeout(1300);
+    await recording.getByRole("button",{name:"Explore in 3D"}).click();
+    await recording.locator(".opening-art canvas[tabindex='0']").focus();
+    await recording.keyboard.press("ArrowRight");
+    await recording.waitForTimeout(650);
+    await scroll("#journey",1450);
+    await recording.getByRole("button",{name:"Trace the axon"}).click();
+    await recording.waitForTimeout(1250);
+    await scroll("#chapter-acquisition",1500);
+    await recording.locator(".head-live canvas").waitFor();
+    await recording.getByRole("button",{name:"Amplify",exact:true}).click();
+    await recording.waitForTimeout(1100);
+    await scroll("#chapter-processing",1500);
+    await recording.getByRole("button",{name:"35 Hz low-pass",exact:true}).click();
+    await recording.waitForTimeout(1250);
+    await scroll("#chapter-spectrum",1500);
+    await recording.getByRole("button",{name:"Apply Hann"}).click();
+    await recording.waitForTimeout(1100);
+    await recording.getByRole("button",{name:"Average",exact:true}).click();
+    await recording.waitForTimeout(1250);
+    await scroll("#chapter-emg",1500);
+    await recording.getByText(/computed synthetic EMG below/).waitFor();
+    await recording.waitForTimeout(1700);
+    await scroll("#lab",1550);
     await recording.getByRole("heading",{name:"Channel overview"}).waitFor();
-    await recording.waitForTimeout(1600);
+    await recording.waitForTimeout(1400);
     await recording.locator("#lab").getByRole("button",{name:"Spectrogram",exact:true}).click();
     await recording.getByRole("heading",{name:"Processed spectrogram"}).waitFor();
     await recording.waitForTimeout(1300);
