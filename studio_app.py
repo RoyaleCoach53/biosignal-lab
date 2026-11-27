@@ -3,17 +3,17 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import json
+import math
 import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 
 from biosignal_lab.models import Recording, AnalysisResults
 from biosignal_lab.studio import Workflow, Executor, Cache, builtin_registry
-import biosignal_lab.studio
+from biosignal_lab.studio.editor import frontend_available, render_editor
 
 
 st.set_page_config(page_title="BioSignal Studio", page_icon="🧬", layout="wide")
@@ -64,30 +64,36 @@ if controls[1].button("Redo", disabled=not st.session_state.studio_redo):
 controls[2].download_button("Download workflow", workflow.to_json(), "workflow.json", "application/json")
 controls[3].download_button("Download Python runner", workflow.python_source(), "reproduce_workflow.py", "text/x-python")
 
-frontend = Path(biosignal_lab.studio.__file__).parent / "editor_frontend"
-if (frontend / "index.html").exists():
-    editor = components.declare_component("biosignal_studio_editor", path=str(frontend))
+if frontend_available():
     catalog = {name: {"inputs": {p: asdict(v) for p, v in definition.inputs.items()},
                       "outputs": {p: asdict(v) for p, v in definition.outputs.items()},
                       "description": definition.description}
                for name, definition in registry.definitions.items()}
-    event = editor(workflow=workflow.to_dict(), catalog=catalog,
+    event = render_editor(workflow=workflow.to_dict(), catalog=catalog,
                    positions=st.session_state.studio_positions,
                    graph_digest=workflow.digest, errors=errors,
+                   event_ack=st.session_state.get("studio_editor_event"),
                    key="scientific_graph_editor", default=None)
     if isinstance(event, dict) and event.get("event_id") != st.session_state.get("studio_editor_event"):
         st.session_state.studio_editor_event = event.get("event_id")
         if event.get("graph_digest") == workflow.digest:
             try:
-                candidate = Workflow.from_dict(event["workflow"])
+                candidate = Workflow.from_json(json.dumps(event["workflow"]))
                 if candidate.digest != workflow.digest:
                     set_graph(candidate.to_dict())
                 positions = event.get("positions", {})
                 if isinstance(positions, dict) and len(json.dumps(positions)) < 100_000:
-                    st.session_state.studio_positions = positions
-                st.rerun()
+                    valid_positions = {}
+                    for key, position in positions.items():
+                        if key not in {n.id for n in candidate.nodes} or not isinstance(position, dict):
+                            continue
+                        if all(isinstance(position.get(axis), (float, int)) and math.isfinite(position[axis]) for axis in ("x", "y")):
+                            valid_positions[key] = {axis: float(position[axis]) for axis in ("x", "y")}
+                    st.session_state.studio_positions = valid_positions
+                st.session_state.pop("studio_editor_error", None)
             except (ValueError, TypeError, KeyError) as exc:
-                st.error(f"Editor draft rejected: {exc}")
+                st.session_state.studio_editor_error = f"Editor draft rejected: {exc}"
+        st.rerun()  # Acknowledge accepted and rejected events to the component queue.
 else:
     dot = ["digraph workflow { rankdir=LR;"]
     for node in workflow.nodes:
@@ -95,6 +101,8 @@ else:
         for port, source in node.inputs.items():
             dot.append(f'"{source.node}" -> "{node.id}" [label="{port}"];')
     st.graphviz_chart("\n".join(dot) + "\n}")
+if st.session_state.get("studio_editor_error"):
+    st.error(st.session_state.studio_editor_error)
 
 with st.expander("Keyboard-accessible node and connection editor"):
     kind = st.selectbox("Node operation", list(registry.definitions))
@@ -178,5 +186,12 @@ if "studio_result" in st.session_state:
         elif hasattr(value, "data") and hasattr(value, "sfreq"):
             st.write({"channels": value.channels, "sfreq": value.sfreq, "unit": value.unit,
                       "modality": value.modality, "reference": value.reference, "history": value.history})
+        elif hasattr(value, "X") and hasattr(value, "subjects"):
+            st.write({"samples": value.X.shape[0], "features": value.X.shape[1],
+                      "subjects": len(np.unique(value.subjects)), "feature_names": value.feature_names,
+                      "provenance": value.provenance})
+            st.dataframe(pd.DataFrame(value.X, columns=value.feature_names))
+        elif hasattr(value, "to_dict"):
+            st.json(value.to_dict())
         else:
             st.json(value)
