@@ -27,6 +27,12 @@ def audit(destination: Path, output: Path):
     destination = destination.resolve()
     if destination.exists() or destination.is_relative_to(ROOT):
         raise ValueError("Use a new, nonexistent virtual-environment directory outside the checkout")
+    scratch = destination.parent / (destination.name + "-results")
+    if scratch.exists() or scratch.is_symlink():
+        raise ValueError("Use a nonexistent clean-audit results directory; existing results are preserved")
+    if output.exists() or output.is_symlink():
+        raise ValueError("Use a nonexistent audit report path; existing reports are preserved")
+    scratch.mkdir(exist_ok=False)
     venv.EnvBuilder(with_pip=True, system_site_packages=False).create(destination)
     python = destination / ("Scripts/python.exe" if platform.system() == "Windows" else "bin/python")
     before = json.loads(command([python, "-m", "pip", "list", "--format=json"]))
@@ -39,8 +45,7 @@ def audit(destination: Path, output: Path):
     command([python, "-m", "pip", "install", "--no-cache-dir", ".[app]"])
     command([python, "-m", "pip", "check"])
     # These are synthetic outputs only, kept beside the disposable environment.
-    scratch = destination.parent / (destination.name + "-results")
-    scratch.mkdir(exist_ok=True)
+    # The results directory was reserved before creating the environment.
     first = json.loads(command([python, ROOT / "tools/first_run_check.py", "--require-app"]))
     if not first["passed"]:
         raise RuntimeError("Offline first-use gate failed")

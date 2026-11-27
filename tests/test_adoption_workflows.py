@@ -76,3 +76,32 @@ def test_tutorial_refuses_stale_output_before_fetching_and_preserves_files(tmp_p
     with pytest.raises(ValueError, match="new or empty"):
         eeg_tutorial.run(tmp_path / "cache", output)
     assert previous.read_text() == '{"passed": true}'
+
+
+def test_clean_audit_refuses_stale_results_before_installing(tmp_path, monkeypatch):
+    from tools import check_installation
+    destination = tmp_path / "fresh"
+    scratch = tmp_path / "fresh-results"
+    scratch.mkdir()
+    marker = scratch / "eeg.json"
+    marker.write_text("previous")
+    monkeypatch.setattr(check_installation.venv.EnvBuilder, "create",
+                        lambda *a, **k: pytest.fail("Environment creation reached"))
+    with pytest.raises(ValueError, match="results directory"):
+        audit(destination, tmp_path / "report.json")
+    assert not destination.exists()
+    assert marker.read_text() == "previous"
+
+
+def test_clean_audit_refuses_existing_report_before_installing(tmp_path, monkeypatch):
+    from tools import check_installation
+    destination = tmp_path / "fresh"
+    report = tmp_path / "report.json"
+    report.write_text("previous")
+    monkeypatch.setattr(check_installation.venv.EnvBuilder, "create",
+                        lambda *a, **k: pytest.fail("Environment creation reached"))
+    with pytest.raises(ValueError, match="report path"):
+        audit(destination, report)
+    assert not destination.exists()
+    assert not (tmp_path / "fresh-results").exists()
+    assert report.read_text() == "previous"
