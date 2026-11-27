@@ -27,7 +27,7 @@ jobs:
           cache-dependency-path: website/package-lock.json
       - name: Generate and verify synthetic reference payloads
         run: |
-          python -m pip install -r website/requirements-demo.txt -e . pytest
+          python -m pip install -r website/requirements-demo.txt -e ".[app]" pytest
           python website/scripts/scenarios.py
           python -m pytest website/test/test_scenarios.py
       - name: Build and exercise desktop and mobile browsers
@@ -38,3 +38,27 @@ jobs:
           npx playwright install --with-deps chromium
           npm test
           npm run test:studio
+      - name: Verify actual Studio browser-to-Python execution
+        working-directory: website
+        env:
+          STREAMLIT_BROWSER_GATHER_USAGE_STATS: 'false'
+          SITE_STUDIO_URL: 'http://127.0.0.1:8503'
+        run: |
+          python -m streamlit run ../studio_app.py --server.headless true --server.address 127.0.0.1 --server.port 8503 > /tmp/biosignal-studio.log 2>&1 &
+          studio_pid=$!
+          trap 'kill "$studio_pid" 2>/dev/null || true' EXIT
+          python - <<'PY'
+          import time
+          from urllib.request import urlopen
+          for attempt in range(120):
+              try:
+                  with urlopen("http://127.0.0.1:8503/_stcore/health", timeout=1) as response:
+                      if response.read() == b"ok":
+                          break
+              except OSError:
+                  pass
+              time.sleep(.25)
+          else:
+              raise SystemExit("Studio did not become healthy within 30 seconds")
+          PY
+          npm run test:studio-backend

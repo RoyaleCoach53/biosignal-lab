@@ -36,8 +36,25 @@
     }});
   }
   function validateWorkflow(raw) {
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      if (Object.keys(raw).some(key => !["schema_version", "name", "nodes"].includes(key))) throw new Error("Unknown workflow fields.");
+      raw = clone(raw);
+      if (!Object.hasOwn(raw, "schema_version")) raw.schema_version = 1;
+      if (!Object.hasOwn(raw, "name")) raw.name = "Untitled experiment";
+      if (Array.isArray(raw.nodes)) raw.nodes.forEach(node => {
+        if (!node || typeof node !== "object" || Array.isArray(node)) return;
+        if (Object.keys(node).some(key => !["id", "kind", "parameters", "inputs"].includes(key))) throw new Error("Unknown node fields.");
+        if (!Object.hasOwn(node, "parameters")) node.parameters = {};
+        if (!Object.hasOwn(node, "inputs")) node.inputs = {};
+        if (node.inputs && typeof node.inputs === "object") Object.values(node.inputs).forEach(source => {
+          if (!source || typeof source !== "object" || Array.isArray(source)) return;
+          if (Object.keys(source).some(key => !["node", "port"].includes(key))) throw new Error("Unknown connection fields.");
+          if (!Object.hasOwn(source, "port")) source.port = "out";
+        });
+      });
+    }
     if (!raw || typeof raw !== "object" || Array.isArray(raw) || raw.schema_version !== 1 ||
-        typeof raw.name !== "string" || !raw.name.trim() || raw.name.length > 200 ||
+        typeof raw.name !== "string" || raw.name.length > 200 ||
         !Array.isArray(raw.nodes) || raw.nodes.length < 1 || raw.nodes.length > 128) {
       throw new Error("Use a schema_version 1 workflow with a name and 1–128 nodes.");
     }
@@ -61,6 +78,29 @@
       if (!parent || !Object.hasOwn(state.catalog[parent.kind].outputs, source.port)) throw new Error(`Connection on ${node.id} refers to an unavailable source port.`);
     }
     return clone(raw);
+  }
+  function strictJSON(text) {
+    const parsed = JSON.parse(text, (_key, value) => {
+      if (typeof value === "number" && !Number.isFinite(value)) throw new Error("Numbers must be finite.");
+      return value;
+    });
+    // JSON.parse validates grammar first. Scan valid tokens to catch duplicate
+    // object keys before JavaScript's parser can silently discard their values.
+    const tokens = text.match(/"(?:\\.|[^"\\])*"|[{}\[\]:,]|true|false|null|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/g) || [];
+    const stack = [];
+    for (const token of tokens) {
+      const current = stack.at(-1);
+      if (token === "{") stack.push({object: true, key: true, keys: new Set()});
+      else if (token === "[") stack.push({object: false});
+      else if (token === "}" || token === "]") stack.pop();
+      else if (token === "," && current?.object) current.key = true;
+      else if (token.startsWith('"') && current?.object && current.key) {
+        const name = JSON.parse(token);
+        if (current.keys.has(name)) throw new Error(`Duplicate JSON field: ${name.slice(0, 80)}`);
+        current.keys.add(name); current.key = false;
+      }
+    }
+    return parsed;
   }
   function ensurePositions(proposed = {}) {
     const positions = Object.create(null);
@@ -314,7 +354,7 @@
     try {
       if (state.disabled) return;
       if ($("parameter-json").value.length > 100000) throw new Error("Parameter JSON must be below 100 kB.");
-      const value = JSON.parse($("parameter-json").value);
+      const value = strictJSON($("parameter-json").value);
       if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Parameters must be a JSON object.");
       const node = state.workflow.nodes.find(item => item.id === parameterNode);
       if (!node) throw new Error("This node no longer exists.");
@@ -327,7 +367,7 @@
     try {
       const file = $("file").files[0]; if (!file || state.disabled) return;
       if (file.size > 1000000) throw new Error("Workflow import must be below 1 MB.");
-      const workflow = validateWorkflow(JSON.parse(await file.text()));
+      const workflow = validateWorkflow(strictJSON(await file.text()));
       remember(); state.workflow = workflow; ensurePositions(); state.pending = null; state.selected = null;
       emit("Imported workflow data. Nothing has been executed."); fit();
     } catch (error) {announce(`Import rejected: ${error.message}`);}

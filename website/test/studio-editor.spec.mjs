@@ -20,7 +20,7 @@ test("loads typed graph, edits parameters and safely adds only registered nodes"
   await expect(frame.getByLabel("Node type").locator("option")).toHaveCount(1);
   await frame.getByRole("button",{name:"Add node",exact:true}).click();
   expect((await latest(page)).workflow.nodes.at(-1)).toEqual({id:"processed",kind:"processed",parameters:{},inputs:{}});
-  await expect(frame.getByRole("status",{name:"Editor status"})).toContainText("required inputs");
+  await expect(frame.getByRole("status",{name:"Editor status"})).toContainText("synchronized with Python");
 });
 
 test("connects typed ports, rejects incompatible ports and cycles, and disconnects",async({page})=>{
@@ -120,4 +120,22 @@ test("renders server errors as text and respects disabled editing",async({page})
   await expect(frame.getByRole("button",{name:"Edit parameters for demo",exact:true})).toBeDisabled();
   const result=await new AxeBuilder({page}).withTags(["wcag2a","wcag2aa","wcag21a","wcag21aa"]).analyze();
   expect(result.violations.map(item=>({id:item.id,nodes:item.nodes.map(node=>node.target)}))).toEqual([]);
+});
+
+test("imports repository-style defaults and rejects duplicate keys or numeric overflow",async({page})=>{
+  await open(page);const frame=editor(page);
+  const defaults={nodes:[{id:"source",kind:"simulate"},{id:"result",kind:"analyze",inputs:{signal:{node:"source"}}}]};
+  await frame.locator("#file").setInputFiles({name:"defaults.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(defaults))});
+  await expect.poll(async()=> (await latest(page))?.workflow.nodes[1].inputs).toEqual({signal:{node:"source",port:"out"}});
+  expect((await latest(page)).workflow.nodes[0].parameters).toEqual({});
+  expect((await latest(page)).workflow.name).toBe("Untitled experiment");
+  await frame.locator("#file").setInputFiles({name:"duplicate.json",mimeType:"application/json",buffer:Buffer.from('{"nodes":[],"nodes":[{"id":"source","kind":"simulate"}]}')});
+  await expect(frame.getByRole("status",{name:"Editor status"})).toContainText("Duplicate JSON field");
+  await frame.getByRole("button",{name:"Edit parameters for source",exact:true}).click();
+  await frame.getByLabel("Parameter object (JSON)").fill('{"sfreq":1e999}');
+  await frame.getByRole("button",{name:"Apply parameters",exact:true}).click();
+  await expect(frame.locator("#parameter-error")).toContainText("finite");
+  await frame.getByLabel("Parameter object (JSON)").fill('{"nested":{"seed":1,"seed":2}}');
+  await frame.getByRole("button",{name:"Apply parameters",exact:true}).click();
+  await expect(frame.locator("#parameter-error")).toContainText("Duplicate JSON field");
 });

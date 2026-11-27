@@ -11,7 +11,9 @@ The component uses Streamlit's version 1 iframe protocol. It accepts parent
 `streamlit:render` messages with `args.workflow`, `args.catalog`, optional
 `args.positions`, `args.graph_digest`, `args.errors`, and `args.disabled`. It sends
 `streamlit:setComponentValue` JSON objects containing `event_id`, `graph_digest`,
-`workflow`, and `positions`. Incoming messages must originate from the parent
+`workflow`, and `positions`. The parent returns `args.event_ack` with the consumed
+event ID; rapid local edits are buffered until the acknowledged revision is
+available. Incoming messages must originate from the parent
 window. Node names, descriptions, and errors are inserted through textContent.
 The component does not accept messages from unrelated windows.
 
@@ -20,6 +22,9 @@ Inputs map port names to `{node, port}` references. The catalogue maps node kind
 to input/output port descriptors (`kind`, `unit`, `sfreq`, `modality`) and a plain
 description. Missing connections can persist as drafts; Python must prevent
 execution while required inputs or scientific constraints remain invalid.
+Imports support the repository's omitted defaults for parameters, inputs, source
+ports, schema version, and name. Duplicate JSON keys and nonfinite numeric
+overflow are rejected before parsing can silently discard or coerce their data.
 
 Editing supports draggable titles, keyboard movement/deletion, registry search,
 node creation/deletion, typed port connections, link deletion, JSON parameter
@@ -34,9 +39,18 @@ From the repository's `website` directory, verify the browser protocol and graph
 interactions with `npm run test:studio -- --workers=2`. When a system browser is
 required, prefix with `SITE_CHROME_EXECUTABLE=/usr/bin/chromium`. The test harness
 uses a loopback-only disposable HTTP server and real iframe protocol messages;
-it does not simulate scientific results. On 27 November 2026, all 12 checks
+it does not simulate scientific results. On 27 November 2026, all 16 checks
 passed in Chromium desktop and Pixel 7 emulation, including axe WCAG A/AA checks.
-Actual Python execution is covered separately by Studio runtime and integration
-tests. Physical touch devices, Firefox/WebKit, screen-reader evaluation,
+Three additional actual browser-to-Python tests passed with
+`SITE_STUDIO_URL=http://127.0.0.1:8503 npm run test:studio-backend`: visual parameter
+edits produced the expected three-channel 500 Hz/12-second signal through the
+six-node engine workflow; incomplete drafts disabled execution until connected,
+then executed seven real nodes; rapid node additions survived server revision
+acknowledgements and appeared in the Python-exported nine-node workflow.
+These tests start from a real local Streamlit application, download actual
+execution manifests, and verify workflow/source hashes and node timings.
+The unified application sidebar also opened Studio and loaded its six-node graph
+in a real browser. Actual Python execution is covered separately by Studio
+runtime and integration tests. Physical touch devices, Firefox/WebKit, screen-reader evaluation,
 multi-node selection, node grouping, and cross-tab clipboard workflows remain
 unverified or unsupported; no such capabilities are presented as implemented.
