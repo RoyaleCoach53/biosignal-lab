@@ -22,5 +22,10 @@ data
 *.FIF
 *.xdf
 *.XDF
+**/*.[Nn][Pp][Zz]
+**/*.[Nn][Pp][Yy]
+**/*.[Hh]5
+**/*.[Hh][Dd][Ff]5
+**/*.[Mm][Aa][Tt]
 website/node_modules
 website/dist

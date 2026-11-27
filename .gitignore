@@ -30,6 +30,11 @@ local-results/
 *.eeg
 *.set
 *.cnt
+*.npz
+*.npy
+*.h5
+*.hdf5
+*.mat
 *_raw.csv
 
 # Editor and operating-system files

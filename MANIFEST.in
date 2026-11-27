@@ -6,7 +6,7 @@ include .streamlit/config.toml
 recursive-include docs *.md *.json *.svg *.png *.jpg
 recursive-include .github *.md *.yml
 recursive-include requirements *.txt
-recursive-include examples *.py *.json *.csv *.md
+recursive-include examples *.py *.json *.csv *.md *.ipynb
 recursive-include benchmarks *.py *.md *.json
 recursive-include tools *.py
 recursive-include tests *.py

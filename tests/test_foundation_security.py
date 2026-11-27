@@ -9,7 +9,7 @@ from tools.check_publication import scan
 from tools import check_installation
 
 
-@pytest.mark.parametrize("name", ["record.EDF", "record.eDf.gz", "record.BDF", "record.FIF", "record.XDF", "record.GDF", "secret.CSV"])
+@pytest.mark.parametrize("name", ["record.EDF", "record.eDf.gz", "record.BDF", "record.FIF", "record.XDF", "record.GDF", "secret.CSV", "record.NpZ", "record.NPY", "record.H5", "record.HdF5.gz", "record.MaT"])
 def test_publication_rejects_mixed_case_and_compressed_recordings(tmp_path, name):
     (tmp_path / name).write_bytes(b"synthetic")
     assert scan(tmp_path, [name]) == [f"Unapproved recording/data file: {name}"]

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "biosignal-lab"
-version = "0.3.0"
+version = "0.4.0.dev0"
 description = "Local-first, reproducible EEG/EMG signal quality and spectral analysis for education and research"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -20,7 +20,10 @@ app = ["streamlit>=1.35,<2", "plotly>=5.18,<7"]
 edf = ["mne>=1.6,<2"]
 engine = ["PyWavelets>=1.6,<2", "h5py>=3.11,<4"]
 ai = ["scikit-learn>=1.5,<2"]
-live = ["brainflow>=5.12,<6", "pylsl>=1.16,<2"]
+live = ["brainflow>=5.12,<6", "pylsl>=1.16,<2", "pyserial>=3.5,<4", "websockets>=15,<18"]
+neural = ["torch>=2.4,<3", "scikit-learn>=1.5,<2"]
+formats = ["mne-bids>=0.15,<1", "pyxdf>=1.16,<2"]
+notebooks = ["nbformat>=5.10,<6", "nbclient>=0.10,<1", "ipykernel>=6,<8"]
 tutorial = ["mne>=1.6,<2", "matplotlib>=3.6,<4"]
 dev = ["pytest>=8", "ruff>=0.6", "build>=1.2"]
 all = ["streamlit>=1.35,<2", "plotly>=5.18,<7", "mne>=1.6,<2", "PyWavelets>=1.6,<2", "h5py>=3.11,<4", "scikit-learn>=1.5,<2"]
@@ -36,6 +39,9 @@ Documentation = "https://github.com/RoyaleCoach53/biosignal-lab/blob/main/README
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"biosignal_lab.studio" = ["editor_frontend/*.html", "editor_frontend/*.js", "editor_frontend/*.css", "editor_frontend/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

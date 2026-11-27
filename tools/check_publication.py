@@ -5,7 +5,8 @@ import subprocess
 
 
 def scan(root, files):
-    raw = {".edf", ".bdf", ".fif", ".vhdr", ".eeg", ".set", ".fdt", ".cnt", ".gdf", ".xdf"}
+    raw = {".edf", ".bdf", ".fif", ".vhdr", ".eeg", ".set", ".fdt", ".cnt", ".gdf", ".xdf",
+           ".npz", ".npy", ".h5", ".hdf5", ".mat"}
     csv_allowed = {"examples/data/eeg_demo.csv", "examples/data/emg_demo.csv"}
     patterns = [r"gh[pousr]_[A-Za-z0-9]{20,}", r"github_pat_[A-Za-z0-9_]{30,}",
                 r"sk-proj-[A-Za-z0-9_-]{20,}", r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"]
