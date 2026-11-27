@@ -7,7 +7,7 @@
   const ns = "http://www.w3.org/2000/svg";
   const width = 238, portStart = 66, portStep = 34;
   const state = {workflow: null, catalog: {}, positions: {}, digest: "", disabled: false,
-    selected: null, pending: null, undo: [], redo: [], view: {x: 30, y: 30, zoom: 1}};
+    selected: null, pending: null, undo: [], redo: [], outbound: null, view: {x: 30, y: 30, zoom: 1}};
   let counter = 0, gesture = null, parameterNode = null;
   function message(type, extra = {}) {
     window.parent.postMessage({isStreamlitMessage: true, type, ...extra}, "*");
@@ -21,12 +21,19 @@
     state.redo = [];
   }
   function emit(text) {
-    message("streamlit:setComponentValue", {dataType: "json", value: {
-      event_id: `${Date.now()}-${++counter}`, graph_digest: state.digest,
-      workflow: clone(state.workflow), positions: clone(state.positions),
-    }});
+    // Only one mutation may use a server revision. Buffer fast local edits until
+    // the parent acknowledges it, then send the latest graph with the new digest.
+    if (!state.outbound) sendGraph();
     if (text) announce(text);
     renderGraph();
+  }
+  function sendGraph() {
+    const eventId = `${Date.now()}-${++counter}`;
+    state.outbound = {id: eventId, ...snapshot()};
+    message("streamlit:setComponentValue", {dataType: "json", value: {
+      event_id: eventId, graph_digest: state.digest,
+      workflow: clone(state.workflow), positions: clone(state.positions),
+    }});
   }
   function validateWorkflow(raw) {
     if (!raw || typeof raw !== "object" || Array.isArray(raw) || raw.schema_version !== 1 ||
@@ -375,14 +382,33 @@
     if (!args || typeof args !== "object" || !args.workflow || !args.catalog) return;
     try {
       state.catalog = args.catalog;
-      const next = validateWorkflow(args.workflow), changed = !state.workflow || !same(next, state.workflow);
-      state.digest = typeof args.graph_digest === "string" ? args.graph_digest : "";
+      const next = validateWorkflow(args.workflow);
+      const digest = typeof args.graph_digest === "string" ? args.graph_digest : "";
+      const acknowledged = state.outbound && (Object.hasOwn(args, "event_ack")
+        ? args.event_ack === state.outbound.id : same(next, state.outbound.workflow));
+      let changed = false, resend = false;
+      if (acknowledged) {
+        if (same(next, state.outbound.workflow)) {
+          // Keep edits made locally while the accepted graph was in flight.
+          resend = !same(next, state.workflow) || !same(state.positions, state.outbound.positions);
+        } else {
+          // A rejected structural draft must not be replayed indefinitely.
+          changed = true;
+          announce("The application rejected the last draft. Review its validation messages.");
+        }
+        state.outbound = null;
+      } else if (!state.outbound || digest !== state.digest) {
+        changed = !state.workflow || !same(next, state.workflow);
+        if (changed) state.outbound = null;
+      }
+      state.digest = digest;
       state.disabled = !!args.disabled;
       if (changed) {state.workflow = next; ensurePositions(args.positions || {}); state.undo = []; state.redo = []; state.pending = null; state.selected = null;}
       $("errors").replaceChildren();
       if (Array.isArray(args.errors)) args.errors.slice(0, 20).forEach(error => $("errors").append(element("p", "", String(error))));
       catalogue(); renderGraph();
       if (changed) {fit(); announce("Workflow loaded. Graph editing does not execute algorithms.");}
+      if (resend) sendGraph();
     } catch (error) {announce(`Workflow could not be loaded: ${error.message}`);}
   });
   new ResizeObserver(() => {applyView(); frameHeight();}).observe(document.body);

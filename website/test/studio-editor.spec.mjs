@@ -46,15 +46,29 @@ test("supports keyboard movement, node deletion, undo/redo and acknowledged revi
   await frame.getByRole("button",{name:"Move node demo",exact:true}).focus();
   await page.keyboard.press("ArrowRight");
   expect((await latest(page)).positions.demo.x).toBe(10);
-  await page.evaluate(()=>{const event=window.bridgeEvents.at(-1);window.args={...window.args,...event,graph_digest:"acknowledged-v2"};window.renderEditor();});
+  await page.evaluate(()=>{window.autoAcknowledge=false;const event=window.bridgeEvents.at(-1);window.args={...window.args,...event,event_ack:event.event_id,graph_digest:"acknowledged-v2"};window.renderEditor();});
   await frame.getByRole("button",{name:"Undo",exact:true}).click();
   expect((await latest(page)).positions.demo.x).toBe(0);
   expect((await latest(page)).graph_digest).toBe("acknowledged-v2");
+  await page.evaluate(()=>{const event=window.bridgeEvents.at(-1);window.args={...window.args,...event,event_ack:event.event_id};window.renderEditor();window.autoAcknowledge=true;});
   await frame.getByRole("button",{name:"Redo",exact:true}).click();
   expect((await latest(page)).positions.demo.x).toBe(10);
   await frame.getByRole("button",{name:"Move node report",exact:true}).focus();
   await page.keyboard.press("Delete");
   await expect.poll(async()=> (await latest(page))?.workflow.nodes.map(node=>node.id)).toEqual(["demo","analysis"]);
+});
+
+test("queues rapid edits until the parent acknowledges its revision",async({page})=>{
+  await open(page);const frame=editor(page);
+  await page.evaluate(()=>{window.autoAcknowledge=false;});
+  await frame.getByRole("button",{name:"Move node demo",exact:true}).focus();
+  await page.keyboard.press("ArrowRight");await page.keyboard.press("ArrowRight");await page.keyboard.press("ArrowRight");
+  expect(await page.evaluate(()=>window.bridgeEvents.length)).toBe(1);
+  expect((await latest(page)).positions.demo.x).toBe(10);
+  await page.evaluate(()=>{const event=window.bridgeEvents[0];window.renderEditor({...window.args,...event,event_ack:event.event_id,graph_digest:"new-server-revision"});});
+  await expect.poll(()=>page.evaluate(()=>window.bridgeEvents.length)).toBe(2);
+  const buffered=await latest(page);
+  expect(buffered.graph_digest).toBe("new-server-revision");expect(buffered.positions.demo.x).toBe(30);
 });
 
 test("drag changes persisted positions, zoom and pan change only viewport",async({page},info)=>{
