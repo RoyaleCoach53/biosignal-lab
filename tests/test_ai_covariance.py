@@ -100,3 +100,16 @@ def test_ai_cli_creates_new_experiment_and_preserves_old(tmp_path, capsys):
     assert error.value.code == 1
     assert (output / "model.json").read_bytes() == model_bytes
     assert "No physiological task validated" in capsys.readouterr().out
+
+
+def test_ai_dashboard_runs_spatial_covariance_pipeline():
+    pytest.importorskip("streamlit")
+    from pathlib import Path
+    from streamlit.testing.v1 import AppTest
+    app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "ai_app.py"), default_timeout=60).run()
+    next(select for select in app.selectbox if select.label == "Representation").set_value("Spatial covariance").run()
+    next(button for button in app.button if button.label == "Run grouped evaluation").click().run()
+    assert not app.exception
+    assert app.session_state["ai_report"]["model"] == "csp_lda"
+    assert app.session_state["ai_report"]["metrics"]["accuracy"] == 1
+    assert app.session_state["ai_linear_model"] is None

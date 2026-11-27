@@ -4,36 +4,46 @@ import json
 import pandas as pd
 import streamlit as st
 
-from biosignal_lab.ai import evaluate_grouped, train_linear
-from biosignal_lab.ai.demo import synthetic_feature_dataset
+from biosignal_lab.ai import evaluate_epochs, evaluate_grouped, train_linear
+from biosignal_lab.ai.demo import synthetic_epoch_dataset, synthetic_feature_dataset
 
 st.set_page_config(page_title="BioSignal AI", page_icon="🧪", layout="wide")
 st.title("BioSignal AI")
 st.caption("Subject-disjoint research baselines · local computation · reproducible seeds")
-st.info("This demonstration classifies simulated 10 Hz versus 20 Hz tones. Its scores do not measure motor imagery, disease, or any physiological task. No pretrained weights or human data are used.")
+st.info("This demonstration classifies simulated tones or spatial covariance patterns. Its scores do not measure motor imagery, disease, or any physiological task. No pretrained weights or human data are used.")
 
 with st.sidebar:
     st.header("Synthetic experiment")
-    model_name = st.selectbox("Classifier", ["lda", "logistic", "svm", "random_forest",
-                                             "knn", "gradient_boosting", "qda"])
+    representation = st.selectbox("Representation", ["Spectral tone features", "Spatial covariance"])
+    models = (["lda", "logistic", "svm", "random_forest", "knn", "gradient_boosting", "qda"]
+              if representation == "Spectral tone features" else ["csp_lda", "log_euclidean"])
+    model_name = st.selectbox("Classifier", models)
     n_subjects = st.slider("Simulated subjects", 3, 20, 8)
     n_trials = st.slider("Trials per subject", 4, 40, 16, 2)
     seed = int(st.number_input("Random seed", min_value=0, max_value=999999, value=42))
     nested = st.checkbox("Nested grouped hyperparameter search", value=False,
-                         help="Available for logistic regression; outer test subjects never select parameters.")
+                         help="Available for logistic regression, CSP/LDA and covariance geometry; outer test subjects never select parameters.")
     run = st.button("Run grouped evaluation", type="primary")
 
 st.write("Every outer test subject is excluded from fitting both the scaler and classifier. Confidence intervals resample whole simulated subjects. The Python API supports validated feature datasets and explicitly licensed, checksum-pinned local caches.")
 if run:
     try:
-        if nested and model_name != "logistic":
-            st.error("Choose logistic regression for this demonstration's nested search.")
+        if nested and model_name not in {"logistic", "csp_lda", "log_euclidean"}:
+            st.error("Choose logistic, CSP/LDA or covariance geometry for this demonstration's nested search.")
         else:
             with st.spinner("Evaluating held-out subjects…"):
-                dataset = synthetic_feature_dataset(seed, n_subjects, n_trials)
-                report = evaluate_grouped(dataset, model=model_name, seed=seed,
-                                          param_grid={"logisticregression__C": [.1, 1., 10.]} if nested else None)
-                report["data_scope"] = "Synthetic 10 Hz and 20 Hz tones; no physiological generalisation claim."
+                if representation == "Spectral tone features":
+                    dataset = synthetic_feature_dataset(seed, n_subjects, n_trials)
+                    report = evaluate_grouped(dataset, model=model_name, seed=seed,
+                                              param_grid={"logisticregression__C": [.1, 1., 10.]} if nested else None)
+                    report["data_scope"] = "Synthetic 10 Hz and 20 Hz tones; no physiological generalisation claim."
+                else:
+                    dataset = synthetic_epoch_dataset(seed, n_subjects, n_trials)
+                    parameters = ({"csptransformer__n_components": [2, 4]} if model_name == "csp_lda"
+                                  else {"regularization": [.01, .1]}) if nested else None
+                    report = evaluate_epochs(dataset, model=model_name, seed=seed,
+                                               n_components=2, param_grid=parameters)
+                    report["data_scope"] = "Synthetic spatial covariance patterns; no physiological generalisation claim."
                 st.session_state["ai_report"] = report
                 st.session_state["ai_linear_model"] = train_linear(dataset, model_name, seed).to_dict() if model_name in {"lda", "logistic"} else None
     except (ValueError, ImportError, RuntimeError) as exc:
@@ -43,6 +53,7 @@ if "ai_report" in st.session_state:
     report = st.session_state["ai_report"]
     st.subheader(f"Completed experiment: {report['model']}, seed {report['seed']}")
     st.caption("Results below describe the completed configuration; use Run to evaluate changed controls.")
+    st.caption(report["data_scope"])
     cols = st.columns(4)
     cols[0].metric("Held-out accuracy", f"{report['metrics']['accuracy']:.3f}")
     cols[1].metric("Balanced accuracy", f"{report['metrics']['balanced_accuracy']:.3f}")
