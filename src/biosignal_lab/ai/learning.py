@@ -193,14 +193,17 @@ def _evaluate_grouped(dataset, model, cv, n_splits, seed, param_grid,
     boot = np.array([rng.choice(subject_accuracy, size=len(subjects), replace=True).mean()
                      for _ in range(bootstrap_samples)])
     digest = sha256()
-    digest.update(X.astype("<f8").tobytes())
-    digest.update(dataset._provenance_json.encode())
-    # Length prefixes prevent collisions between e.g. ['ab','c'] and ['a','bc'].
-    for values in (y, groups, dataset.feature_names):
-        for value in values:
-            encoded = str(value).encode("utf-8")
-            digest.update(len(encoded).to_bytes(8, "big"))
-            digest.update(encoded)
+    # Bind shape, dtype, field identity and sequence boundaries, not just the
+    # concatenation of array bytes and length-prefixed identifiers. Otherwise
+    # different reshapes and repartitioned metadata can collide structurally.
+    envelope = {"fingerprint_schema": "biosignal-ai-input-v2", "shape": list(X.shape),
+                "dtype": "<f8", "labels": y.tolist(), "subjects": groups.tolist(),
+                "feature_names": list(dataset.feature_names),
+                "provenance": json.loads(dataset._provenance_json)}
+    encoded = json.dumps(envelope, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    digest.update(len(encoded).to_bytes(8, "big"))
+    digest.update(encoded)
+    digest.update(X.astype("<f8").tobytes(order="C"))
     discrimination = {"available": False, "reason": "Classifier does not expose class probabilities"}
     if has_probabilities:
         metrics, _, _, _ = _sklearn()
@@ -218,6 +221,7 @@ def _evaluate_grouped(dataset, model, cv, n_splits, seed, param_grid,
             "cv": cv, "seed": seed, "n_samples": len(X), "n_features": X.shape[1],
             "n_subjects": len(subjects), "classes": classes.tolist(),
             "features": list(dataset.feature_names), "data_sha256": digest.hexdigest(),
+            "data_fingerprint_schema": "biosignal-ai-input-v2",
             "provenance": json.loads(dataset._provenance_json), "roc": discrimination,
             "metrics": _metrics(y, predictions, classes), "folds": folds,
             "per_subject": per_subject, "subject_mean_accuracy": float(subject_accuracy.mean()),

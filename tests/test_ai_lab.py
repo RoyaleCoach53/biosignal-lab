@@ -145,6 +145,17 @@ def test_dataset_rejects_nonfinite_features_and_copies_caller_arrays():
         FeatureDataset([[0], [1]], [0, 1], [1., np.nan])
 
 
+def test_dataset_hash_binds_shape_and_metadata_field_boundaries():
+    same_bytes = np.arange(48, dtype=float)
+    first = FeatureDataset(same_bytes.reshape(4, 12), ["a", "b", "a", "b"],
+                            list("abcd"), tuple("efghijklmnop"))
+    second = FeatureDataset(same_bytes.reshape(6, 8), ["a", "b", "a", "b", "a", "b"],
+                             list("cdefgh"), tuple("ijklmnop"))
+    reports = [evaluate_grouped(data, model="knn", bootstrap_samples=100) for data in (first, second)]
+    assert reports[0]["data_sha256"] != reports[1]["data_sha256"]
+    assert reports[0]["data_fingerprint_schema"] == "biosignal-ai-input-v2"
+
+
 def _record(path="subject/signal.bin", contents=b"synthetic signal", subject="s1", split="train"):
     return DatasetRecord(path, "https://example.org/signal.bin", sha256(contents).hexdigest(), subject, split)
 
