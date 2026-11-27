@@ -13,12 +13,19 @@ window.args={workflow:{schema_version:1,name:"Synthetic EEG workflow",nodes:[
   summary:{inputs:{analysis:port("analysis")},outputs:{out:port("json")},description:"Machine-readable analysis summary"},
   processed:{inputs:{analysis:port("analysis")},outputs:{out:port("recording","uV")},description:"Extract processed recording"},
 },positions:{demo:{x:0,y:30},analysis:{x:320,y:30},report:{x:640,y:30}},graph_digest:"fixture-v1",errors:[]};
-window.bridgeEvents=[];
+window.bridgeEvents=[];window.autoAcknowledge=true;
 window.renderEditor=(args=window.args)=>document.getElementById("editor").contentWindow.postMessage({type:"streamlit:render",args},location.origin);
 window.addEventListener("message",event=>{
   if(event.source!==document.getElementById("editor").contentWindow)return;
   if(event.data.type==="streamlit:componentReady")window.renderEditor();
-  if(event.data.type==="streamlit:setComponentValue")window.bridgeEvents.push(event.data.value);
+  if(event.data.type==="streamlit:setComponentValue"){
+    window.bridgeEvents.push(event.data.value);
+    if(window.autoAcknowledge){
+      window.args={...window.args,workflow:event.data.value.workflow,positions:event.data.value.positions,
+        event_ack:event.data.value.event_id,graph_digest:`ack-${window.bridgeEvents.length}`};
+      window.renderEditor();
+    }
+  }
   if(event.data.type==="streamlit:setFrameHeight")document.getElementById("editor").style.height=event.data.height+"px";
 });
 </script></body></html>
