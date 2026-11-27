@@ -1,0 +1,173 @@
+# Additive scientific engine
+
+The `biosignal_lab.engine` API extends the v0.3 EEG/EMG toolkit without changing
+`Recording`, `AnalysisConfig`, `analyze`, the existing CLI, or recorded release
+evidence. These are research primitives, not diagnostic tools or a completed
+v0.5 release. A result must be interpreted with its acquisition and processing
+settings.
+
+## Units and provenance
+
+`Signal(data, sfreq, channels, modality="eeg", unit="uV", reference=None,
+metadata={})` contains finite channel-by-sample data. It copies input data and
+metadata, marks the owned array read-only, and stores labels, explicit units,
+sampling frequency and acquisition reference. Arrays can deliberately have
+write protection overridden by callers; do not share with code that mutates
+internal state. Metadata is copied and protected at its top level, not recursively
+frozen. Applications should treat nested metadata and history as read-only.
+
+Supported modality labels are EEG, EMG, ECG, EOG, PPG, EDA and `other` in lowercase.
+This labels the signal; it does not validate physiological identity. Electrical
+units (`V`, `mV`, `uV`), conductance units (`S`, `uS`) and arbitrary units (`a.u.`)
+are separate. `to_unit()` rejects conversion between incompatible quantities.
+PPG is not assumed to be voltage or calibrated blood volume. Transformations
+retain metadata and append operation parameters to `history`. Explicit reference
+transforms update the reference description. `Signal.from_recording()` bridges
+the original toolkit; it does not guess an acquisition reference.
+
+Missing data are not silently accepted. `repair_missing()` performs bounded
+interior linear interpolation and records its limits and warning messages. Gaps
+at boundaries, infinities, excessive duration or missing fraction fail. Filled
+values are estimates, not recovered physiology.
+
+## Filtering and sampling
+
+`FilterSpec` accepts Butterworth (`butter`), Chebyshev I/II (`cheby1`, `cheby2`),
+Bessel (`bessel`), elliptic (`ellip`) and windowed FIR (`fir`). Types are lowpass,
+highpass, bandpass, bandstop and notch. Frequencies are Hz strictly inside
+Nyquist. IIR order is limited to 20; FIR `order` means odd tap count, at least 3.
+The ripple and stopband attenuation settings apply to families that use them.
+Notch uses SciPy's second-order IIR design with explicit quality factor.
+
+`filter_signal(signal, spec)` records causal or forward-backward direction,
+odd padding and pad length. Forward-backward filtering is acausal and squares
+the single-pass magnitude response; it is not appropriate for real-time use.
+Padding policy changes results at boundaries. Padding is not a guarantee of
+settled response: trim and assess transients for the selected filter and data.
+Causal one-shot filtering starts at zero state and includes startup transients.
+
+`StreamingFilter(FilterSpec(phase="causal", ...), sfreq, n_channels)` persists
+filter state across `.process(chunk)` calls. One consumer owns each instance;
+call `.reset()` explicitly after a discontinuity. Arbitrary chunk partitioning
+matches the one-shot causal reference in tests. The class does not perform
+thread synchronization or infer dropped samples.
+
+`resample_signal()` uses rational polyphase FIR resampling, a Kaiser window
+(beta 5), and line extension. It rejects inaccurate rational approximations and
+excessive outputs. Anti-alias filtering is tested using a tone above the new
+Nyquist frequency. Edge transients remain. `detrend_signal()` supports constant
+and linear detrending. `normalize_signal()` provides z-score and median/MAD
+normalization, outputs arbitrary units and rejects zero dispersion.
+
+## Spectra and time-frequency transforms
+
+- `fft_spectrum()` returns one-sided rectangular-window amplitudes in input units,
+  with correct DC/Nyquist scaling. No mean removal or window correction is hidden.
+- `welch_psd()` returns Hz and input-unit-squared/Hz with Hann segments, 50% overlap,
+  constant segment detrending and density scaling. Requested windows must fit.
+- `spectrogram()` uses the same density convention; `stft()` returns complex
+  coefficients in input units without boundary extension or tail padding.
+- `multitaper_psd()` averages DPSS periodograms with explicit time-bandwidth and
+  taper count. It removes channel means and uses equal taper weights. This is
+  not adaptive multitaper weighting or a confidence-interval estimator.
+- `integrate_band()` interpolates spectral endpoints and integrates with the
+  trapezoidal rule. An incompletely observed band fails rather than becoming zero.
+- `spectral_entropy()` computes Shannon entropy of normalized discrete power
+  weights, optionally divided by log2(number of bins). Zero total power fails.
+- `wavelet_transform()` and `discrete_wavelet()` require PyWavelets. CWT values
+  are coefficients, not a calibrated PSD. Neither transform automatically removes
+  boundary effects. Decomposition levels and output sizes are bounded.
+
+Scalp spectral coupling can reflect volume conduction and common reference.
+It does not establish a neural source or causal network.
+
+## EEG and event processing
+
+`common_average_reference()` and `bipolar_reference()` transform known electrical
+channels. Exclude identified bad channels explicitly before common averaging.
+`epoch()` accepts integer event sample indices, inclusive start/end times rounded
+to nearest samples, and optional inclusive baseline interval. It rejects any
+out-of-range epoch rather than silently dropping trials. `Epochs` preserves
+channels, unit, reference, event indices, modality and timing; `.average()`
+computes an event average with its trial count and epoch start time in metadata.
+
+`phase_locking_value()` computes pairwise temporal PLV using Hilbert phase.
+Pass suitable narrowband signals and remove filter edges first. Constant signals
+fail. `bad_channel_candidates()` flags flatline/high-variance candidates only;
+it is not a calibrated bad-channel detector.
+
+`ica_remove()` requires MNE and scikit-learn. It fits reproducible FastICA and
+removes only explicitly supplied, reviewed component indices. No component is
+classified automatically as an artifact; desired activity can be removed.
+Insufficient samples, invalid rank/index and reached iteration limits fail.
+Choose filtering, channel selection and component count scientifically before
+fitting; ICA does not establish independent anatomical neural sources.
+
+## EMG and peripheral descriptions
+
+`emg_features()` reports RMS, MAV, waveform length, integrated EMG, zero crossings,
+slope sign changes, median and mean PSD frequencies. Crossing thresholds use the
+signal's amplitude units. Integrated EMG uses sum(abs(x))/sfreq. Zero power gives
+unavailable frequency values. These frequency features alone do not establish
+muscle fatigue.
+
+`activation_intervals()` uses a trailing RMS envelope and explicit threshold,
+window and minimum duration. Initial incomplete windows are excluded. Its
+half-open intervals are threshold candidates, not validated physiological onsets.
+
+`peak_intervals()` locates configurable ECG/PPG/EOG peak candidates on signals
+that the caller has preprocessed. Returned intervals and reciprocal mean rate
+need peak review. This is not an automatic QRS/blink detector, arrhythmia decision,
+blood-pressure estimate, oxygen-saturation measurement or validated heart-rate
+monitor.
+
+`eda_components()` separates an explicit lowpass tonic approximation from its
+residual in conductance units. The residual is not deconvolved sudomotor activity
+and can be negative. `adaptive_cancel()` implements deterministic normalized LMS
+with an explicit reference, taps and learning rate; it may also remove desired
+activity correlated with that reference. It is not automatic artifact removal.
+
+## Interchange and parsing limits
+
+`save_signal()` writes a versioned NPZ with numeric arrays and strict JSON metadata.
+`load_signal()` disables pickle, bounds compressed/uncompressed sizes and declared
+NPY allocations, and rejects unexpected archive members. Saving exclusively creates
+files and preserves previous outputs. `save_hdf5()`/`load_hdf5()` use a versioned
+engine schema, preserve provenance, reject external/virtual datasets and bound
+expanded sample allocation. They require h5py; generic HDF5 is not silently
+interpreted as engine data.
+
+`load_mat()` accepts explicit data key, sampling frequency, labels, modality,
+unit and reference for numeric MATLAB v4/v5/v7.2 matrices. MATLAB v7.3 is not
+silently treated as that format. `load_mne()` supports electrical channels in
+EDF/EDF+, BDF, GDF and FIF through MNE, explicitly converts volts to uV and retains
+selected channel labels, bad-channel names and annotations. EDF/BDF channel types
+are inferred from labels by MNE, whose unknown labels can default to EEG; users
+must verify source channel metadata and biological identity. It rejects absent
+requested modality and oversize selected samples. Acquisition reference is not
+inferred. Generic format parsers are not a security sandbox; only parse trusted
+files, and apply OS resource limits when processing adversarial inputs. General
+HDF5/MAT parsing has not undergone fuzzing or an independent security audit.
+
+XDF, BIDS, automatic ASR, automatic artifact classification, validated ECG/PPG/EOG
+physiology pipelines, electrode/source topography and physical acquisition are
+not claimed by this package. Other modules have their own acceptance status.
+
+## Reproduce verification
+
+From the repository root with development, MNE, scikit-learn, PyWavelets and
+h5py installed:
+
+```sh
+python -m pytest tests/test_engine.py -ra
+python benchmarks/verify_engine.py --output local-results/engine-verification.json
+python examples/engine_workflow.py --output local-results/engine-example.npz
+```
+
+Tests include analytical power/frequency targets, matched SciPy filters, causal
+chunk equivalence, explicit anti-alias control, interpolation/epoch limits,
+wavelet localization/reconstruction, ICA reconstruction and removal, typed
+interchange, malicious shape headers and external HDF5 links. Shared NumPy/SciPy
+and MNE comparisons are interoperability evidence, not fully independent
+scientific validation. No real-world peripheral cohort or independent review
+has been performed for this additive engine.
