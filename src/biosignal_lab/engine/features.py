@@ -1,6 +1,7 @@
 """Descriptive EMG and peripheral-signal features; no diagnostic decisions."""
 
 from __future__ import annotations
+import hashlib
 import numpy as np
 from scipy import signal as sp
 from scipy.integrate import cumulative_trapezoid, trapezoid
@@ -197,6 +198,22 @@ def adaptive_cancel(signal: Signal, reference: Signal, *, taps=16, step=0.1, eps
             "taps": taps,
             "step": step,
             "epsilon": epsilon,
+            "reference_input": {
+                "data_sha256": hashlib.sha256(reference.data.tobytes(order="C")).hexdigest(),
+                "shape": list(reference.data.shape),
+                "dtype": reference.data.dtype.str,
+                "sfreq": reference.sfreq,
+                "unit": reference.unit,
+                "modality": reference.modality,
+                "reference": reference.reference,
+                "metadata": dict(reference.metadata),
+                "history": reference.history,
+                "channel_mapping": [
+                    {"target": target, "reference": ref}
+                    for target, ref in zip(signal.channels, reference.channels)
+                ],
+                "mapping_policy": "positional; acquisition time synchronization is caller responsibility",
+            },
             "warning": "desired signal correlated with reference may be removed",
         },
     ), weights

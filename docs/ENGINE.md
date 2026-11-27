@@ -124,7 +124,9 @@ monitor.
 `eda_components()` separates an explicit lowpass tonic approximation from its
 residual in conductance units. The residual is not deconvolved sudomotor activity
 and can be negative. `adaptive_cancel()` implements deterministic normalized LMS
-with an explicit reference, taps and learning rate; it may also remove desired
+with an explicit reference, taps and learning rate. History binds reference data
+SHA-256, shape/dtype, metadata, prior processing and positional channel mapping;
+reference/acquisition time synchronization remains the caller's responsibility. It it may also remove desired
 activity correlated with that reference. It is not automatic artifact removal.
 
 ## Interchange and parsing limits

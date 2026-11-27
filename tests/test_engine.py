@@ -478,3 +478,28 @@ def test_mat_compressed_shape_and_object_classes_are_rejected(tmp_path):
     savemat(objects, {"data": np.array([["unsupported"]], dtype=object)})
     with pytest.raises(ValueError, match="bounded numeric"):
         load_mat(objects, **kwargs)
+
+
+def test_nlms_provenance_binds_reference_samples_metadata_and_channel_mapping():
+    s = tone(duration=1)
+    first = Signal(
+        np.ones_like(s.data), s.sfreq, ("reference_A",), metadata={"source": "reference-file"}
+    )
+    second = Signal(
+        np.full_like(s.data, 2.0), s.sfreq, ("reference_A",), metadata={"source": "reference-file"}
+    )
+    a, _ = adaptive_cancel(s, first, taps=4)
+    b, _ = adaptive_cancel(s, second, taps=4)
+    params = a.history[-1]["parameters"]["reference_input"]
+    assert params["metadata"]["source"] == "reference-file"
+    assert params["channel_mapping"] == [{"target": "Cz", "reference": "reference_A"}]
+    assert params["shape"] == list(s.data.shape) and params["unit"] == "uV"
+    assert params["data_sha256"] != b.history[-1]["parameters"]["reference_input"]["data_sha256"]
+
+
+@pytest.mark.parametrize("calculate", [welch_psd, spectrogram, multitaper_psd])
+def test_power_estimators_reject_finite_input_with_unrepresentable_squared_power(calculate):
+    s = Signal((np.tile([-1.0, 1.0], 500) * 1e200)[None], 100.0, ("extreme",))
+    with np.errstate(over="ignore", invalid="ignore"):
+        with pytest.raises(ValueError, match="overflow"):
+            calculate(s)
