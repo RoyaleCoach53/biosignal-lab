@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Please cite the exact BioSignal Lab version or commit and the methods and dataset sources used in your experiment."
+type: software
+title: "BioSignal Lab"
+authors:
+  - name: "BioSignal Lab contributors"
+repository-code: "https://github.com/RoyaleCoach53/biosignal-lab"
+url: "https://github.com/RoyaleCoach53/biosignal-lab"
+license: MIT
+abstract: "Local-first physiological signal processing and reproducible research workflows. Research and education only."
