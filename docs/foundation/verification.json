@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-27",
+  "workstream": "foundation",
+  "baseline_pr6": "e740502d1be013647bf4ec7e0233c1f65b795c97",
+  "python": "3.12.14",
+  "platform": "Linux x86_64",
+  "tests": {
+    "passed": 142,
+    "skipped": 0,
+    "failed": 0
+  },
+  "numerical": {
+    "passed": 12,
+    "total": 12
+  },
+  "clean_wheel_install": {
+    "passed": true,
+    "isolated_venv": true,
+    "installed_module_inside_venv": true,
+    "eeg_emg_cli_reports": true,
+    "dashboard_apptest": true
+  },
+  "advisory_audit": {
+    "report": "DEPENDENCY_AUDIT.json",
+    "distributions_in_report": 82,
+    "known_vulnerability_entries": 0,
+    "editable_project_skipped": true,
+    "initial_pip_advisory_entries": 12,
+    "pip_updated_to": "26.3"
+  },
+  "container": {
+    "image_sha256": "488bb271effaed2aaa0a8440e514f8e3f4278935971d3cd52b1dbd58c23178c1",
+    "uid": 10001,
+    "network": "none",
+    "capabilities": "all dropped",
+    "dashboard_apptest": true,
+    "synthetic_cli_exports": true,
+    "http_health_and_html": true,
+    "build_ca_bundle_mount": true
+  },
+  "source_sha256": {
+    "tools/check_installation.py": "8123b9f45a85e22b4dc3b386d5fa53938c69d84088d467133ed9a5cca882ac17",
+    "tools/check_publication.py": "484787570b90049c97cb18f04b5bdc39c7a1419d347fbc4ee96dfa5d05afe3c5",
+    "tools/release_artifacts.py": "0d25ae15764705b462b92b68e3c2906f56fd70267af85cc66130c8608d1b5d9f",
+    "src/biosignal_lab/cli.py": "bf24f42453c33e549077703a735da172ff429f9c9c8a5ec144211f9b521d3c90",
+    "Dockerfile": "5b821890421a6c465f42f8b279daca356f42e4aab3b182c515233f8bbbf9fc99"
+  },
+  "not_verified": [
+    "Windows/macOS execution",
+    "hosted CI",
+    "PyPI configuration or publication",
+    "independent security review",
+    "hardware or physiological validity"
+  ],
+  "scope": "Workstream development evidence only. Rebuild and reverify combined source before release. Source hashes describe the final tools; individual earlier artifact builds are retained in ignored local-results."
+}

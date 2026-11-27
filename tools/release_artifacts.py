@@ -14,6 +14,7 @@ from importlib import metadata
 import io
 import json
 from pathlib import Path, PurePosixPath
+import stat
 import tarfile
 import zipfile
 
@@ -32,6 +33,8 @@ def verify_archive(path: Path):
             names = archive.namelist()
             if len(names) != len(set(names)) or not all(safe_member(n) for n in names):
                 raise ValueError("Duplicate or unsafe wheel members")
+            if any(stat.S_ISLNK(info.external_attr >> 16) for info in archive.infolist()):
+                raise ValueError("Wheel contains symbolic links")
             if archive.testzip() is not None:
                 raise ValueError("Wheel CRC verification failed")
             records = [n for n in names if n.endswith(".dist-info/RECORD")]

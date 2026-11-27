@@ -13,6 +13,7 @@ RUN --mount=type=secret,id=build_ca,required=false \
     python -m pip install --no-cache-dir '.[all]' \
     && python -m pip check \
     && useradd --create-home --uid 10001 biosignal
+RUN chmod -R a+rX /opt/biosignal
 USER biosignal
 EXPOSE 8501
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD python -c "import urllib.request; assert urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=3).read() == b'ok'"

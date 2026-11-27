@@ -49,3 +49,16 @@ def test_existing_release_evidence_is_preserved(tmp_path):
     with pytest.raises(FileExistsError):
         prepare(tmp_path)
     assert marker.read_text() == "previous release"
+
+
+def test_wheel_symbolic_links_are_rejected(tmp_path):
+    import stat
+    path = tmp_path / "example.whl"
+    with zipfile.ZipFile(path, "w") as archive:
+        member = zipfile.ZipInfo("example/link")
+        member.create_system = 3
+        member.external_attr = (stat.S_IFLNK | 0o777) << 16
+        archive.writestr(member, "../../secret")
+        archive.writestr("example-1.dist-info/RECORD", "")
+    with pytest.raises(ValueError, match="symbolic links"):
+        verify_archive(path)
