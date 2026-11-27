@@ -27,9 +27,11 @@ def test_publication_fails_closed_for_unreadable_and_symlink(tmp_path):
 def test_audit_subprocess_removes_inherited_python_paths(monkeypatch):
     monkeypatch.setenv("PYTHONPATH", "/untrusted-checkout")
     monkeypatch.setenv("PYTHONHOME", "/untrusted-runtime")
+    monkeypatch.setenv("PIP_TARGET", "/untrusted-installation-target")
     def fake_run(*args, **kwargs):
         assert "PYTHONPATH" not in kwargs["env"]
         assert "PYTHONHOME" not in kwargs["env"]
+        assert "PIP_TARGET" not in kwargs["env"]
         assert kwargs["env"]["PYTHONNOUSERSITE"] == "1"
         return subprocess.CompletedProcess(args, 0, stdout="done")
     monkeypatch.setattr(subprocess, "run", fake_run)

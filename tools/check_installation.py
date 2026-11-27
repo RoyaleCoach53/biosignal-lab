@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def command(arguments, cwd=ROOT):
     # Never inherit a development checkout or user module search path into an audit.
     environment = {k: v for k, v in os.environ.items()
-                   if k not in {"PYTHONPATH", "PYTHONHOME"}}
+                   if k not in {"PYTHONPATH", "PYTHONHOME", "PYTHONUSERBASE",
+                                "PIP_TARGET", "PIP_PREFIX", "PIP_USER"}}
     environment.update(PYTHONUTF8="1", PYTHONIOENCODING="utf-8",
                        PYTHONNOUSERSITE="1", STREAMLIT_BROWSER_GATHER_USAGE_STATS="false")
     completed = subprocess.run([str(x) for x in arguments], cwd=cwd, capture_output=True,

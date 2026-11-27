@@ -44,6 +44,7 @@ jobs:
           python -m ruff check --select E9,F63,F7,F82 src tests app.py benchmarks examples tools
           python -m compileall -q src app.py benchmarks examples tools
           python tools/check_docs.py
+          python tools/check_publication.py
       - name: Build wheel and source distribution
         run: python -m build
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
