@@ -47,6 +47,10 @@ def test_sample_block_owns_readonly_copy_and_rejects_ambiguous_data():
         SampleBlock(np.full((2, 4), np.nan), np.arange(4), 0)
     with pytest.raises(ValueError):
         SampleBlock(np.zeros((2, 4)), np.arange(4), 1.5)
+    with pytest.raises(ValueError, match="Complex"):
+        SampleBlock(np.ones((2, 4), dtype=complex)*1j, np.arange(4), 0)
+    with pytest.raises(ValueError, match="explicit sequences"):
+        StreamInfo(250, "AB", "uv")
 
 
 def test_ring_wrap_gap_overflow_and_out_of_order_are_distinct():
@@ -228,3 +232,15 @@ def test_live_dashboard_capture_has_real_signal_psd_and_gap_detection():
     assert not dashboard.exception
     lost = next(metric for metric in dashboard.metric if metric.label == "Detected dropped samples")
     assert lost.value == "50"
+
+
+def test_paced_dashboard_finishes_actual_three_second_rolling_preview():
+    pytest.importorskip("streamlit")
+    from streamlit.testing.v1 import AppTest
+    dashboard = AppTest.from_file(str(Path(__file__).resolve().parents[2] / "live_app.py"), default_timeout=15).run()
+    next(x for x in dashboard.slider if x.label == "Capture duration (seconds)").set_value(3)
+    next(x for x in dashboard.checkbox if x.label == "Animate finite capture in wall time").set_value(True)
+    dashboard.button[0].click().run()
+    assert not dashboard.exception
+    assert next(x for x in dashboard.metric if x.label == "Retained contiguous samples").value == "750"
+    assert len(dashboard.get("plotly_chart")) == 1

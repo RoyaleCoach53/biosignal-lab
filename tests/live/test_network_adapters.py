@@ -1,5 +1,6 @@
 import socket
 import struct
+import json
 from threading import Thread
 
 import numpy as np
@@ -75,6 +76,23 @@ def test_udp_requires_explicit_connected_datagram_peer():
             UDPDevice(receiver, info())
     finally:
         receiver.close()
+
+
+def test_duplicate_metadata_keys_and_nonfinite_json_frames_fail_closed():
+    for payload in (b'{"data":[[1],[2]],"timestamps":[0],"start_sample":0,"start_sample":100}',
+                    b'{"data":[[NaN],[2]],"timestamps":[0],"start_sample":0}',
+                    json.dumps({"data": [[10**1000], [2]], "timestamps": [0], "start_sample": 0}).encode()):
+        sender, receiver = udp_pair()
+        device = UDPDevice(receiver, info())
+        try:
+            sender.send(struct.pack("!I", len(payload))+payload)
+            with pytest.raises((ValueError, OverflowError)):
+                device.read()
+            with pytest.raises(RuntimeError, match="closed"):
+                device.read()
+        finally:
+            sender.close()
+            device.close()
 
 
 def test_websocket_real_loopback_binary_values_and_lifecycle():

@@ -1,0 +1,40 @@
+{
+  "scope": "Deterministic synthetic acquisition, causal SOS and sliding Welch PSD; no physical hardware or wall-clock pacing",
+  "source_sha256": {
+    "benchmarks/live/streaming.py": "ac3f4c5b0aca1fc27b2de8200307f7e40abe16707a877e92b5095fdd7515ffe2",
+    "src/biosignal_lab/live/__init__.py": "46e9bd7ed9d7b4a78806ce002fdecf11d9f4179883faa9a37491de35bf5aeada",
+    "src/biosignal_lab/live/_json.py": "35d537fff2f578570384208351b0ac2df9b181d9550f50284f0115e64a85fa9c",
+    "src/biosignal_lab/live/adapters.py": "f3f202fd2e2a5c5218173b7cf09fc7456678626c3b191b32948f47b584556669",
+    "src/biosignal_lab/live/clock.py": "dc1e867ac62b5e2e79461abb5dfa1840bd0f227a790832e0c875acbe7102145e",
+    "src/biosignal_lab/live/core.py": "71e5453ac35910bebe57af758be11243dddb7637fe7da78712647bf4239152af",
+    "src/biosignal_lab/live/processing.py": "1f86e0d93d7be2ce895d25dd3eff4b5204ba8808574a76bb1f7710f28cba0c3d",
+    "src/biosignal_lab/live/recording.py": "86254c6245ee7850bcd23c46b025e746cfb3f657e3a5420fb94b2a5e665bd85b",
+    "src/biosignal_lab/live/session.py": "a433d991bdaa0a5543a3156417a7414ba84bcce7a5c3b452832355e692324027",
+    "src/biosignal_lab/live/transport.py": "f96dbfd2e0b7b66636a509e633b90e8ab983144fea1888ea8643f6ade25d6f25"
+  },
+  "host": {
+    "os": "Linux",
+    "architecture": "x86_64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "python": "3.12.14",
+    "numpy": "2.5.5",
+    "scipy": "1.18.1"
+  },
+  "workload": {
+    "channels": 8,
+    "sfreq_hz": 1000,
+    "block_samples": 100,
+    "blocks": 300,
+    "warmup_blocks": 30
+  },
+  "cpu_processing_p50_ms": 3.264177500000187,
+  "cpu_processing_p95_ms": 4.09220959996901,
+  "cpu_processing_max_ms": 103.44338599998082,
+  "samples_per_second_including_simulation": 23435.049536012542,
+  "tracemalloc_peak_bytes": 1221331,
+  "limitations": [
+    "Tracemalloc is Python-tracked allocator peak, not process RSS",
+    "Timing includes tracemalloc overhead and excludes acquisition/network/display",
+    "Container scheduling affects timings; no guaranteed real-time deadlines"
+  ]
+}
