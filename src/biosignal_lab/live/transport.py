@@ -11,6 +11,8 @@ import json
 import socket
 import struct
 
+import numpy as np
+
 from .core import SampleBlock, StreamInfo
 
 
@@ -31,7 +33,7 @@ class TCPDevice:
     """
 
     def __init__(self, connection: socket.socket, info: StreamInfo, timeout: float = 2., max_bytes: int = 1_048_576):
-        if timeout <= 0 or max_bytes < 1 or max_bytes > 16_777_216:
+        if not np.isfinite(timeout) or timeout <= 0 or isinstance(max_bytes, bool) or not isinstance(max_bytes, int) or max_bytes < 1 or max_bytes > 16_777_216:
             raise ValueError("Positive timeout and frame limit <=16MiB required")
         self.info, self._socket, self.max_bytes = info, connection, max_bytes
         self._socket.settimeout(timeout)
@@ -69,3 +71,34 @@ class TCPDevice:
     def close(self):
         self._closed = True
         self._socket.close()
+
+
+class _SerialConnection:
+    """Map an already-open pyserial object to the bounded framing transport."""
+
+    def __init__(self, port):
+        self.port = port
+
+    def settimeout(self, timeout):
+        self.port.timeout = timeout
+
+    def recv(self, n):
+        data = self.port.read(n)
+        if not data:
+            raise TimeoutError("Serial frame timed out; reconnect with a fresh parser")
+        return data
+
+    def close(self):
+        self.port.close()
+
+
+class SerialDevice(TCPDevice):
+    """Custom length-prefixed JSON over an already-open pyserial port.
+
+    This is software framing, not a driver for an arbitrary USB/serial board.
+    Timeouts close the port: an incomplete frame must never be retried using
+    ambiguous parser state. Physical serial devices have not been verified.
+    """
+
+    def __init__(self, port, info: StreamInfo, timeout: float = 2., max_bytes: int = 1_048_576):
+        super().__init__(_SerialConnection(port), info, timeout, max_bytes)

@@ -1,0 +1,110 @@
+# Optional acquisition adapters
+
+The Live adapters implement real acquisition-library interfaces. They do not
+establish physical board compatibility. The dashboard deliberately exposes only
+the deterministic simulator; connecting a physical source requires explicit
+SDK code and suitable board documentation, drivers and permissions.
+
+Install the appropriate optional library without changing core dependencies:
+
+```sh
+python -m pip install 'brainflow>=5.12,<6' 'pylsl>=1.16,<2' 'pyserial>=3.5,<4'
+python examples/live/native_smoke.py --source brainflow
+python examples/live/native_smoke.py --source lsl
+python examples/live/native_smoke.py --source serial
+```
+
+`native_smoke.py` uses BrainFlow's native `SYNTHETIC_BOARD`, an ephemeral local
+synthetic LSL outlet, or pyserial's `loop://` virtual port. It does not connect
+to physical hardware. The LSL check performs local network discovery and sample
+transport; firewalls or multicast policy can prevent it. Test results describe
+this Linux cloud machine, not all operating systems. The native library versions
+and actual results are recorded in [native adapter results](native-adapter-results.json).
+
+## BrainFlow
+
+```python
+from biosignal_lab.live import BrainFlowDevice, StreamInfo
+
+# board is an explicitly prepared and started brainflow.board_shim.BoardShim.
+# Obtain these indices from BoardShim's documented board descriptor.
+info = StreamInfo(250, ("C3", "C4"), ("uV", "uV"), clock="board_timestamp_seconds")
+adapter = BrainFlowDevice(board, info, signal_rows=[1, 2], timestamp_row=22,
+                         counter_row=0, counter_modulus=256, owns_board=False)
+block = adapter.read(50)
+adapter.close()
+```
+
+The indices above illustrate the interface and are not a board mapping. The
+caller must use the correct board-specific descriptor, units, sampling rate,
+and channel names. No board identifier is assumed, including ADS1299/OpenBCI.
+The adapter preserves the supplied timestamp row and native amplitude units.
+It validates finite samples, increasing timestamps, channel/row counts and
+requested sample limits. An empty buffer raises a retryable `TimeoutError`.
+Other read/parse failures close the adapter. With `owns_board=True`, close calls
+`stop_stream` and guarantees an attempt to `release_session`, even if stopping
+fails. With `owns_board=False`, close preserves the caller's hardware session.
+Reconnection requires a deliberately started fresh session and adapter.
+
+An optional packet-counter row detects missing samples between blocks, exposing
+the gap as a jump in `start_sample`. A discontinuity inside a block is rejected
+instead of silently assigning a continuous sample index. A modulo counter cannot
+distinguish a loss of an entire counter period; forward gaps greater than half
+the modulus, duplicates and apparent reordering are rejected as ambiguous.
+Timestamp gaps remain observable independently. Hardware-specific counter
+semantics and sample-to-packet relationships need physical verification.
+
+## Lab Streaming Layer
+
+```python
+from biosignal_lab.live import LSLDevice, StreamInfo
+
+info = StreamInfo(250, ("C3", "C4"), ("uV", "uV"), clock="lsl_remote_clock")
+adapter = LSLDevice.from_stream(info, stream_name="my-explicit-outlet",
+                               timeout=2, correct_clock=True)
+try:
+    block = adapter.read(100)
+finally:
+    adapter.close()
+```
+
+The factory resolves an explicit stream name and refuses no matches or multiple
+matches. Merely importing BioSignal Lab does not discover streams. Automatic
+LSL recovery is disabled; users must reconnect deliberately. The adapter checks
+LSL channel count and nominal sampling rate against explicit metadata. Channel
+labels and units are provided by the caller; the adapter does not guess them.
+Irregular-rate LSL streams are not supported by this nominal-rate signal API.
+An existing inlet can be supplied with `LSLDevice(inlet, info, ...)`.
+
+By default timestamps remain in the source LSL clock. `correct_clock=True`
+explicitly applies `inlet.time_correction(timeout=...)`, marks the output clock
+`lsl_local_clock`, and records the last correction. Correction can change over
+time and is not a bound on clock error. Backwards output timestamps raise an
+error and close the inlet; no silent retiming occurs. Empty pulls are retryable
+timeouts. Malformed samples or read failures close the inlet. LSL has no required
+source sample counter; generated indices count received samples only. Source
+loss cannot be inferred from these local indices, although timestamp gaps remain
+visible to `RingBuffer`/`LiveProcessor`. Real network timing, dropout/recovery,
+clock accuracy and device data provenance remain unverified.
+
+## Serial/custom USB gateway
+
+`SerialDevice(open_pyserial_port, info, timeout=2, max_bytes=1048576)` accepts an
+already-open serial object. It uses the same four-byte network-order length plus
+UTF-8 JSON frame as `TCPDevice`, generated by `encode_frame`. Partial reads are
+handled; oversized, malformed and incomplete frames close the port. A timeout
+closes the parser because a partial frame cannot safely be resumed as a new
+frame. Channel names, units, timing and sample counters must come from an explicit
+gateway protocol. This is not a native ADS1299, OpenBCI or generic USB driver.
+No device ports are opened automatically. Serial encryption/authentication is
+outside this custom local framing protocol. Physical electrical safety,
+isolation, cable reliability and device calibration are outside software tests.
+
+## Verification boundaries
+
+Protocol tests exercise LSL clock correction, no-sample timeouts, backwards clocks,
+connection failures, ambiguous discovery, BrainFlow counter wrapping, dropped
+packets, ownership and cleanup, and serial fragmented framing/timeouts. Native
+library smoke tests additionally verify current callable interfaces and actual
+local sample transport. They do not replace hardware, multi-host network,
+operating-system, long-duration, disconnect/reconnect or independent verification.
