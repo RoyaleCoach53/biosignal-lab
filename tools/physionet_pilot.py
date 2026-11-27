@@ -174,6 +174,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--download", action="store_true",
                         help="Explicitly download EDF data from PhysioNet if needed")
     args = parser.parse_args(argv)
+    if args.output.exists() or args.output.is_symlink():
+        parser.error("Choose a new output path; existing scientific reports are preserved")
     if any(s not in (1, 2, 3) for s in args.subjects):
         parser.error("This frozen pilot supports checksum-pinned subjects 1, 2, 3 only")
     if len(set(args.subjects)) != len(args.subjects) or len(set(args.runs)) != len(args.runs):
@@ -219,7 +221,8 @@ def main(argv: list[str] | None = None) -> int:
         "interpretation": "Technical interoperability pilot only; not human physiology, artifact-classifier, or clinical validation.",
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    with args.output.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(payload, indent=2, allow_nan=False) + "\n")
     print(f"{len(records)} cases; passed={passed}; report={args.output}")
     return 0 if passed else 1
 

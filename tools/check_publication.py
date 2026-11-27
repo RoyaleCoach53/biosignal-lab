@@ -4,24 +4,35 @@ import re
 import subprocess
 
 
-def main():
-    root = Path(__file__).resolve().parents[1]
-    files = [p for p in subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode().split("\0") if p]
-    raw = {".edf", ".bdf", ".fif", ".vhdr", ".eeg", ".set", ".cnt"}
+def scan(root, files):
+    raw = {".edf", ".bdf", ".fif", ".vhdr", ".eeg", ".set", ".fdt", ".cnt", ".gdf", ".xdf"}
     csv_allowed = {"examples/data/eeg_demo.csv", "examples/data/emg_demo.csv"}
     patterns = [r"gh[pousr]_[A-Za-z0-9]{20,}", r"github_pat_[A-Za-z0-9_]{30,}",
                 r"sk-proj-[A-Za-z0-9_-]{20,}", r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"]
     failures = []
     for name in files:
         path = root / name
-        if set(path.suffixes) & raw or (path.suffix.lower() == ".csv" and name not in csv_allowed):
+        if {suffix.lower() for suffix in path.suffixes} & raw or (path.suffix.lower() == ".csv" and name not in csv_allowed):
             failures.append(f"Unapproved recording/data file: {name}")
+        if path.is_symlink():
+            failures.append(f"Unreviewed symbolic link: {name}")
+            continue
         try:
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             continue
+        except OSError:
+            failures.append(f"Unreadable publication file: {name}")
+            continue
         if any(re.search(p, text) for p in patterns):
             failures.append(f"Credential pattern in: {name}")
+    return failures
+
+
+def main():
+    root = Path(__file__).resolve().parents[1]
+    files = [p for p in subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode().split("\0") if p]
+    failures = scan(root, files)
     print(f"Publication check: {len(files)} tracked files, {len(failures)} findings.")
     for failure in failures:
         print(failure)

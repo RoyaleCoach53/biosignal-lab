@@ -66,7 +66,8 @@ def main(argv=None):
     text = json.dumps(report, indent=2, allow_nan=False) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(text, encoding="utf-8", newline="\n")
+        with args.output.open("x", encoding="utf-8", newline="\n") as stream:
+            stream.write(text)
     print(text, end="")
     return 0 if report["passed"] else 1
 
