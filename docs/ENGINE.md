@@ -153,17 +153,64 @@ inferred. Generic format parsers are not a security sandbox; only parse trusted
 files, and apply OS resource limits when processing adversarial inputs. General
 HDF5/MAT parsing has not undergone fuzzing or an independent security audit.
 
-XDF, BIDS, automatic ASR, automatic artifact classification, validated ECG/PPG/EOG
-physiology pipelines, electrode/source topography and physical acquisition are
-not claimed by this package. Other modules have their own acceptance status.
+## Electrode and event-average visualization
+
+`scalp_positions()` resolves exact EEG labels with an MNE built-in montage or
+caller-provided `DigMontage`, returning head coordinates in metres. The default
+selects MNE's current 10–20 template name, with a legacy-name fallback for older
+MNE versions. Unknown labels fail. Template electrodes approximate a standard
+head; they are not individual digitization or intracranial positions.
+
+`plot_topomap(signal, values, value_unit=...)` plots explicitly unit-labelled
+channel scalars with local spatial interpolation. `plot_montage()` shows selected
+sensors in 2D or 3D. Neither image is neural-source localization. An interpolated
+value between electrodes is not another measured channel. `plot_evoked()` plots
+an `Epochs` trial average, optional pointwise Student-t confidence intervals, the
+event time and original amplitude unit. Intervals assume independent trials and
+are not participant-level or simultaneous inference; correlated trials violate
+the assumption. No component is classified automatically as P300 or another ERP.
+
+## Optional BIDS and XDF workflows
+
+`load_bids(bids_path, modality="eeg")` requires MNE-BIDS and an explicit `BIDSPath`.
+It preserves channel names, sample rate, signal reference, bad-channel labels,
+annotations and recording JSON/channel/event/electrode/coordinate sidecars with
+source checksums. MNE electrical volt values are explicitly converted to uV.
+Selected sample count and sidecar size are bounded. Participant demographics are
+not copied into signal exports; the dataset remains in its source directory.
+This adapter is not a complete BIDS validator or dataset anonymizer.
+
+`load_xdf(path, stream_id=..., modality=..., unit=...)` requires pyxdf and explicitly
+selects one regular numeric stream. A strict chunk/header preflight bounds sample
+counts and float64 expansion before parsing. The adapter refuses partial data
+from pyxdf's tolerant corruption recovery. Complete original timestamps, clock
+offset measurements and raw stream/container metadata are retained; no clock
+synchronization, reset correction, de-jittering or resampling occurs. Timestamp
+intervals must match the nominal sample rate within an explicit tolerance.
+Irregular streams fail and require a separate specified synchronization/resampling
+workflow. Complete channel labels or explicit labels are required, and declared
+channel units must agree with the caller's unit. Compressed `.xdfz`, irregular
+marker streams and implicit multi-device clock alignment are unsupported.
+Long timestamp lists may exceed the NPZ/HDF5 metadata read limit; increasing that
+limit or an alternate timestamp-aware storage scheme must be explicit.
+
+Actual synthetic EDF-backed BIDS and binary XDF files exercise parsing, sidecar
+reference/annotation/unit preservation, discontinuity rejection and malformed
+sample-count handling. Offscreen image tests draw real MNE scalp maps, montages
+and event averages. These are synthetic interoperability checks, not broad
+real-dataset compatibility or independent scientific validation.
+
+Automatic ASR, automatic artifact classification, validated ECG/PPG/EOG physiology
+pipelines, anatomical source reconstruction and physical acquisition are not
+claimed by this package. Other modules have their own acceptance status.
 
 ## Reproduce verification
 
 From the repository root with development, MNE, scikit-learn, PyWavelets and
-h5py installed:
+h5py, MNE-BIDS and pyxdf installed:
 
 ```sh
-python -m pytest tests/test_engine.py -ra
+python -m pytest tests/test_engine.py tests/test_engine_visualization.py tests/test_engine_interchange.py -ra
 python benchmarks/verify_engine.py --output local-results/engine-verification.json
 python examples/engine_workflow.py --output local-results/engine-example.npz
 ```
