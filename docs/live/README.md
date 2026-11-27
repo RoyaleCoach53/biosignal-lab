@@ -5,8 +5,10 @@ Streamlit workbench. It has been tested with a deterministic simulator and a
 custom TCP protocol over loopback. Optional BrainFlow/LSL/serial software adapters
 are described in [adapter verification](adapters.md); native synthetic-board,
 local LSL outlet and virtual serial checks have run. No physical board, USB,
-OpenBCI or ADS1299 acquisition has been verified. UDP and WebSocket acquisition
-remain future adapter work.
+OpenBCI or ADS1299 acquisition has been verified. Custom UDP and WebSocket
+gateway transports have real local loopback tests; they are not native board
+protocols. A bounded background acquisition session supports SDK polling and
+explicit cancellation.
 
 Start from the repository root after installing `.[dev,all]`:
 
@@ -109,13 +111,62 @@ create a new device and a fresh processor session deliberately. The adapter is
 plaintext, unauthenticated and intended only for trusted local networks or a
 caller-managed authenticated encrypted connection. It is not an OpenBCI protocol.
 
+`UDPDevice(connected_socket, info, ...)` uses the same binary frame in one
+datagram. It requires an explicit connected peer, rejects malformed/truncated
+or oversized packets and closes on timeout. Delivery/order are not guaranteed.
+Feed blocks through the ring or processor to detect missing sequence numbers
+and reject old/duplicate blocks. Peer addressing is not authentication.
+
+`WebSocketDevice.connect(url, info, ...)` uses the same binary frame per message.
+It requires `websockets>=15,<18`, sets bounded receive size and queue length,
+disables compression and automatic reconnect, rejects plaintext remote URLs and
+embedded URL credentials, and retains default TLS verification for `wss`.
+Loopback `ws` is permitted for development. A malformed/oversized/text message,
+timeout or disconnection closes the connection. A caller-supplied connection
+must enforce equivalent message-allocation limits. Real loopback tests cover
+binary transport and actual protocol-level oversized-message rejection; remote
+TLS, authentication and multi-host performance have not been exercised.
+
+## Bounded background acquisition
+
+```python
+from biosignal_lab.live import AcquisitionSession
+
+# device and processor must describe exactly the same channels/units/clock.
+session = AcquisitionSession(device, processor, max_samples=2500,
+                             block_samples=50, buffer_seconds=5, pace=True)
+session.start()
+status = session.wait(timeout=15)
+latest_contiguous_window = session.snapshot()
+```
+
+The worker owns one device for one finite requested sample count and never
+reconnects automatically. `pace=True` provides interruptible nominal pacing for
+simulated/playback devices; physical acquisition generally uses `pace=False`.
+The ring stays bounded, and status retains only the latest processing report,
+sample/block/timeouts counts, elapsed wall time and error class. Arbitrary adapter
+exception text is not copied into status. Consecutive empty-read timeouts are
+bounded (`max_idle_timeouts=10`), yielding `idle_timeout` rather than spinning
+forever. End-of-stream yields `disconnected`; malformed data or adapter errors
+yield `fault`. The device is closed in all worker exit paths.
+
+Call `stop(timeout=...)` to request cancellation. Reads must have a finite adapter
+timeout; a third-party/native read may still block. If the worker remains active,
+stop raises and status continues to say running with `stop_requested=True`; it
+does not claim the native call was forcibly cancelled. A completed/stopped
+session cannot be restarted. Reconnect with a new device, processor and session.
+The dashboard uses finite synchronous capture; it does not leave background
+sessions running when a page reruns.
+
 ## Acceptance evidence and remaining gates
 
 Tests compare chunked causal filtering against a single continuous SciPy call,
 check known-tone frequency and integrated spectral power, exercise gap resets,
 overflow, out-of-order blocks, concurrent snapshots, clock calibration, safe
 recording/playback, malicious archive rejection, fragmented TCP loopback frames,
-oversized-frame shutdown and the actual dashboard capture/export flow.
+oversized-frame shutdown, real UDP/WebSocket loopback, acquisition worker
+completion/cancellation/timeout/failure states and the actual dashboard
+capture/export flow.
 
 The benchmark records host CPU, architecture, Python/NumPy/SciPy versions,
 sample rate, channel/block counts, CPU timing percentiles and Python allocator
