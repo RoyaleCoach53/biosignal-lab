@@ -103,7 +103,7 @@ supplied data for export and is not an additional accuracy evaluation.
 
 ## Safe local inference
 
-Only LDA and logistic baselines export to `biosignal-linear-json` schema version
+LDA and logistic baselines export to `biosignal-linear-json` schema version
 1. The file contains affine coefficients, standardization, class order and feature
 names. `load_linear_model(path)` rejects unknown schemas, duplicate JSON keys,
 oversized files, nonfinite values, invalid shapes and nonpositive scales. It
@@ -113,6 +113,75 @@ Matching predictions/probabilities against sklearn are tested for binary and
 multiclass models. Files are created exclusively; no default overwrite occurs.
 This narrow format does not sign models, certify their provenance or provide a
 sandbox for third-party code.
+
+## Optional temporal neural baseline
+
+`train_temporal(EpochDataset(...))` trains one documented lightweight temporal
+Conv1D network. It is a baseline with two temporal convolutions (16 then 32
+features), ELU activations, average pooling and a linear class head. It is not
+EEGNet, and no published model's accuracy is claimed. There are no bundled weights.
+
+Install a compatible official PyTorch build for the intended device. For a CPU
+environment using standard PyPI for other dependencies:
+
+```sh
+python -m pip install 'torch>=2.4,<3' --index-url https://download.pytorch.org/whl/cpu
+python -m pip install -e '.[neural,app]'
+```
+
+The extra declares PyTorch/scikit-learn but cannot choose a CPU/GPU wheel index
+for every platform. Python, OS and torch compatibility must be checked by the
+installer. The tested implementation currently trains and infers on CPU only,
+with one torch thread during fitting. No GPU, ONNX/TFLite, quantization, edge or
+microcontroller support is claimed.
+
+Training uses disjoint complete training/validation/test subjects. By default the
+last sorted identifier is held out for test, the penultimate for validation, and
+all remaining subjects train. At least three subjects and complete training-class
+coverage are required. Explicit partitions must be nonempty, disjoint and cover
+every supplied subject exactly. Normalization fits training epochs only. Adam,
+validation-loss learning-rate scheduling, gradient clipping and early stopping
+are recorded. The minimum validation-loss checkpoint is restored before a single
+test evaluation. Changing test labels is tested to leave weights, training
+history and checkpoint selection unchanged. Use a predeclared protocol rather
+than choosing subject assignments after examining scores.
+
+```python
+from biosignal_lab.ai import train_temporal, save_temporal_model, load_temporal_model
+from biosignal_lab.ai.demo import synthetic_epoch_dataset
+
+dataset = synthetic_epoch_dataset(seed=42)
+model, report = train_temporal(dataset, seed=42, max_epochs=25, patience=5)
+save_temporal_model(model, 'my-new-temporal-model.json')
+restored = load_temporal_model('my-new-temporal-model.json')
+probabilities = restored.predict_proba(
+    dataset.X, sfreq=dataset.sfreq, unit=dataset.unit,
+    channels=dataset.channels, reference=dataset.reference,
+)
+```
+
+Inference requires matching sampling frequency, unit, channel order and reference;
+no unit conversion or resampling is silently applied. The temporal checkpoint is
+strict bounded numeric JSON for one fixed local architecture. Shape, names,
+metadata, finite values and float precision are checked. Neither `torch.load`
+nor pickle nor executable import strings are accepted. Checkpoints are created
+exclusively and preserve existing files. Only model weights and normalization are
+exported; resuming optimizer state mid-training is not implemented. Within the
+tested CPU/software environment, same-seed training histories and predictions are
+identical; cross-device or cross-version bit identity is not promised.
+
+The preprocessing/batch estimate is checked before copies and normalization;
+it is not a complete process/torch allocator memory guarantee. Global torch
+thread/determinism/random-generator settings are restored after fitting. Train
+these models in a dedicated process when other threads also invoke torch.
+The UI exposes actual training, losses, checkpoint selection, held-out metrics
+and numeric model export when torch is installed. The neural benchmark measures
+actual synthetic holdout inference and makes no physiological task claim:
+
+```sh
+python -m pytest -ra tests/test_ai_neural.py
+python benchmarks/ai_neural.py --output local-results/neural-new-run.json
+```
 
 ## Dataset manifest and cache
 
@@ -149,12 +218,13 @@ specific to that execution environment.
 Implemented: seven feature-based classical estimators, binary CSP/LDA and
 log-Euclidean covariance classification, grouped/nested evaluation, explicit
 feature extraction, strict JSON linear inference, manifest/cache integrity,
-synthetic browser workflow, and meaningful analytical/security/regression tests.
+one temporal Conv1D train/validation/test baseline with strict JSON weights,
+synthetic browser workflows, and analytical/security/regression tests.
 
-Incomplete v0.7/v1.0 gates: affine-invariant Riemannian approaches, deep architectures
-(including EEGNet and temporal networks), real motor imagery/P300/SSVEP/blink/EMG
+Incomplete v0.7/v1.0 gates: affine-invariant Riemannian approaches, additional deep architectures
+(including EEGNet, recurrent, attention and temporal convolutional networks), real motor imagery/P300/SSVEP/blink/EMG
 task cohorts and their licenses, preprocessing fit checks beyond the caller-supplied
 feature boundary, independent cohorts/review, imbalance interventions, training
-checkpoints/scheduling/early stopping, experiment database, robustness studies,
+optimizer-resume checkpoints, experiment database, robustness studies,
 ONNX/TFLite/quantization/GPU/edge/microcontroller validation. No button, registry
 entry, accuracy claim or release-completion claim is provided for those features.

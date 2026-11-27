@@ -132,6 +132,28 @@ def test_model_rejects_pickle_duplicate_keys_and_oversized_payload(tmp_path):
         load_linear_model(path, max_bytes=50)
 
 
+@pytest.mark.parametrize("field,value", [("classes", "AB"),
+                                         ("feature_names", {"x": "not an array"}),
+                                         ("mean", ["0", 0, 0, 0, 0, 0, 0, 0]),
+                                         ("mean", [10**400, 0, 0, 0, 0, 0, 0, 0]),
+                                         ("scale", [True, 1., 1., 1., 1., 1., 1., 1.])])
+def test_model_schema_rejects_string_iterables_and_numeric_coercion(tmp_path, field, value):
+    model = train_linear(synthetic_feature_dataset(n_subjects=3, trials_per_subject=4))
+    payload = model.to_dict()
+    payload[field] = value
+    path = tmp_path / "invalid.json"
+    path.write_text(json.dumps(payload))
+    with pytest.raises(ValueError):
+        load_linear_model(path)
+
+
+def test_complex_amplitudes_are_rejected_without_projection():
+    with pytest.raises(ValueError, match="real"):
+        FeatureDataset(np.array([[1 + 2j], [2 + 3j]]), [0, 1], [0, 1])
+    with pytest.raises(ValueError, match="real"):
+        extract_epoch_features(np.ones((2, 1, 500), dtype=complex), 250)
+
+
 def test_dataset_rejects_nonfinite_features_and_copies_caller_arrays():
     X = np.array([[1.], [2.]])
     data = FeatureDataset(X, [0, 1], ["a", "b"])

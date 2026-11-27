@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import subprocess
 from time import perf_counter_ns
 import tracemalloc
 
@@ -46,7 +47,7 @@ def benchmark(seed=42):
         cpu = next((line.split(":", 1)[1].strip() for line in cpu_info.read_text().splitlines()
                     if line.startswith("model name")), cpu)
     root = Path(__file__).resolve().parents[1]
-    sources = [Path(__file__).relative_to(root), *sorted(Path("src/biosignal_lab/ai").glob("*.py"))]
+    sources = [Path(__file__), *sorted((root / "src/biosignal_lab/ai").glob("*.py"))]
     return {"schema_version": 1, "measured_at_utc": datetime.now(timezone.utc).isoformat(),
             "scope": "Deterministic synthetic oscillation classification; not a physiological task or clinical validation.",
             "hardware": {"cpu": cpu, "logical_cpus": os.cpu_count(), "architecture": platform.machine(),
@@ -60,7 +61,8 @@ def benchmark(seed=42):
                              "inference_median_ms": float(np.median(times)),
                              "inference_p95_ms": float(np.quantile(times, .95)),
                              "inference_scope": "Warm in-process CPU JSON model prediction; excludes acquisition, features, IO and model loading."},
-            "source_sha256": {str(path): sha256((root / path).read_bytes()).hexdigest() for path in sources}}
+            "source_revision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip(),
+            "source_sha256": {str(path.relative_to(root)): sha256(path.read_bytes()).hexdigest() for path in sources}}
 
 
 def main():

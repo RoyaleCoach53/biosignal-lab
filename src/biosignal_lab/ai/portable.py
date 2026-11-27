@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import math
 from pathlib import Path
 
 import numpy as np
@@ -20,8 +21,10 @@ class LinearModel:
     algorithm: str
 
     def __post_init__(self):
+        if not isinstance(self.classes, (tuple, list)) or not isinstance(self.feature_names, (tuple, list)):
+            raise ValueError("Classes and feature names must be explicit sequences of strings")
         classes, names = tuple(self.classes), tuple(self.feature_names)
-        if self.algorithm not in {"lda", "logistic"}:
+        if not isinstance(self.algorithm, str) or self.algorithm not in {"lda", "logistic"}:
             raise ValueError("Unsupported portable algorithm")
         if not 2 <= len(classes) <= 1000 or len(set(classes)) != len(classes):
             raise ValueError("Expected 2..1000 unique classes")
@@ -33,6 +36,8 @@ class LinearModel:
         shapes = {"coefficients": (expected, len(names)), "intercept": (expected,),
                   "mean": (len(names),), "scale": (len(names),)}
         for field, shape in shapes.items():
+            if np.asarray(getattr(self, field)).dtype.kind not in "iuf":
+                raise ValueError(f"{field} must contain real numeric values")
             value = np.array(getattr(self, field), dtype=float, copy=True)
             if value.shape != shape or not np.isfinite(value).all():
                 raise ValueError(f"Invalid {field} shape or nonfinite data")
@@ -87,6 +92,15 @@ def _unique_pairs(pairs):
     return value
 
 
+def _real_json_number(value):
+    if type(value) not in (int, float):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (ValueError, TypeError, OverflowError):
+        return False
+
+
 def load_linear_model(path, max_bytes=8 * 1024 * 1024):
     """Load bounded, schema-checked JSON. No pickle, joblib or import strings."""
     if not isinstance(max_bytes, int) or not 1 <= max_bytes <= 32 * 1024 * 1024:
@@ -101,5 +115,20 @@ def load_linear_model(path, max_bytes=8 * 1024 * 1024):
                 "coefficients", "intercept", "mean", "scale", "scope"}
     if not isinstance(data, dict) or set(data) != required or type(data["schema_version"]) is not int or data["schema_version"] != 1 or data["format"] != "biosignal-linear-json":
         raise ValueError("Unsupported model schema")
+    for field in ("classes", "feature_names"):
+        if not isinstance(data[field], list) or any(not isinstance(item, str) for item in data[field]):
+            raise ValueError(f"{field} must be a JSON array of strings")
+    if not isinstance(data["algorithm"], str) or not isinstance(data["scope"], str):
+        raise ValueError("Model algorithm and scope must be JSON strings")
+    for field in ("coefficients", "intercept", "mean", "scale"):
+        values = data[field]
+        if not isinstance(values, list):
+            raise ValueError(f"{field} must be a numeric JSON array")
+        if field == "coefficients":
+            if any(not isinstance(row, list) for row in values):
+                raise ValueError("Coefficients must be a nested numeric JSON array")
+            values = [item for row in values for item in row]
+        if any(not _real_json_number(item) for item in values):
+            raise ValueError(f"{field} requires finite JSON numbers, excluding booleans")
     return LinearModel(data["classes"], data["coefficients"], data["intercept"],
                        data["mean"], data["scale"], data["feature_names"], data["algorithm"])

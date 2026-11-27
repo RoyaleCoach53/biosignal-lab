@@ -15,6 +15,8 @@ from .learning import FeatureDataset, _evaluate_grouped, _sklearn
 
 
 def _epochs(data):
+    if np.iscomplexobj(data):
+        raise ValueError("Covariance epochs require real amplitudes")
     data = np.asarray(data, dtype=float)
     if data.ndim != 3 or data.shape[0] < 1 or data.shape[1] < 1 or data.shape[2] < 16:
         raise ValueError("Expected nonempty epochs x channels x samples with >=16 samples")
@@ -243,11 +245,21 @@ def evaluate_epochs(dataset: EpochDataset, model="csp_lda", cv="loso", n_splits=
     report["task"] = "subject_disjoint_epoch_classification"
     report["n_channels"] = dataset.X.shape[1]
     report["n_samples_per_epoch"] = dataset.X.shape[2]
-    report["n_features"] = n_components if model == "csp_lda" else dataset.X.shape[1] * (dataset.X.shape[1] + 1) // 2
-    report["features"] = ([f"csp_log_variance_{i+1}" for i in range(n_components)]
-                           if model == "csp_lda" else ["symmetric_log_covariance"])
-    report["parameters"] = {"n_components": n_components if model == "csp_lda" else None,
+    used_components = [fold["selected_parameters"].get("csptransformer__n_components", n_components)
+                       for fold in report["folds"]]
+    count = used_components[0] if len(set(used_components)) == 1 else None
+    report["n_features"] = count if model == "csp_lda" else dataset.X.shape[1] * (dataset.X.shape[1] + 1) // 2
+    if model == "csp_lda":
+        report["features"] = [f"csp_log_variance_{i+1}" for i in range(count)] if count is not None else []
+    else:
+        report["features"] = ["symmetric_log_covariance"]
+    for fold, components in zip(report["folds"], used_components):
+        fold["executed_parameters"] = {"n_components": components if model == "csp_lda" else None,
+                                        "covariance_shrinkage": fold["selected_parameters"].get(
+                                            "csptransformer__regularization" if model == "csp_lda" else "regularization", regularization)}
+    report["base_parameters"] = {"n_components": n_components if model == "csp_lda" else None,
                              "covariance_shrinkage": regularization,
                              "geometry": "log_euclidean" if model == "log_euclidean" else "generalized_eigenvectors"}
+    report["features_note"] = "Spatial filters are fitted separately in each fold; component indices do not denote shared maps. n_features is null when tuned dimensions vary."
     report["limitations"].append("Spatial filters are mixtures of scalp channels, not inferred neural sources.")
     return report

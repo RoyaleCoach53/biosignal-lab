@@ -20,6 +20,8 @@ class FeatureDataset:
     _provenance_json: str = field(init=False, repr=False)
 
     def __post_init__(self):
+        if np.iscomplexobj(self.X):
+            raise ValueError("Features must be real; complex values are not silently projected")
         X = np.array(self.X, dtype=np.float64, copy=True)
         raw_y, raw_subjects = np.asarray(self.y), np.asarray(self.subjects)
         if X.ndim != 2 or min(X.shape) < 1 or not np.isfinite(X).all():
