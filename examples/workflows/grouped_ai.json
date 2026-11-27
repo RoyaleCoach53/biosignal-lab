@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "name": "Synthetic subject-disjoint research classification",
+  "nodes": [
+    {"id": "dataset", "kind": "ai_demo", "parameters": {"n_subjects": 4, "trials_per_subject": 8, "seed": 42}},
+    {"id": "evaluation", "kind": "ai_evaluate", "parameters": {"model": "lda", "cv": "loso", "seed": 42, "bootstrap_samples": 200}, "inputs": {"dataset": {"node": "dataset"}}},
+    {"id": "training", "kind": "ai_train", "parameters": {"model": "lda", "seed": 42}, "inputs": {"dataset": {"node": "dataset"}}},
+    {"id": "portable_model", "kind": "ai_model_json", "inputs": {"model": {"node": "training"}}},
+    {"id": "fitted_predictions", "kind": "ai_predict", "inputs": {"model": {"node": "training"}, "dataset": {"node": "dataset"}}}
+  ]
+}

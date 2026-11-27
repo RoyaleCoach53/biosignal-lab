@@ -214,6 +214,16 @@ def _port_check(value, port: Port):
         if not isinstance(value, Signal):
             raise WorkflowError("Expected engine Signal")
         unit, sfreq, modality = value.unit, value.sfreq, value.modality
+    elif kind == "dataset":
+        from ..ai import FeatureDataset
+        if not isinstance(value, FeatureDataset):
+            raise WorkflowError("Expected validated FeatureDataset")
+        unit = sfreq = modality = None
+    elif kind == "linear_model":
+        from ..ai import LinearModel
+        if not isinstance(value, LinearModel):
+            raise WorkflowError("Expected validated portable LinearModel")
+        unit = sfreq = modality = None
     elif kind == "spectrum":
         if not isinstance(value, dict) or not {"frequencies", "power", "unit", "sfreq", "channels"} <= set(value):
             raise WorkflowError("Expected spectrum")
@@ -346,7 +356,7 @@ class Executor:
         used_bytes = 0
         dependencies = {}
         source_hash = source_fingerprint()
-        for package in ("biosignal-lab", "numpy", "scipy", "pandas", "mne"):
+        for package in ("biosignal-lab", "numpy", "scipy", "pandas", "mne", "scikit-learn", "PyWavelets"):
             try:
                 dependencies[package] = version(package)
             except PackageNotFoundError:
@@ -381,6 +391,8 @@ class Executor:
                         raise WorkflowError("Signal exceeds configured sample-value limit")
                     if definition.outputs[port].kind == "signal" and item.data.size > self.limits.max_signal_values:
                         raise WorkflowError("Signal exceeds configured sample-value limit")
+                    if definition.outputs[port].kind == "dataset" and item.X.size > self.limits.max_signal_values:
+                        raise WorkflowError("Feature dataset exceeds configured value limit")
                 used_bytes += data_bytes(value)
                 if used_bytes > self.limits.max_output_bytes:
                     raise WorkflowError("Workflow exceeds retained-output byte limit")

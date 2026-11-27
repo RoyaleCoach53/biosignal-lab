@@ -42,3 +42,36 @@ Next exact actions:
    them in the registry. No placeholder acquisition or model nodes exist.
 4. Assess remaining editor and v0.8 acceptance requirements honestly; parallel
    scheduling, durable execution and all advanced node families remain incomplete.
+
+## Resumed integration follow-up
+
+Commit `668b690` contains the first runtime/application implementation. Commit
+`ddf9fbd` moves component declaration into an importable module so unified
+`st.Page` navigation works and adds the acknowledged single-flight event protocol.
+The parent integrates the website agent's separately tested canvas files.
+
+Implemented real Live/AI nodes: `live_simulate`, `ai_demo`, `epoch_features`,
+`ai_evaluate`, `ai_train`, `ai_model_json`, and `ai_predict`. Optional modules are
+checked before registration. The two new templates execute actual simulated
+acquisition to original analysis/report and actual grouped evaluation to portable
+training/inference. No physical-device or unimplemented deep-learning nodes are
+exposed. Epoch extraction rejects cross-subject overlap in the same samples.
+CSV preflight additionally rejects row-width mismatches (preventing pandas inferred
+indices) and duplicate/empty headers; four independent-review regressions cover it.
+
+Focused integration suite after these changes: **34 passed, no skips** with the
+completed Engine/Live/AI worktrees added to the package import path. This is not
+final merged-branch validation; the parent must repeat it after integration.
+Critical Ruff checks passed. Synthetic integration artifact
+`SYNTHETIC_LIVE_AI.json` records actual 4-node virtual acquisition plus analysis
+(1,000 samples) and 5-node AI workflow (32 synthetic trials, 4 held-out subject
+folds). Observed single-run elapsed times were about 0.219 s and 1.212 s,
+respectively. Python allocator peaks were about 1.42 MB and 23.43 MB. These are
+single local synthetic observations, not physiological, end-to-end hardware,
+throughput-distribution or process-RSS claims.
+
+Exact next action: parent cherry-pick the follow-up commit, run the full merged
+suite plus actual unified-navigation/browser flows, and retain the external
+physical hardware, scientific review and real-user gates as incomplete. Durable
+execution, parallel DAG scheduling, plugin compatibility certification and all
+requested advanced research node families remain unimplemented.

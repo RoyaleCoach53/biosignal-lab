@@ -225,6 +225,15 @@ def test_overflowed_psd_cannot_emit_success(tmp_path):
         Executor(builtin_registry(), source_root=tmp_path).execute(workflow)
 
 
+@pytest.mark.parametrize("text,diagnosis", [("A\n1,2\n", "row width"), ("A,B\n1\n", "row width"),
+                                            ("A,A\n1,2\n", "unique nonempty"), (",B\n1,2\n", "unique nonempty")])
+def test_csv_preflight_rejects_implicit_indices_and_ambiguous_headers(tmp_path, text, diagnosis):
+    (tmp_path / "invalid.csv").write_text(text)
+    workflow = Workflow((Node("source", "csv", {"path": "invalid.csv", "sfreq": 100}),))
+    with pytest.raises(NodeExecutionError, match=diagnosis):
+        Executor(builtin_registry(), source_root=tmp_path).execute(workflow)
+
+
 def test_cli_output_never_overwrites_existing_reports(tmp_path, capsys):
     output = tmp_path / "result"
     assert main(["validate", str(TEMPLATE)]) == 0
