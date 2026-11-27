@@ -39,6 +39,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("performance.json"))
     args = parser.parse_args()
+    if args.output.exists() or args.output.is_symlink():
+        parser.error("Choose a new output path; existing scientific reports are preserved")
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(benchmark(), indent=2)+"\n", encoding="utf-8", newline="\n")
+    with args.output.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(benchmark(), indent=2)+"\n")
     print("Recorded three synthetic timing/allocation workloads.")

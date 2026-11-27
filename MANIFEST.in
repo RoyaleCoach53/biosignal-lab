@@ -1,7 +1,10 @@
 include app.py
+include *_app.py
+include CITATION.cff Dockerfile .dockerignore
 include LICENSE NOTICE.md SECURITY.md CONTRIBUTING.md CODE_OF_CONDUCT.md CHANGELOG.md ROADMAP.md
 include .streamlit/config.toml
-recursive-include docs *.md *.json *.svg
+recursive-include docs *.md *.json *.svg *.png *.jpg
+recursive-include .github *.md *.yml
 recursive-include requirements *.txt
 recursive-include examples *.py *.json *.csv *.md
 recursive-include benchmarks *.py *.md *.json

@@ -19,6 +19,7 @@ from biosignal_lab.pipeline import analyze
 from biosignal_lab.report import html_report, json_report
 from biosignal_lab.analysis import time_frequency_psd, pairwise_coherence
 from biosignal_lab import __version__
+from biosignal_lab.ui import display_options
 
 st.set_page_config(page_title="BioSignal Lab | EEG & EMG", page_icon="🧠",
                    layout="wide", initial_sidebar_state="expanded")
@@ -152,7 +153,8 @@ with signals:
                           fillcolor="orange", opacity=.13, line_width=0)
     fig.update_layout(xaxis_title="Time (seconds)", yaxis_title="Amplitude (µV)",
                       height=470, legend=dict(orientation="h"), margin=dict(l=10,r=10,t=20,b=10))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, **display_options(st.plotly_chart,
+        f"{channel}: raw and filtered amplitude in microvolts versus seconds; orange spans are heuristic review candidates."))
     st.caption("Orange shading indicates heuristic review candidates, not diagnosed artifacts.")
 
 with spectrum:
@@ -170,7 +172,8 @@ with spectrum:
     plot.update_layout(xaxis_title="Frequency (Hz)", yaxis_title="Power (dB re µV²/Hz)", height=450,
                        margin=dict(l=10,r=10,t=20,b=10))
     plot.update_xaxes(range=[0, min(100, recording.sfreq/2)])
-    st.plotly_chart(plot, use_container_width=True)
+    st.plotly_chart(plot, **display_options(st.plotly_chart,
+        f"{channel_spec}: raw and processed Welch PSD in dB relative to microvolts squared per Hz, versus frequency in Hz."))
     st.caption(f"Welch grid spacing: {f[1]-f[0]:.3g} Hz. Raw and processed spectra use identical window settings; notch filtering removes energy near the selected mains frequency.")
     st.caption("Raw PSD uses permitted short-gap interpolation and per-segment mean removal; it is shown before the selected digital filters.")
     if result.band_powers:
@@ -182,7 +185,8 @@ with spectrum:
             value = table.loc[channel_spec, band+'_uv2']
             col.metric(band.title(), "Unavailable" if pd.isna(value) else f"{value:.2f} µV²")
         st.caption("Unavailable bands are not shown as zero. Relative powers are fractions of 0.5–min(45 Hz, Nyquist), and only complete bands have numerical values.")
-        st.dataframe(pd.DataFrame(result.band_powers), use_container_width=True)
+        st.dataframe(pd.DataFrame(result.band_powers), **display_options(st.dataframe,
+            "EEG absolute band powers in microvolts squared, relative fractions and observed-band coverage for each channel."))
     else:
         st.info("EEG band powers intentionally unavailable for EMG.")
 
@@ -197,7 +201,8 @@ with tf_tab:
         z=10*np.log10(np.maximum(power_tf[mask], 1e-12)),
         colorscale="Viridis", colorbar=dict(title="dB re µV²/Hz")))
     figure.update_layout(xaxis_title="Time (s)", yaxis_title="Frequency (Hz)", height=430)
-    st.plotly_chart(figure, use_container_width=True)
+    st.plotly_chart(figure, **display_options(st.plotly_chart,
+        f"{channel_tf}: short-time PSD versus seconds and Hz; color is dB relative to microvolts squared per Hz."))
     st.caption("Descriptive short-time PSD. Spectral patterns do not establish a medical diagnosis.")
     if len(recording.channels) >= 2:
         st.subheader("Pairwise coherence — research only")
@@ -217,21 +222,25 @@ with tf_tab:
                                        yaxis_title="Magnitude-squared coherence", height=280)
                 figure_c.update_yaxes(range=[0, 1])
                 figure_c.update_xaxes(range=[0, min(100, recording.sfreq/2)])
-                st.plotly_chart(figure_c, use_container_width=True)
+                st.plotly_chart(figure_c, **display_options(st.plotly_chart,
+                    f"{ch_a} and {ch_b}: magnitude-squared coherence from zero to one versus Hz; not evidence of neural connectivity."))
         st.caption("Coherence is not proof of neural connectivity; common references, volume conduction and artifacts can inflate it.")
 
 with channel_qc:
     st.subheader("Processed channel metrics")
-    st.dataframe(pd.DataFrame(result.channel_metrics), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(result.channel_metrics), hide_index=True,
+        **display_options(st.dataframe, "Processed per-channel amplitude and descriptive quality metrics; amplitudes in microvolts."))
     st.caption("Metrics describe the processed signal. They do not provide clinical signal suitability approval.")
     st.subheader("Raw channel metrics")
-    st.dataframe(pd.DataFrame(result.raw_channel_metrics), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(result.raw_channel_metrics), hide_index=True,
+        **display_options(st.dataframe, "Raw per-channel amplitude and mains-interference fractions before selected filters."))
     st.caption("Compare raw and processed line-noise fractions. A low post-notch fraction does not show that the original recording was free of interference.")
 
 with artifacts:
     st.write("Candidates are generated using robust amplitude excursions and flatline windows on **unfiltered** data.")
     if result.artifact_intervals:
-        st.dataframe(pd.DataFrame(result.artifact_intervals), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(result.artifact_intervals), hide_index=True,
+            **display_options(st.dataframe, "Heuristic review intervals in seconds with peak-to-peak amplitudes in microvolts; no clinical labels."))
     else:
         st.success("No artifact candidates under these thresholds (not evidence of clean clinical data).")
 

@@ -1,0 +1,70 @@
+name: Beta usability feedback
+description: Report a real software-testing session; no patient or private data
+title: "[Beta] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is public. Do not attach recordings, raw headers, full paths,
+        credentials or identifying screenshots. Independent beta results are not
+        clinical validation. For a security defect use private reporting instead.
+  - type: input
+    id: build
+    attributes:
+      label: Full commit SHA and beta protocol
+      placeholder: "40-character SHA; BETA-1.0"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS family/version and Python version
+      description: Omit usernames, hostnames and local paths.
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Session outcome
+      options:
+        - Completed
+        - Incomplete
+        - Blocked
+        - Declined remaining tasks
+    validations:
+      required: true
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks attempted, outcomes and help required
+      description: Install; synthetic PSD; export; EEG first/offline runs; keyboard/zoom. Separate active time from downloads if timed.
+    validations:
+      required: true
+  - type: textarea
+    id: friction
+    attributes:
+      label: Expected behavior, actual behavior and one suggested improvement
+      description: A short redacted reproduction is more useful than full logs.
+    validations:
+      required: true
+  - type: textarea
+    id: understanding
+    attributes:
+      label: Units, raw versus processed, and validation limits
+      description: Explain µV versus µV²/Hz versus µV², post-notch QC, and why matched-reference agreement is not clinical validation.
+  - type: dropdown
+    id: aggregate
+    attributes:
+      label: May a de-identified summary be used in the beta report?
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy review
+      options:
+        - label: I removed private data and understand that this issue is public; permission to quote me is not implied.
+          required: true

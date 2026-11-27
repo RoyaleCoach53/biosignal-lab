@@ -156,9 +156,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("verification-results.json"))
     args = parser.parse_args()
+    if args.output.exists() or args.output.is_symlink():
+        parser.error("Choose a new output path; existing scientific reports are preserved")
     result = verify()
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    with args.output.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(result, indent=2, allow_nan=False) + "\n")
     print(f"Numerical checks: {sum(x['passed'] for x in result['checks'].values())}/"
           f"{len(result['checks'])}; results: {args.output}")
     sys.exit(0 if result["passed"] else 1)

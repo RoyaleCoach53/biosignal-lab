@@ -1,0 +1,61 @@
+name: Scientific reproducibility result
+description: Report a matched-protocol pass, failure or mismatch without uploading recordings
+title: "[Reproduction] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A failure is useful evidence. Keep tolerances/settings fixed and retain
+        all attempted cases. Public issues must not contain recordings, waveforms,
+        personal EDF headers, usernames, credentials or full paths.
+  - type: input
+    id: revision
+    attributes:
+      label: Full commit, runner hash and protocol hash
+    validations:
+      required: true
+  - type: input
+    id: record
+    attributes:
+      label: Official PhysioNet recording ID and SHA-256
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: OS/Python/package versions and redacted command
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Observed result
+      options:
+        - Pass under unchanged protocol
+        - Reference tolerance failure
+        - Input or checksum failure
+        - Build or protocol mismatch
+        - Could not complete
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Actual metadata, error values, limits and offline rerun
+      description: Include channel count, Hz, seconds, grid spacing, exact failed keys and whether settings/exclusions changed. Attach redacted summary JSON only if comfortable.
+    validations:
+      required: true
+  - type: textarea
+    id: interpretation
+    attributes:
+      label: Interpretation and unresolved limitations
+      description: Distinguish software consistency from physiological or clinical validation; do not infer clean data from zero heuristic flags.
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Reporting boundaries
+      options:
+        - label: I retained failures and disclosed any parameter/build mismatch instead of silently relaxing criteria.
+          required: true
+        - label: I reviewed the report for private data; no recordings or raw headers are attached.
+          required: true

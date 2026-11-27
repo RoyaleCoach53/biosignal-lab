@@ -20,6 +20,7 @@ def _parser() -> argparse.ArgumentParser:
     demo.add_argument("--duration", type=float, default=30)
     demo.add_argument("--sfreq", type=float, default=250)
     demo.add_argument("--channels", type=int, default=8)
+    demo.add_argument("--overwrite", action="store_true", help="Replace an existing synthetic CSV")
     analysis = sub.add_parser("analyze", help="Analyze one local CSV or EDF recording")
     analysis.add_argument("--input", required=True)
     analysis.add_argument("--output", default="results")
@@ -33,6 +34,7 @@ def _parser() -> argparse.ArgumentParser:
     analysis.add_argument("--no-notch", action="store_true")
     analysis.add_argument("--window", type=float, default=None)
     analysis.add_argument("--artifact-window", type=float, default=1.0)
+    analysis.add_argument("--overwrite", action="store_true", help="Replace reports at this output prefix")
     return parser
 
 
@@ -46,7 +48,12 @@ def main(argv: list[str] | None = None) -> int:
         frame.insert(0, "time_s", [i / rec.sfreq for i in range(frame.shape[0])])
         output = Path(args.output)
         output.parent.mkdir(parents=True, exist_ok=True)
-        frame.to_csv(output, index=False)
+        if output.is_symlink():
+            parser.error("Refusing a symbolic-link output")
+        try:
+            frame.to_csv(output, index=False, mode="w" if args.overwrite else "x")
+        except FileExistsError:
+            parser.error("Output exists; choose a new path or explicitly use --overwrite")
         print(f"Wrote {output} ({len(rec.channels)} channels, {rec.duration_s:g}s, values µV)")
         return 0
     path = Path(args.input)
@@ -72,13 +79,37 @@ def main(argv: list[str] | None = None) -> int:
     result = analyze(rec, config)
     base = Path(args.output)
     base.parent.mkdir(parents=True, exist_ok=True)
-    Path(str(base) + ".json").write_text(json_report(result), encoding="utf-8")
-    Path(str(base) + ".html").write_text(html_report(result), encoding="utf-8")
-    pd.DataFrame(result.channel_metrics).to_csv(str(base) + "_quality.csv", index=False)
+    # Reserve every possible report name so stale optional tables cannot masquerade
+    # as outputs from the current analysis.
+    targets = [Path(str(base) + suffix) for suffix in
+               (".json", ".html", "_quality.csv", "_bands.csv", "_artifacts.csv")]
+    if any(p.resolve() == path.resolve() for p in targets):
+        parser.error("An output report cannot replace the input recording")
+    if any(p.is_symlink() for p in targets):
+        parser.error("Refusing a symbolic-link output")
+    if not args.overwrite and any(p.exists() for p in targets):
+        parser.error("Report prefix already exists; choose a new prefix or explicitly use --overwrite")
+    contents = {targets[0]: json_report(result), targets[1]: html_report(result),
+                targets[2]: pd.DataFrame(result.channel_metrics).to_csv(index=False)}
     if result.band_powers:
-        pd.DataFrame(result.band_powers).to_csv(str(base) + "_bands.csv", index=False)
+        contents[targets[3]] = pd.DataFrame(result.band_powers).to_csv(index=False)
     if result.artifact_intervals:
-        pd.DataFrame(result.artifact_intervals).to_csv(str(base) + "_artifacts.csv", index=False)
+        contents[targets[4]] = pd.DataFrame(result.artifact_intervals).to_csv(index=False)
+    created = []
+    try:
+        for target, text in contents.items():
+            with target.open("w" if args.overwrite else "x", encoding="utf-8", newline="") as stream:
+                created.append(target)
+                stream.write(text)
+    except OSError:
+        if not args.overwrite:
+            for target in created:
+                target.unlink(missing_ok=True)
+        parser.error("Report export failed; choose a writable, unused output prefix")
+    if args.overwrite:
+        for target in targets:
+            if target not in contents and target.exists():
+                target.unlink()
     print(f"Analyzed {len(rec.channels)} channels over {rec.duration_s:.1f}s")
     print(f"Artifact review candidates: {len(result.artifact_intervals)}")
     print(f"Wrote {base}.json, {base}.html and quality CSV")

@@ -34,6 +34,8 @@ jobs:
         run: |
           python tools/physionet_pilot.py --data-dir "${{ runner.temp }}/eegbci" --output ci-results/baseline-pilot.json
           python benchmarks/performance.py --output ci-results/performance.json
+      - name: Reproduce the educational single-record walkthrough
+        run: python examples/eeg_tutorial.py --cache "${{ runner.temp }}/eegbci" --output ci-results/tutorial
       - name: Check installed dependencies for known advisories
         run: python -m pip_audit --local --skip-editable --format json --output ci-results/dependency-audit.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

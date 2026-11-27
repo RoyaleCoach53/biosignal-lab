@@ -250,6 +250,8 @@ def validate_record(record, path, protocol):
 
 
 def run(cache: Path, download: bool, output: Path):
+    if output.exists() or output.is_symlink():
+        raise ValueError("Choose a new output path; existing scientific reports are preserved")
     if cache.resolve().is_relative_to(HERE.parents[1]):
         raise ValueError("Keep human recordings outside the repository")
     protocol_bytes = (HERE / "protocol.json").read_bytes()
@@ -282,7 +284,8 @@ def run(cache: Path, download: bool, output: Path):
     report["software_source_sha256"] = {name: hashlib.sha256((source_root / name).read_bytes()).hexdigest()
                                         for name in source_files}
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, allow_nan=False)+"\n", encoding="utf-8", newline="\n")
+    with output.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(report, indent=2, allow_nan=False)+"\n")
     return report
 
 
