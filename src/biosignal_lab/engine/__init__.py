@@ -43,7 +43,16 @@ from .features import (
 )
 from .io import save_signal, load_signal, load_mat, load_mne, save_hdf5, load_hdf5
 
+from .interchange import load_bids, load_xdf
+from .visualization import scalp_positions, plot_topomap, plot_montage, plot_evoked
+
 __all__ = [
+    "load_bids",
+    "load_xdf",
+    "scalp_positions",
+    "plot_topomap",
+    "plot_montage",
+    "plot_evoked",
     "repair_missing",
     "ica_remove",
     "save_hdf5",
