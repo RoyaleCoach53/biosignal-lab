@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "scope": "Synthetic analytical/reference engineering verification; no clinical or independent human-data validation",
+  "python": "3.12.14",
+  "platform": "Linux",
+  "software": {
+    "numpy": "2.5.5",
+    "scipy": "1.18.1"
+  },
+  "source_sha256": {
+    "src/biosignal_lab/engine/__init__.py": "8eb3442f08c1b7e764b970145e3dc01792bdce126a6ee92b70436ee3db9ab2cf",
+    "src/biosignal_lab/engine/eeg.py": "1cfd02b0ee9c2ee2f3d5c0befa26eaadcdef1635d631d629cdd15600166275dd",
+    "src/biosignal_lab/engine/features.py": "6314b45b51727ceec1c101fc379cb3881a1d3c79d05cf3b080d95cda3aa18dcc",
+    "src/biosignal_lab/engine/filters.py": "0e8a766a92d0418cb1b544c185f19a20a18f8e87d8b626bc5cd41539f75e8827",
+    "src/biosignal_lab/engine/io.py": "ae5f63a180c812b15015ac17dc3d0362e170e94471a03b8b1eb7d7d88ebc8623",
+    "src/biosignal_lab/engine/model.py": "3594ae122fc4213d0945b73c0fe377aadf051eb3c02b5c5f7d2c2ab240f86cd3",
+    "src/biosignal_lab/engine/spectral.py": "754e0ff0d78b1de87250500a988b7b916f4d2d630894a8b5d6962e58351f14de"
+  },
+  "checks": [
+    {
+      "name": "welch_peak_hz",
+      "measured": 10.0,
+      "target": 10.0,
+      "absolute_tolerance": 0.001,
+      "passed": true
+    },
+    {
+      "name": "welch_total_power_uV2",
+      "measured": 49.99999999999989,
+      "target": 50.0,
+      "absolute_tolerance": 0.05,
+      "passed": true
+    },
+    {
+      "name": "multitaper_total_power_uV2",
+      "measured": 50.00035050368068,
+      "target": 50.0,
+      "absolute_tolerance": 0.25,
+      "passed": true
+    },
+    {
+      "name": "anti_alias_output_rms_uV",
+      "measured": 0.0024537697746351713,
+      "target": 0.0,
+      "absolute_tolerance": 0.1,
+      "passed": true
+    },
+    {
+      "name": "chunk_max_absolute_error_uV",
+      "measured": 0.0,
+      "target": 0.0,
+      "absolute_tolerance": 1e-12,
+      "passed": true
+    }
+  ],
+  "passed": true
+}
