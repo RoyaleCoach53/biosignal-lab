@@ -200,17 +200,47 @@ sample-count handling. Offscreen image tests draw real MNE scalp maps, montages
 and event averages. These are synthetic interoperability checks, not broad
 real-dataset compatibility or independent scientific validation.
 
-Automatic ASR, automatic artifact classification, validated ECG/PPG/EOG physiology
+## Optional peripheral library workflows
+
+`process_peripheral(signal, channel=...)` uses NeuroKit2 to run an explicitly
+selected ECG, PPG, EDA or vertical-EOG research pipeline. Electrical channels are
+converted to mV, conductance to uS, and PPG must use arbitrary units. ECG defaults
+to the NeuroKit method, PPG to Elgendi, and EDA to NeuroKit. Vertical EOG uses
+explicit NeuroKit cleaning and MNE peak detection and requires positive blink
+polarity. Additional documented ECG methods are Pan–Tompkins (1985) and Hamilton
+(2002), selected by their NeuroKit method identifiers. These method names refer
+to external implementations, not new clinical evidence collected by this project.
+
+The engineering wrapper requires integer sampling rates (ECG at least 100 Hz,
+PPG 25 Hz, EDA 10 Hz and EOG 50 Hz), 10 seconds of data and no more than 1,000,000
+samples. These are wrapper operating limits, not proven physiological accuracy
+thresholds. Constant signals fail. The original NeuroKit sample table and event
+information are preserved; missing/unavailable derived values are not changed to
+zero. `PeripheralResult.summary()` encodes nonfinite missing values as JSON null
+and reports finite-rate coverage separately. Source hash, units, reference,
+metadata, processing history, exact library version/method and emitted warnings
+are retained. Library quality columns are heuristics, not evidence of clinical
+quality. Rate descriptions require reviewed event identity.
+
+The pipeline is offline: filters and interpolated rates may be acausal. It has
+not been validated for live monitoring or prospective diagnosis. Synthetic tests
+exercise ECG/PPG known simulated rate, conductance scaling/decomposition and
+positive mathematical EOG pulse timing. Those checks do not establish real-world
+sensitivity, specificity, physiological ground truth, clinical accuracy or
+independent verification. Do not infer disease, diagnosis, blood pressure,
+oxygen saturation or a clinical decision from these outputs.
+
+Automatic ASR, automatic artifact classification, clinically validated peripheral
 pipelines, anatomical source reconstruction and physical acquisition are not
 claimed by this package. Other modules have their own acceptance status.
 
 ## Reproduce verification
 
 From the repository root with development, MNE, scikit-learn, PyWavelets and
-h5py, MNE-BIDS and pyxdf installed:
+h5py, MNE-BIDS, pyxdf and NeuroKit2 installed:
 
 ```sh
-python -m pytest tests/test_engine.py tests/test_engine_visualization.py tests/test_engine_interchange.py -ra
+python -m pytest tests/test_engine.py tests/test_engine_visualization.py tests/test_engine_interchange.py tests/test_engine_physiology.py -ra
 python benchmarks/verify_engine.py --output local-results/engine-verification.json
 python examples/engine_workflow.py --output local-results/engine-example.npz
 ```
