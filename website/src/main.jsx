@@ -5,6 +5,7 @@ import "@fontsource-variable/space-grotesk/wght.css";
 import "@fontsource-variable/inter/wght.css";
 import { asset } from "./assets";
 import { arabic, english } from "./story-content";
+import LocalWorkspace from "./LocalWorkspace";
 import "./style.css";
 import "./cinema.css";
 
@@ -113,6 +114,7 @@ function App(){
       <button type="button" ref={toggle} className="menu-toggle" aria-expanded={menu} aria-controls="main-links" onClick={()=>setMenu(x=>!x)}>{rtl?"القائمة":"Menu"}</button>
       <nav id="main-links" className={menu?"open":""} aria-label={rtl?"التنقل الرئيسي":"Main navigation"} onKeyDown={e=>{if(e.key==="Escape"){setMenu(false);toggle.current?.focus();}}}>
         {["journey","lab","methods"].map((id,i)=><a key={id} href={"#"+id} onClick={()=>setMenu(false)}>{copy.nav[i]}</a>)}
+        <a href="#install" onClick={()=>setMenu(false)}>{rtl?"التثبيت":"Install"}</a>
       </nav>
       <div className="nav-end"><a className="nav-source" href={repo}>GitHub</a><button type="button" className="language"
         aria-label={rtl?"EN · Switch to English":"عربي · عرض بالعربية"} onClick={()=>setRtl(x=>!x)}>{rtl?"EN":"عربي"}</button></div>
@@ -139,6 +141,7 @@ function App(){
           <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4254845/">Surface EMG · Farina et al.</a>
         </div>
       </section>
+      <LocalWorkspace rtl={rtl}/>
     </main>
     <footer className="project-footer"><div className="shell">
       <a className="brand" href="#"><img src={asset("mark.svg")} alt="" width="30" height="30"/><b>BioSignal<span> Lab</span></b></a>

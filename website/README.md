@@ -20,6 +20,22 @@ npm run preview
 
 Run Playwright on a deployed build by setting `SITE_TEST_URL` to its full URL with a trailing slash. Run `node scripts/capture.mjs` for screenshots. Set `SITE_RECORD=1` to record the journey with Playwright and its FFmpeg browser dependency. The staging branch serves only built static files. No request can invoke the Python engine or upload a recording there.
 
+When Chromium is already installed on a managed development host, use
+`SITE_CHROME_EXECUTABLE=/usr/bin/chromium npm test -- --workers=2` instead of
+downloading another browser. The default CI still installs Playwright's pinned
+Chromium. For shared cloud development, start Vite with
+`npm run dev -- --host 0.0.0.0`; do not assume development processes survive a
+machine restart. Generate the ignored synthetic catalogue before starting the site.
+
+The local installation section offers Linux/macOS and Windows PowerShell commands
+for the released dashboard, CLI, and Python SDK. It installs v0.3.0 from GitHub;
+it does not claim newer experimental modules are released. Copy controls report
+clipboard permission failures and retain selectable commands. Commands execute on
+the visitor's computer only when the visitor runs them.
+
+See [current executed verification](docs/VERIFICATION.md) for the browser, numerical,
+accessibility, security-audit, and performance results and their limits.
+
 ## Interaction and accessibility
 
 Desktop uses native scrolling with a sticky stage. Scroll position selects each chapter, drives changes in scale and positioning, and advances acquisition steps. Chapter links and teaching controls also work with a keyboard. The hero brain is interactive on demand, and the desktop acquisition stage loads a separate 3D scalp illustration while in view. Both WebGL views render on demand. On smaller screens, all chapters and visuals appear in reading order. Reduced-motion settings suppress animated transitions and use the illustrated acquisition view. A static brain poster and scalp diagram cover environments without WebGL. The Arabic option translates narrative and navigation. Diagram controls and the scientific console use English.

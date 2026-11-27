@@ -115,6 +115,39 @@ test("synthetic request failure clears on retry", async ({page})=>{
   await expect(lab.getByRole("alert")).toHaveCount(0);
 });
 
+test("local installation exposes working CLI and SDK choices without a hosted upload", async ({page,context})=>{
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("#install");
+  const install=page.locator("#install");
+  await expect(install.getByRole("heading",{name:"Make the experiment your own."})).toBeVisible();
+  const commands=install.getByLabel("Installation commands");
+  await expect(commands).toContainText("python3 -m venv .venv");
+  await expect(commands).toContainText('.venv/bin/python -m pip install -e ".[app]"');
+  await expect(commands).toContainText("-m streamlit run app.py");
+  await install.getByLabel("Operating system").selectOption("windows");
+  await install.getByLabel("Local workflow").selectOption("cli");
+  await expect(commands).toContainText("py -3 -m venv .venv");
+  await expect(commands).toContainText(".\\.venv\\Scripts\\python.exe -m biosignal_lab.cli analyze");
+  await install.getByRole("button",{name:"Copy commands"}).click();
+  await expect(install.getByRole("status")).toHaveText("Commands copied.");
+  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(await commands.innerText());
+  await install.getByLabel("Local workflow").selectOption("sdk");
+  await expect(commands).toContainText("from biosignal_lab import analyze");
+  await expect(install.getByRole("status")).toBeEmpty();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test("installation clipboard failure explains the manual copy fallback", async ({page})=>{
+  await page.addInitScript(()=>Object.defineProperty(navigator,"clipboard",{
+    value:{writeText:()=>Promise.reject(new Error("Permission denied"))},configurable:true,
+  }));
+  await page.goto("#install");
+  const install=page.locator("#install");
+  await install.getByRole("button",{name:"Copy commands"}).click();
+  await expect(install.getByRole("status")).toContainText("Select the commands below");
+  await expect(install.getByLabel("Installation commands")).toContainText("git clone");
+});
+
 test("poster remains when WebGL is unavailable",async({page})=>{
   await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext=function(type,...args){return type.startsWith("webgl")?null:original.call(this,type,...args);};});
