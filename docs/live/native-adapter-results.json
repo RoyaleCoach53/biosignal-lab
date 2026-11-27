@@ -1,0 +1,56 @@
+{
+  "scope": "Native-library software integration with synthetic/local sources only; no physical acquisition hardware",
+  "host": {
+    "os": "Linux",
+    "architecture": "x86_64",
+    "python": "3.12.14"
+  },
+  "checks": [
+    {
+      "library": "brainflow",
+      "version": "5.24.0",
+      "source": "native SYNTHETIC_BOARD; no physical hardware",
+      "channels": 16,
+      "sfreq_hz": 250,
+      "samples": 6,
+      "finite": true,
+      "timestamps_increasing": true
+    },
+    {
+      "library": "pylsl",
+      "version": "1.19.0",
+      "liblsl_version": 118,
+      "source": "local synthetic LSL outlet; no physical hardware",
+      "channels": 2,
+      "sfreq_hz": 250,
+      "samples": 3,
+      "sample_values_match": true,
+      "timestamps_increasing": true
+    },
+    {
+      "library": "pyserial",
+      "version": "3.5",
+      "source": "pyserial loop:// virtual port; no physical serial hardware",
+      "samples": 4,
+      "channels": 2,
+      "sample_values_match": true,
+      "timestamps_match": true
+    }
+  ],
+  "source_sha256": {
+    "src/biosignal_lab/live/__init__.py": "aa13407dc4ee0225c66461318ed870779964405887e3862d54ed3a4c5a89585c",
+    "src/biosignal_lab/live/adapters.py": "f3f202fd2e2a5c5218173b7cf09fc7456678626c3b191b32948f47b584556669",
+    "src/biosignal_lab/live/clock.py": "dc1e867ac62b5e2e79461abb5dfa1840bd0f227a790832e0c875acbe7102145e",
+    "src/biosignal_lab/live/core.py": "da44d8388b74f5641ef502c9ae9d91e9c14e4426e49504472a4cdeba21175195",
+    "src/biosignal_lab/live/processing.py": "1f86e0d93d7be2ce895d25dd3eff4b5204ba8808574a76bb1f7710f28cba0c3d",
+    "src/biosignal_lab/live/recording.py": "da38f3877ad86676479be887b325b74829b42da26f73c3433800818dc34ad63c",
+    "src/biosignal_lab/live/transport.py": "406f9fb12d78f0c1ba7604f8df729fa5d41973950d76ab0babc94004bde04c0f",
+    "examples/live/native_smoke.py": "097f57f05d5cc61dfff2b5c0976acebec147f421df6d65fc256d7622e72d9a58"
+  },
+  "limitations": [
+    "BrainFlow synthetic board is generated software data",
+    "LSL outlet and inlet run on same host; no multi-host clock accuracy verified",
+    "pyserial loop:// is a software virtual port",
+    "Physical OpenBCI/ADS1299/USB/serial electrical and timing verification remains incomplete"
+  ]
+}

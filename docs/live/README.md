@@ -2,9 +2,11 @@
 
 The Live package provides finite acquisition building blocks and a local
 Streamlit workbench. It has been tested with a deterministic simulator and a
-custom TCP protocol over loopback. No physical board, USB, OpenBCI, ADS1299,
-BrainFlow or LSL integration has been verified or is advertised as supported.
-Serial, UDP and WebSocket acquisition remain future adapter work.
+custom TCP protocol over loopback. Optional BrainFlow/LSL/serial software adapters
+are described in [adapter verification](adapters.md); native synthetic-board,
+local LSL outlet and virtual serial checks have run. No physical board, USB,
+OpenBCI or ADS1299 acquisition has been verified. UDP and WebSocket acquisition
+remain future adapter work.
 
 Start from the repository root after installing `.[dev,all]`:
 
