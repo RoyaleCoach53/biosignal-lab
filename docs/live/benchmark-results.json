@@ -1,0 +1,37 @@
+{
+  "scope": "Deterministic synthetic acquisition, causal SOS and sliding Welch PSD; no physical hardware or wall-clock pacing",
+  "source_sha256": {
+    "benchmarks/live/streaming.py": "ac3f4c5b0aca1fc27b2de8200307f7e40abe16707a877e92b5095fdd7515ffe2",
+    "src/biosignal_lab/live/__init__.py": "f4e4d29950ecc98d904ffa0e417baee09fc2255938179c5625c5d0b10893d8c8",
+    "src/biosignal_lab/live/clock.py": "dc1e867ac62b5e2e79461abb5dfa1840bd0f227a790832e0c875acbe7102145e",
+    "src/biosignal_lab/live/core.py": "da44d8388b74f5641ef502c9ae9d91e9c14e4426e49504472a4cdeba21175195",
+    "src/biosignal_lab/live/processing.py": "1f86e0d93d7be2ce895d25dd3eff4b5204ba8808574a76bb1f7710f28cba0c3d",
+    "src/biosignal_lab/live/recording.py": "da38f3877ad86676479be887b325b74829b42da26f73c3433800818dc34ad63c",
+    "src/biosignal_lab/live/transport.py": "9beff51f02a245ab906715fac60fa9c9a0e2ff8ec7c8ce07c7685978c96d35e3"
+  },
+  "host": {
+    "os": "Linux",
+    "architecture": "x86_64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "python": "3.12.14",
+    "numpy": "2.5.5",
+    "scipy": "1.18.1"
+  },
+  "workload": {
+    "channels": 8,
+    "sfreq_hz": 1000,
+    "block_samples": 100,
+    "blocks": 300,
+    "warmup_blocks": 30
+  },
+  "cpu_processing_p50_ms": 3.6011395000059565,
+  "cpu_processing_p95_ms": 6.01892095006634,
+  "cpu_processing_max_ms": 47.384018999991895,
+  "samples_per_second_including_simulation": 22679.533340477898,
+  "tracemalloc_peak_bytes": 1208720,
+  "limitations": [
+    "Tracemalloc is Python-tracked allocator peak, not process RSS",
+    "Timing includes tracemalloc overhead and excludes acquisition/network/display",
+    "Container scheduling affects timings; no guaranteed real-time deadlines"
+  ]
+}
