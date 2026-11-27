@@ -5,6 +5,7 @@
   "scripts": {
     "test": "playwright test",
     "test:studio": "playwright test --config playwright.studio.config.mjs",
+    "test:studio-backend": "playwright test --config playwright.studio-backend.config.mjs",
     "dev": "vite",
     "build": "node scripts/poster.mjs && vite build",
     "preview": "vite preview"
