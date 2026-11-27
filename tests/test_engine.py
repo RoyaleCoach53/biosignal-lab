@@ -451,3 +451,30 @@ def test_spectral_overflow_is_rejected_and_entropy_is_scale_invariant():
             normalize_signal(huge)
     with pytest.raises(ValueError):
         integrate_band([0.0, 1.0], 2.0, 0.0, 1.0)
+
+
+def test_npz_uint8_to_float64_expansion_respects_memory_budget(tmp_path):
+    path = tmp_path / "byte-data.npz"
+    metadata = json.dumps(
+        {"schema_version": 1, "sfreq": 100, "channels": ["a"], "modality": "eeg", "unit": "uV"}
+    )
+    np.savez_compressed(
+        path, data=np.arange(4096, dtype=np.uint8)[None], metadata=np.array(metadata)
+    )
+    with pytest.raises(ValueError, match="allocation limit"):
+        load_signal(path, max_bytes=5000)
+
+
+def test_mat_compressed_shape_and_object_classes_are_rejected(tmp_path):
+    from scipy.io import savemat
+
+    path = tmp_path / "huge.mat"
+    savemat(path, {"data": np.zeros((1, 10000), dtype=np.uint8)}, do_compression=True)
+    kwargs = dict(data_key="data", sfreq=100, channels=("a",), modality="eeg", unit="uV")
+    assert path.stat().st_size < 1000
+    with pytest.raises(ValueError, match="bounded numeric"):
+        load_mat(path, max_bytes=5000, **kwargs)
+    objects = tmp_path / "object.mat"
+    savemat(objects, {"data": np.array([["unsupported"]], dtype=object)})
+    with pytest.raises(ValueError, match="bounded numeric"):
+        load_mat(objects, **kwargs)

@@ -41,6 +41,7 @@ def load_signal(path, *, max_bytes=256_000_000):
         ):
             raise ValueError("Invalid signal archive members or expanded resource limit")
         # Bound declared NPY shapes too: a tiny malicious header can claim a huge array.
+        allocation = 0
         for entry in entries:
             with archive.open(entry) as member:
                 version = np.lib.format.read_magic(member)
@@ -51,7 +52,16 @@ def load_signal(path, *, max_bytes=256_000_000):
                 if reader is None:
                     raise ValueError("Unsupported NPY member version")
                 shape, _, dtype = reader(member)
-                if dtype.hasobject or math.prod(shape) * dtype.itemsize > max_bytes:
+                if entry.filename == "data.npy":
+                    if len(shape) != 2 or min(shape) < 1 or dtype.kind not in "fiu":
+                        raise ValueError("NPY data must be a nonempty real numeric matrix")
+                    # Signal converts to float64: uint8 input needs eight times its storage.
+                    allocation += math.prod(shape) * max(dtype.itemsize, 8)
+                else:
+                    if shape != () or dtype.kind not in "US" or dtype.itemsize > 1_000_000:
+                        raise ValueError("NPY metadata must be bounded scalar text")
+                    allocation += dtype.itemsize
+                if dtype.hasobject or allocation > max_bytes:
                     raise ValueError("Unsafe NPY dtype or declared allocation limit")
     with np.load(path, allow_pickle=False) as loaded:
         metadata = json.loads(str(loaded["metadata"].item()))
@@ -60,13 +70,42 @@ def load_signal(path, *, max_bytes=256_000_000):
         return Signal(data=loaded["data"], **metadata)
 
 
-def load_mat(path, *, data_key, sfreq, channels, modality, unit, reference=None):
+def load_mat(
+    path, *, data_key, sfreq, channels, modality, unit, reference=None, max_bytes=256_000_000
+):
     """MAT v4/v5/v7.2 numeric matrix; metadata explicitly supplied by caller.
 
     MATLAB v7.3/HDF5 is not silently interpreted by this adapter.
     """
-    from scipy.io import loadmat
+    from scipy.io import loadmat, whosmat
 
+    path = Path(path)
+    if path.stat().st_size > max_bytes:
+        raise ValueError("MAT file exceeds resource limit")
+    declarations = [item for item in whosmat(path) if item[0] == data_key]
+    if len(declarations) != 1:
+        raise ValueError("MAT data key missing or duplicated")
+    _, shape, kind = declarations[0]
+    allowed = {
+        "double",
+        "single",
+        "int8",
+        "uint8",
+        "int16",
+        "uint16",
+        "int32",
+        "uint32",
+        "int64",
+        "uint64",
+    }
+    # Reserve worst-case complex-double storage; Signal separately rejects complex data.
+    if (
+        len(shape) != 2
+        or min(shape) < 1
+        or kind not in allowed
+        or math.prod(shape) * 16 > max_bytes
+    ):
+        raise ValueError("MAT data must be a bounded numeric matrix")
     values = loadmat(path, variable_names=[data_key])
     if data_key not in values:
         raise ValueError("MAT data key missing")

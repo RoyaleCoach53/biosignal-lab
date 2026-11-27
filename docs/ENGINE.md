@@ -131,14 +131,16 @@ activity correlated with that reference. It is not automatic artifact removal.
 
 `save_signal()` writes a versioned NPZ with numeric arrays and strict JSON metadata.
 `load_signal()` disables pickle, bounds compressed/uncompressed sizes and declared
-NPY allocations, and rejects unexpected archive members. Saving exclusively creates
+NPY allocations including float64 expansion, and rejects unexpected archive members. Saving exclusively creates
 files and preserves previous outputs. `save_hdf5()`/`load_hdf5()` use a versioned
 engine schema, preserve provenance, reject external/virtual datasets and bound
 expanded sample allocation. They require h5py; generic HDF5 is not silently
 interpreted as engine data.
 
 `load_mat()` accepts explicit data key, sampling frequency, labels, modality,
-unit and reference for numeric MATLAB v4/v5/v7.2 matrices. MATLAB v7.3 is not
+unit and reference for numeric MATLAB v4/v5/v7.2 matrices. It checks file size
+and declared shape/class before loading the selected matrix; its conservative
+allocation budget reserves complex-double storage even for integer inputs. MATLAB v7.3 is not
 silently treated as that format. `load_mne()` supports electrical channels in
 EDF/EDF+, BDF, GDF and FIF through MNE, explicitly converts volts to uV and retains
 selected channel labels, bad-channel names and annotations. EDF/BDF channel types
