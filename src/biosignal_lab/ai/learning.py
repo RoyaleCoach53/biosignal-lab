@@ -136,6 +136,12 @@ def evaluate_grouped(dataset: FeatureDataset, model="lda", cv="loso", n_splits=5
     """
     if not isinstance(dataset, FeatureDataset):
         raise TypeError("dataset must be a FeatureDataset")
+    return _evaluate_grouped(dataset, model, cv, n_splits, seed, param_grid,
+                             inner_splits, bootstrap_samples)
+
+
+def _evaluate_grouped(dataset, model, cv, n_splits, seed, param_grid,
+                      inner_splits, bootstrap_samples, factory=None):
     if not isinstance(seed, int) or seed < 0 or not isinstance(bootstrap_samples, int) or not 100 <= bootstrap_samples <= 10000:
         raise ValueError("Use a nonnegative integer seed and 100..10000 bootstrap samples")
     if not isinstance(inner_splits, int) or inner_splits < 2:
@@ -149,7 +155,7 @@ def evaluate_grouped(dataset: FeatureDataset, model="lda", cv="loso", n_splits=5
     tested = np.zeros(len(y), dtype=int)
     folds = []
     for number, (train, test) in enumerate(_splits(X, y, groups, cv, n_splits, seed)):
-        estimator = _pipeline(model, seed)
+        estimator = _pipeline(model, seed) if factory is None else factory(model, seed)
         selected = {}
         if param_grid is not None:
             if not isinstance(param_grid, dict) or not param_grid:

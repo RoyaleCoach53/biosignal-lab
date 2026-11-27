@@ -61,6 +61,15 @@ def test_nested_grouped_tuning_and_class_incomplete_fold_rejected():
         evaluate_grouped(data, cv="random", bootstrap_samples=100)
 
 
+@pytest.mark.parametrize("model", ["lda", "logistic", "qda", "svm", "random_forest", "knn", "gradient_boosting"])
+def test_each_registered_classical_baseline_executes_grouped_predictions(model):
+    data = synthetic_feature_dataset(n_subjects=3, trials_per_subject=8)
+    result = evaluate_grouped(data, model=model, bootstrap_samples=100)
+    assert result["metrics"]["accuracy"] >= .9
+    assert sum(sum(row) for row in result["metrics"]["confusion_matrix"]) == len(data.X)
+    assert result["roc"]["available"] == (model != "svm")
+
+
 def test_scaler_is_fit_inside_training_fold(monkeypatch):
     from sklearn.preprocessing import StandardScaler
     data = synthetic_feature_dataset(n_subjects=4, trials_per_subject=6)
@@ -178,15 +187,42 @@ def test_cache_download_verifies_before_creation_and_enforces_limit(tmp_path, mo
         result.url = "https://example.org/signal.bin"
         return result
 
-    monkeypatch.setattr(cache_module, "urlopen", lambda *a, **k: response(b"bad"))
+    monkeypatch.setattr(cache_module, "_open_https", lambda *a, **k: response(b"bad"))
     with pytest.raises(ValueError, match="SHA-256"):
         fetch_record(_record(), tmp_path, download=True, license_accepted=True)
     assert not (tmp_path / _record().path).exists()
-    monkeypatch.setattr(cache_module, "urlopen", lambda *a, **k: response(b"synthetic signal"))
+    monkeypatch.setattr(cache_module, "_open_https", lambda *a, **k: response(b"synthetic signal"))
     with pytest.raises(ValueError, match="byte limit"):
         fetch_record(_record(), tmp_path, download=True, license_accepted=True, max_bytes=4)
     destination = fetch_record(_record(), tmp_path, download=True, license_accepted=True)
     assert destination.read_bytes() == b"synthetic signal"
+
+
+def test_cache_rejects_root_symlink_and_https_downgrade_before_following(tmp_path, monkeypatch):
+    from urllib.request import HTTPRedirectHandler, Request
+    from biosignal_lab.ai.datasets import _HTTPSOnlyRedirect
+    real = tmp_path / "real"
+    real.mkdir()
+    alias = tmp_path / "alias"
+    alias.symlink_to(real, target_is_directory=True)
+    with pytest.raises(ValueError, match="root.*symlinks"):
+        fetch_record(_record(), alias)
+    with pytest.raises(ValueError, match="root.*symlinks"):
+        fetch_record(_record(), alias / "subdirectory")
+    followed = []
+
+    def redirect(self, request, response, code, message, headers, newurl):
+        followed.append(newurl)
+        return Request(newurl)
+
+    monkeypatch.setattr(HTTPRedirectHandler, "redirect_request", redirect)
+    handler = _HTTPSOnlyRedirect()
+    request = Request("https://example.org/data")
+    with pytest.raises(ValueError, match="credential-free HTTPS"):
+        handler.redirect_request(request, None, 302, "Found", {}, "http://example.org/data")
+    assert followed == []
+    handler.redirect_request(request, None, 302, "Found", {}, "https://example.org/secure")
+    assert followed == ["https://example.org/secure"]
 
 
 def test_ai_dashboard_executes_real_grouped_evaluation():
