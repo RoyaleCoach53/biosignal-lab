@@ -17,8 +17,10 @@ class StreamInfo:
     clock: str = "device"
 
     def __post_init__(self):
-        if not np.isfinite(self.sfreq) or self.sfreq <= 0:
+        if isinstance(self.sfreq, bool) or not np.isfinite(self.sfreq) or self.sfreq <= 0:
             raise ValueError("sfreq must be finite and positive")
+        if not isinstance(self.channels, (tuple, list)) or not isinstance(self.units, (tuple, list)):
+            raise ValueError("Channel names and units must be explicit sequences of strings")
         channels, units = tuple(self.channels), tuple(self.units)
         if not channels or len(channels) > 1024 or any(not isinstance(x, str) for x in channels) or len(set(channels)) != len(channels):
             raise ValueError("channels must be nonempty, unique strings (maximum 1024)")
@@ -37,6 +39,8 @@ class SampleBlock:
     start_sample: int
 
     def __post_init__(self):
+        if np.iscomplexobj(self.data) or np.iscomplexobj(self.timestamps):
+            raise ValueError("Complex samples or timestamps require an explicit representation")
         data = np.array(self.data, dtype=np.float64, copy=True)
         timestamps = np.array(self.timestamps, dtype=np.float64, copy=True)
         if data.ndim != 2 or not data.shape[0] or not data.shape[1]:

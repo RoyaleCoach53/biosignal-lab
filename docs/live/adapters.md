@@ -19,7 +19,10 @@ synthetic LSL outlet, or pyserial's `loop://` virtual port. It does not connect
 to physical hardware. The LSL check performs local network discovery and sample
 transport; firewalls or multicast policy can prevent it. Test results describe
 this Linux cloud machine, not all operating systems. The native library versions
-and actual results are recorded in [native adapter results](native-adapter-results.json).
+and actual results are recorded in [current native adapter results](native-adapter-expanded-results.json).
+The [initial adapter results](native-adapter-results.json) remain preserved with
+their original source hashes. Each report describes the source snapshot it
+actually exercised; it is not an automatically refreshed success claim.
 
 ## BrainFlow
 

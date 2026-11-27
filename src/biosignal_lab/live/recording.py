@@ -10,6 +10,7 @@ from zipfile import ZipFile
 import numpy as np
 
 from .core import SampleBlock, StreamInfo
+from ._json import decode_json
 
 
 def recording_bytes(info: StreamInfo, block: SampleBlock, markers: list[dict] | None = None,
@@ -20,7 +21,7 @@ def recording_bytes(info: StreamInfo, block: SampleBlock, markers: list[dict] | 
     if not isinstance(markers, list) or len(markers) > 1000:
         raise ValueError("At most 1000 event markers are supported")
     for marker in markers:
-        if set(marker) != {"sample", "label"} or not isinstance(marker["sample"], int) or not block.start_sample <= marker["sample"] < block.stop_sample or not isinstance(marker["label"], str) or not 1 <= len(marker["label"]) <= 256:
+        if not isinstance(marker, dict) or set(marker) != {"sample", "label"} or isinstance(marker["sample"], bool) or not isinstance(marker["sample"], int) or not block.start_sample <= marker["sample"] < block.stop_sample or not isinstance(marker["label"], str) or not 1 <= len(marker["label"]) <= 256:
             raise ValueError("Marker requires an in-range integer sample and label of 1..256 characters")
     metadata = {"schema": "biosignal-live-1", "stream": asdict(info),
                 "start_sample": int(block.start_sample), "markers": markers,
@@ -74,10 +75,13 @@ def load_recording(path: str | Path, max_values: int = 10_000_000) -> tuple[Stre
             raw = archive["metadata"]
             if raw.ndim != 0 or raw.dtype.kind != "U" or raw.itemsize > 65536:
                 raise ValueError("Invalid metadata")
-            metadata = json.loads(str(raw))
-            if metadata.get("schema") != "biosignal-live-1":
+            metadata = decode_json(str(raw))
+            if not isinstance(metadata, dict) or set(metadata) != {"schema", "stream", "start_sample", "markers", "scope"} or metadata.get("schema") != "biosignal-live-1":
                 raise ValueError("Unsupported recording schema")
-            info = StreamInfo(**metadata["stream"])
+            stream = metadata["stream"]
+            if not isinstance(stream, dict) or set(stream) != {"sfreq", "channels", "units", "modality", "clock"}:
+                raise ValueError("Invalid recording stream metadata")
+            info = StreamInfo(**stream)
             block = SampleBlock(archive["data"], archive["timestamps"], metadata["start_sample"])
             # Reuse export validation rather than accepting inconsistent markers/shape.
             recording_bytes(info, block, metadata["markers"], max_values=max_values)

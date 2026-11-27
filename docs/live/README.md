@@ -87,6 +87,9 @@ sizes, validates NPY array headers before allocation, limits recording values
 (default ten million), and revalidates all metadata and markers. This is bounded
 local file parsing, not a guarantee against all malicious archive variants.
 `recording_bytes` supports in-memory exports without disk files.
+Metadata and acquisition frames reject duplicate JSON object keys and nonfinite
+JSON constants. Complex-valued samples are rejected rather than silently losing
+their imaginary component during float conversion.
 
 `PlaybackDevice(path).read(n)` returns up to the requested number of samples and
 raises `EOFError` at the end. It preserves original sequence numbers and timestamps
@@ -158,6 +161,12 @@ session cannot be restarted. Reconnect with a new device, processor and session.
 The dashboard uses finite synchronous capture; it does not leave background
 sessions running when a page reruns.
 
+For a visual live simulation, enable **Animate finite capture in wall time**.
+The dashboard updates actual rolling multichannel traces and post-warmup spectra
+while pacing the virtual source to its nominal sampling rate. The run remains
+finite (3–30 seconds); no hidden acquisition process survives it. This is simulated
+wall-clock playback, not measured device-to-display timing or hardware validation.
+
 ## Acceptance evidence and remaining gates
 
 Tests compare chunked causal filtering against a single continuous SciPy call,
@@ -175,3 +184,9 @@ RSS or every native allocation. Container scheduling affects timing and there
 are no real-time deadline guarantees. Physical acquisition, packet-loss detection
 against hardware sequence counters, reconnect stability, hardware timestamp
 accuracy, end-to-end latency and human usability remain incomplete gates.
+
+The [implementation checkpoint](IMPLEMENTATION_STATUS.md) records software
+acceptance evidence and remaining gates. Current source-hashed
+[CPU measurements](benchmark-expanded-streaming-results.json) and
+[native adapter results](native-adapter-expanded-results.json) preserve actual
+outcomes; the original reports remain available as historical source snapshots.

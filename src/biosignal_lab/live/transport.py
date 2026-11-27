@@ -16,6 +16,7 @@ from urllib.parse import urlsplit
 import numpy as np
 
 from .core import SampleBlock, StreamInfo
+from ._json import decode_json
 
 
 def encode_frame(block: SampleBlock, max_bytes: int = 1_048_576) -> bytes:
@@ -28,7 +29,7 @@ def encode_frame(block: SampleBlock, max_bytes: int = 1_048_576) -> bytes:
 
 
 def _decode_payload(payload: bytes, info: StreamInfo, n_samples: int) -> SampleBlock:
-    document = json.loads(payload)
+    document = decode_json(payload)
     if not isinstance(document, dict) or set(document) != {"data", "timestamps", "start_sample"}:
         raise ValueError("Unexpected frame schema")
     block = SampleBlock(**document)
@@ -79,7 +80,7 @@ class TCPDevice:
             if not 1 <= length <= self.max_bytes:
                 raise ValueError("Frame exceeds configured byte limit")
             return _decode_payload(self._exact(length), self.info, n_samples)
-        except (OSError, EOFError, ValueError, TypeError, KeyError, RecursionError):
+        except Exception:
             self.close()
             raise
 
@@ -150,7 +151,7 @@ class UDPDevice:
             # An extra byte detects truncated oversized datagrams portably.
             message = self._socket.recv(self.max_bytes + 1)
             return _decode_message(message, self.info, n_samples, self.max_bytes)
-        except (OSError, ValueError, TypeError, KeyError, RecursionError):
+        except Exception:
             self.close()
             raise
 
