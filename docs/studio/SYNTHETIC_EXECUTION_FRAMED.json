@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-11-27T22:10:19.760880+00:00",
+  "scope": "Synthetic local in-memory DAG; 2 EEG channels, 250 Hz, 10 seconds. Python allocator peaks exclude some native memory and are not process RSS. Two runs do not establish a throughput/latency distribution or hardware compatibility.",
+  "host": {
+    "os": "Linux",
+    "architecture": "x86_64",
+    "python": "3.12.14"
+  },
+  "workflow_sha256": "a752bb99a676803a5ade8dadcffb490b1d84ce39e41a8380765b92aea2eae8ba",
+  "source_sha256": "3db56df79e8071a9c1b12d67cfc276eaca6f70568323a4ea58db99b5690827fc",
+  "dependencies": {
+    "biosignal-lab": "0.3.0",
+    "numpy": "2.5.5",
+    "scipy": "1.18.1",
+    "pandas": "2.3.3",
+    "mne": "1.13.2"
+  },
+  "limits": {
+    "max_nodes": 64,
+    "max_signal_values": 4000000,
+    "max_output_bytes": 128000000,
+    "max_seconds": 60.0,
+    "max_source_bytes": 32000000
+  },
+  "runs": [
+    {
+      "run": "cold_execution",
+      "seconds": 0.12789009500011161,
+      "python_tracemalloc_peak_bytes": 1517904,
+      "cache_hits": 0,
+      "nodes": 6,
+      "output_sha256": {
+        "demo": "dd11540f72ba9c0a480d42b29b8550b31c401f6d773d24c1e00fdf9220737b8c",
+        "analysis": "14dcd3c07add56a3ee7d1f0bf728e771cb12585b1b3c7666fa52cab0c802eb6e",
+        "summary": "b530f128aa865dc590b30e1c67c8d31e552ebbb2580097892452926cbadb6868",
+        "spectrum": "f72029af286340a5fee7e6271c93e9cb75962ffe8ed9a0eb73da00c65a3882cb",
+        "bandpower": "6dc2e2f9c0bb4777f373a2a1f578aa7c05a17a47241f585a48725320ff00dfb8"
+      }
+    },
+    {
+      "run": "same_process_repeat",
+      "seconds": 0.07362782200016227,
+      "python_tracemalloc_peak_bytes": 1164165,
+      "cache_hits": 5,
+      "nodes": 6,
+      "output_sha256": {
+        "demo": "dd11540f72ba9c0a480d42b29b8550b31c401f6d773d24c1e00fdf9220737b8c",
+        "analysis": "14dcd3c07add56a3ee7d1f0bf728e771cb12585b1b3c7666fa52cab0c802eb6e",
+        "summary": "b530f128aa865dc590b30e1c67c8d31e552ebbb2580097892452926cbadb6868",
+        "spectrum": "f72029af286340a5fee7e6271c93e9cb75962ffe8ed9a0eb73da00c65a3882cb",
+        "bandpower": "6dc2e2f9c0bb4777f373a2a1f578aa7c05a17a47241f585a48725320ff00dfb8"
+      }
+    }
+  ],
+  "scientific_outputs_reproduced": true
+}
