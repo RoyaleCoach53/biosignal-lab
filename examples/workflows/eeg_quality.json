@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "Synthetic EEG quality and reproducible report",
+  "nodes": [
+    {"id": "demo", "kind": "simulate", "parameters": {"duration_s": 10, "sfreq": 250, "n_channels": 2, "seed": 42}},
+    {"id": "analysis", "kind": "analyze", "inputs": {"signal": {"node": "demo"}}},
+    {"id": "summary", "kind": "summary", "inputs": {"analysis": {"node": "analysis"}}},
+    {"id": "report", "kind": "html", "inputs": {"analysis": {"node": "analysis"}}},
+    {"id": "spectrum", "kind": "psd", "inputs": {"signal": {"node": "demo"}}},
+    {"id": "bandpower", "kind": "bands", "inputs": {"spectrum": {"node": "spectrum"}}}
+  ]
+}

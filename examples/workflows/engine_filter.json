@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "Engine filter and resampling provenance",
+  "nodes": [
+    {"id": "demo", "kind": "simulate", "parameters": {"duration_s": 10, "n_channels": 2}},
+    {"id": "signal", "kind": "engine_signal", "inputs": {"recording": {"node": "demo"}}},
+    {"id": "filtered", "kind": "filter", "parameters": {"family": "butter", "kind": "bandpass", "cutoff": [1, 40], "order": 4}, "inputs": {"signal": {"node": "signal"}}},
+    {"id": "resampled", "kind": "resample", "parameters": {"sfreq": 125}, "inputs": {"signal": {"node": "filtered"}}},
+    {"id": "spectrum", "kind": "engine_psd", "inputs": {"signal": {"node": "resampled"}}},
+    {"id": "provenance", "kind": "signal_metadata", "inputs": {"signal": {"node": "resampled"}}}
+  ]
+}
