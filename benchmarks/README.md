@@ -11,7 +11,8 @@ python benchmarks/verify.py --output local-results/verification.json
 ```
 
 The suite retains the original 73 tests and adds 12 release regressions. Install
-both MNE and Streamlit to run all 107 tests without optional skips. The benchmark
+both MNE and Streamlit to run the full suite without optional skips. The published
+v0.3.0 suite has 107 tests; the adoption branch adds ten controls (117 total). The benchmark
 requires MNE and records the environment rather than silently omitting its comparison.
 
 ## Twelve benchmark checks

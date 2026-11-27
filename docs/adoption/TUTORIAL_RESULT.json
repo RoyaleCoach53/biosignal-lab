@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "tutorial_version": 1,
+  "software_version": "0.3.0",
+  "source_revision": "081ca794ec9aea8313afea050eebd0353d7cb32c",
+  "source_state": "modified",
+  "recording_id": "S001R01",
+  "sha256": "4743b736131a7e147c150e8b37711029b6cda5e356c4b3e8261a03cdcaaf8b0c",
+  "dataset_url": "https://physionet.org/content/eegmmidb/1.0.0/",
+  "license_url": "https://physionet.org/content/eegmmidb/view-license/1.0.0/",
+  "attribution": "Contains information from the PhysioNet EEG Motor Movement/Imagery Dataset, made available under the ODC Attribution License.",
+  "python": "3.12.14",
+  "packages": {
+    "numpy": "2.5.5",
+    "scipy": "1.18.1",
+    "mne": "1.13.2",
+    "matplotlib": "3.11.2"
+  },
+  "protocol_sha256": "c8463206f7937e54438bff707830c9280bce90814fcf780516cbbd4cbf123697",
+  "manifest_sha256": "405df27c661b2098c8a8fd738816fb2ec5e8275730686a33a8df1beccd5f8d0c",
+  "runner_sha256": "3c6b5573c69836bf30bab6f416e1cd843be80777515d26f6210964fcb2205436",
+  "software_source_sha256": {
+    "examples/eeg_tutorial.py": "3c6b5573c69836bf30bab6f416e1cd843be80777515d26f6210964fcb2205436",
+    "benchmarks/real_world/validate.py": "7d6ead3f66660bef74d9477cba506d1cca57c830d23a79e540d04dd094e269c5",
+    "src/biosignal_lab/io.py": "a7dea358b8cc613ac375c3d8488f255b4c1a355d0b5a704c67081d38ada7409e",
+    "src/biosignal_lab/analysis.py": "6b03b6bab668b0444502afa6613ff5f3670058645e0b510c25d9488ee0fa3d9f",
+    "src/biosignal_lab/preprocessing.py": "050d5582ff13da9c0fd4d3ee666776a859ae3df76629e698c01b7e2f8c0be384",
+    "src/biosignal_lab/pipeline.py": "cc131438d1e321bb14bd8a482213bf519937843a0f4a27b0380d66c0e2c6acea",
+    "src/biosignal_lab/models.py": "b7c1a75214b398c775129c86afd01508c743455822b4e170f2587779e6fd3b32",
+    "src/biosignal_lab/_version.py": "56b5e91c3bb77ab933c25fd65eba883419bdc5691cc94cb9dc840e8f4e3674eb"
+  },
+  "sampling_hz": 160.0,
+  "channels": 64,
+  "analysis_seconds": 60.0,
+  "welch_grid_hz": 0.25,
+  "config": {
+    "modality": "eeg",
+    "highpass_hz": 0.1,
+    "lowpass_hz": null,
+    "notch_hz": 50.0,
+    "notch_quality": 30.0,
+    "window_s": 4.0,
+    "artifact_window_s": 1.0,
+    "artifact_threshold_mad": 8.0,
+    "flatline_tolerance_uv": 0.15,
+    "max_missing_fraction": 0.05,
+    "max_gap_s": 0.1
+  },
+  "displayed_channel_index": 0,
+  "displayed_channel_label": "Fc5.",
+  "selected_band_powers_uv2": {
+    "delta": {
+      "biosignal": 1442.3617897816014,
+      "reference": 1442.361789781608
+    },
+    "theta": {
+      "biosignal": 259.55156385279395,
+      "reference": 259.5515638527943
+    },
+    "alpha": {
+      "biosignal": 163.12818289888838,
+      "reference": 163.12818289888838
+    },
+    "beta": {
+      "biosignal": 172.5672915633601,
+      "reference": 172.5672915633602
+    },
+    "gamma": {
+      "biosignal": 44.54466396275969,
+      "reference": 44.54466396275971
+    }
+  },
+  "validation": {
+    "id": "S001R01",
+    "subject": 1,
+    "condition": "eyes_open_baseline",
+    "sha256": "4743b736131a7e147c150e8b37711029b6cda5e356c4b3e8261a03cdcaaf8b0c",
+    "samples_per_channel": 9600,
+    "channels": 64,
+    "sfreq_hz": 160.0,
+    "passed": true,
+    "errors": {
+      "units_max_abs_uv": 1.1368683772161603e-13,
+      "waveform_relative_l2": 6.574495091573124e-13,
+      "raw_psd_relative_l2": 6.427204240115114e-16,
+      "psd_relative_l2": 1.161300752182644e-13,
+      "band_relative_error": 7.302481714750657e-14,
+      "rounded_qc_max_abs_uv": 4.994808637093229e-05
+    },
+    "natural_artifact_candidate_count": 43,
+    "quality_controls": {
+      "injected_flatline_detected": true,
+      "injected_burst_detected": true
+    },
+    "missing_data_controls": {
+      "short_gap_finite_and_disclosed": true,
+      "long_gap": true,
+      "boundary_gap": true
+    },
+    "median_channel_rms_uv": 51.598533568937,
+    "median_channel_alpha_uv2": 162.77362948300834,
+    "sensitivity": {
+      "highpass_1hz": {
+        "median_rms_ratio": 0.7201687022635023,
+        "median_delta_power_ratio": 0.5668951711983967,
+        "median_gamma_power_ratio": 0.9999999959712011
+      },
+      "lowpass_40hz": {
+        "median_rms_ratio": 0.9880114424455613,
+        "median_delta_power_ratio": 0.9998144127909554,
+        "median_gamma_power_ratio": 0.5258825866143881
+      },
+      "no_notch": {
+        "median_rms_ratio": 1.000408549585972,
+        "median_delta_power_ratio": 0.9999947727251989,
+        "median_gamma_power_ratio": 1.0125419216834826
+      },
+      "mne_native_padding": {
+        "whole_record_relative_l2": 0.11676266965599398,
+        "interior_relative_l2": 0.049471717127361294,
+        "qualification": "Different edge policies; not an equivalence gate or physiological ground truth."
+      },
+      "welch_2s": {
+        "reference_relative_l2": 4.042057397736666e-14,
+        "median_alpha_uv2": 163.70878338447324,
+        "median_delta_uv2": 1221.0645326801948
+      },
+      "welch_4s": {
+        "reference_relative_l2": 1.161300752182644e-13,
+        "median_alpha_uv2": 162.77362948300822,
+        "median_delta_uv2": 1181.721343637604
+      },
+      "welch_8s": {
+        "reference_relative_l2": 2.1791502324092616e-13,
+        "median_alpha_uv2": 166.90602579536284,
+        "median_delta_uv2": 1097.302323548347
+      }
+    },
+    "warnings": [
+      "Low-frequency IIR results depend on padding and recording edges; compare raw/processed spectra. Trimming 5 s does not guarantee transient removal",
+      "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+    ]
+  },
+  "passed": true,
+  "scope": "One-record educational interoperability exercise using the unchanged v0.3 protocol; not 9/9 cohort evidence, independent physiology or clinical validation. Shared SciPy routines; native-padding differences remain in validation.sensitivity."
+}

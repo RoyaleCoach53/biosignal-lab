@@ -5,6 +5,13 @@ The real-EEG pilot was reviewed and merged in PR #4. Release publication require
 passing final checks and maintainer approval; see [release status](docs/RELEASE_STATUS.md).
 No milestone is completed solely because a test counter is green.
 
+The current adoption PR prepares onboarding, a small public EEG lesson and a
+five-person beta program, not an official v0.4.0 release. See the
+[evidence-ranked v0.4 priorities](docs/V0_4_PRIORITIES.md),
+[installation audit](docs/adoption/INSTALLATION_AUDIT.md) and
+[beta protocol](docs/beta/PROGRAM.md). Independent participants remain unassigned;
+community outreach and any future release require owner approval.
+
 | Milestone | Scope and evidence required |
 | --- | --- |
 | v0.3.0 | Reproducible real-EEG technical interoperability pilot, official hashes/attribution, matched MNE references, retained failures/sensitivity, regression coverage, Windows/Linux CI, reviewed PR and explicit release approval |

@@ -13,6 +13,19 @@ truth. See the [release notes](docs/RELEASE_NOTES_v0.3.0.md),
 [release page](https://github.com/RoyaleCoach53/biosignal-lab/releases/tag/v0.3.0),
 and [scientific limitations](docs/LIMITATIONS.md). The v0.2.0 release is preserved.
 
+**Start here:** [five-minute student Quick Start](docs/QUICK_START.md) ·
+[reproducible public EEG lesson](docs/EEG_TUTORIAL.md) ·
+[screenshots](docs/SCREENSHOTS.md) · [five-person beta program](docs/beta/PROGRAM.md).
+
+This development branch proposes adoption/onboarding improvements for review.
+The new lesson, diagnostics and beta forms are not part of the immutable v0.3.0
+release. No independent beta sessions or community adoption are claimed.
+
+![Synthetic EEG raw and processed spectra with frequency in Hz and PSD in dB relative to µV²/Hz](docs/assets/synthetic-spectrum.jpg)
+
+Actual v0.3.0 dashboard, synthetic seed 42; no human recording or clinical result.
+The dotted raw and solid processed spectra show the effect of the selected notch.
+
 ## What you can do
 
 - Import numeric CSV channels with explicit amplitude units and sampling rate;
@@ -30,7 +43,9 @@ approval, or safety-critical control is provided. Quality flags are review aids.
 
 ## Install
 
-Use Python 3.10 or newer. Clone this repository and create a virtual environment:
+Use Python 3.10 or newer. For the released dashboard, clone the fixed tag and
+create a virtual environment (the [Quick Start](docs/QUICK_START.md) also provides
+activation-free commands for Windows and Linux/macOS):
 
 ```sh
 git clone --branch v0.3.0 https://github.com/RoyaleCoach53/biosignal-lab.git
@@ -52,6 +67,8 @@ Open the local address printed by Streamlit. The project configuration binds to
 the signal, spectrum, time-frequency, quality, artifact, and export tabs.
 
 For EDF and the dashboard together, install `python -m pip install -e ".[all]"`.
+In the adoption checkout, `.[tutorial]` installs only the real-EEG lesson's optional
+MNE/Matplotlib dependencies; use [its instructions](docs/EEG_TUTORIAL.md) for the correct build.
 For only the Python library and CLI, use `python -m pip install -e .`.
 There is no claim that this project has been published on PyPI. The release wheel
 installs the library and CLI; use the repository or source distribution for `app.py`.
@@ -96,6 +113,8 @@ microvolts internally. See `biosignal-lab analyze --help` for filter overrides.
 The original archive's **73 tests were reproduced unchanged before release fixes**.
 The v0.3.0 suite has **107 passing tests locally with no skips**;
 the v0.2.0 release had 85. The incoming research branch and its original tests are preserved.
+This adoption branch adds ten offline onboarding/privacy/compatibility controls
+for **117 local passes**; current CI is authoritative for the reviewed commit.
 The test suite includes a generated mixed EEG/EMG EDF file and a matched-setting
 MNE PSD comparison. A separate benchmark command passes **12 numerical checks**.
 
@@ -175,3 +194,9 @@ See [SECURITY.md](SECURITY.md) for private vulnerability reporting.
 Useful next contributions include an independent methods review, reproduction of
 the existing licensed EEG pilot, accessibility feedback, and synthetic issue reports.
 The project is MIT licensed; dependencies retain their own licenses.
+
+The [installation audit](docs/adoption/INSTALLATION_AUDIT.md) distinguishes clean
+maintainer/CI checks from independent-user evidence. Read the [beta protocol and
+feedback form](docs/beta/PROGRAM.md), [community sharing plan](docs/community/SHARING_PLAN.md)
+and [prioritized v0.4 roadmap](docs/V0_4_PRIORITIES.md). Outreach needs owner approval;
+no messages have been sent, no testers recruited, and no new release created.

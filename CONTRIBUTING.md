@@ -23,8 +23,12 @@ using [SECURITY.md](SECURITY.md), not a public issue.
 Use Python 3.10+ and install `python -m pip install -e ".[dev,all]"`.
 Run `python -m pytest -ra`, `python benchmarks/verify.py --output local-results/verification.json`,
 `python -m compileall -q src app.py`, `python tools/check_docs.py`, and
-`python -m build`. MNE and Streamlit must be installed to run all 107 tests without
+`python -m build`. MNE and Streamlit must be installed to run the full suite without
 optional skips. The core-only environment intentionally skips integration tests.
+Start with the [student guide](docs/QUICK_START.md), [EEG lesson](docs/EEG_TUTORIAL.md)
+or [beta instructions](docs/beta/PROGRAM.md). The adoption branch currently has
+117 tests; the immutable v0.3.0 release has 107. New reference/first-use workflows
+must preserve their failure paths and report the exact commit/source hashes.
 Do not report tests as passing unless you ran them against the stated commit.
 Documentation changes do not need implementation-mirroring tests.
 

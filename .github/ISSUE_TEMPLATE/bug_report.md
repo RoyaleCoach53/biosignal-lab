@@ -6,8 +6,8 @@ labels: ''
 assignees: ''
 ---
 
-Before reporting: this checkout is currently in publication preparation. Check
-the README for source availability. Report vulnerabilities privately using SECURITY.md.
+Before reporting: v0.3.0 is Research Alpha. Record the exact tag/commit and check
+the README/Quick Start. Report vulnerabilities privately using SECURITY.md.
 
 ## Problem and expected behavior
 
@@ -16,6 +16,8 @@ the README for source availability. Report vulnerabilities privately using SECUR
 ## Minimal reproduction
 
 Use synthetic or redistributable data. Do not upload private recordings or credentials.
+For PhysioNet use only the official recording ID/hash and redacted summary;
+do not attach EDFs, raw headers, waveforms or full local paths.
 
 ## Actual output
 

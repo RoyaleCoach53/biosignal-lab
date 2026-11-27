@@ -3,6 +3,10 @@
 This is an educational software-consistency exercise, not a diagnostic workflow.
 See [the report](../docs/real_world/REPORT.md) and [data terms](../docs/real_world/DATA_LICENSE.md).
 
+For the new, smaller runnable lesson with PSD/band plots and MNE references, use
+[the educational EEG tutorial](../docs/EEG_TUTORIAL.md). It is under review on the
+adoption branch and is not included in the immutable v0.3.0 tag below.
+
 ## Prepare
 
 Use Python 3.10+ and a virtual environment; check out the fixed Research Alpha tag:
