@@ -50,6 +50,26 @@ recommendations for a physiological task. QDA and neighborhood methods may be
 unsuitable for tiny or ill-conditioned training sets; errors and sklearn warnings
 are not suppressed.
 
+For epoch-level spatial learning, `EpochDataset(epochs, labels, subjects, sfreq,
+unit, channels=(), reference="unspecified", provenance={})` requires explicit
+sampling frequency and units. `evaluate_epochs(dataset, model="csp_lda",
+n_components=2)` fits binary CSP spatial filters only on each training fold,
+then scales log normalized projected variances and fits shrinkage LDA. Select
+2..number-of-channels components; zero-energy epochs fail explicitly. Trace
+normalization and covariance shrinkage (default 0.01 toward scaled identity) are
+explicit. The generalized eigenvalue behavior is tested against analytical
+diagonal covariance, including rank-deficient channels. CSP filters are mixtures
+of scalp potentials and are not neural source estimates.
+
+`evaluate_epochs(dataset, model="log_euclidean")` fits a nearest-class-mean
+classifier using matrix logarithms of regularized SPD epoch covariance matrices.
+Distances are Frobenius distances in the log-Euclidean domain; this is not an
+affine-invariant Riemannian mean implementation. Shared orthogonal-basis rotation
+invariance and held-out classification are tested. This classifier does not
+produce calibrated probabilities, and neither spatial classifier is currently
+exported as a portable model. Nested search keys include
+`csptransformer__n_components` and `regularization`, respectively.
+
 ## Leakage boundaries and uncertainty
 
 `evaluate_grouped` uses leave-one-subject-out (`cv="loso"`) or stratified grouped
@@ -114,7 +134,9 @@ No automatic dataset discovery or human dataset is bundled or downloaded here.
 
 ```sh
 python -m pytest -ra tests/test_ai_lab.py
+python -m pytest -ra tests/test_ai_covariance.py
 python benchmarks/ai_baseline.py --output local-results/ai-new-run.json
+python -m biosignal_lab.ai.cli demo --output local-results/ai-new-experiment
 ```
 
 Choose a new output path for every run. The benchmark measures the separable-tone
@@ -124,11 +146,12 @@ software, seeds, data and source hashes. Tracemalloc is not process RSS or total
 native memory; inference excludes acquisition and feature extraction. Timing is
 specific to that execution environment.
 
-Implemented: seven classical estimators, grouped/nested evaluation, explicit
+Implemented: seven feature-based classical estimators, binary CSP/LDA and
+log-Euclidean covariance classification, grouped/nested evaluation, explicit
 feature extraction, strict JSON linear inference, manifest/cache integrity,
 synthetic browser workflow, and meaningful analytical/security/regression tests.
 
-Incomplete v0.7/v1.0 gates: CSP/Riemannian end-to-end evaluation, deep architectures
+Incomplete v0.7/v1.0 gates: affine-invariant Riemannian approaches, deep architectures
 (including EEGNet and temporal networks), real motor imagery/P300/SSVEP/blink/EMG
 task cohorts and their licenses, preprocessing fit checks beyond the caller-supplied
 feature boundary, independent cohorts/review, imbalance interventions, training

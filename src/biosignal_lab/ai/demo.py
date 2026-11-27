@@ -29,3 +29,26 @@ def synthetic_feature_dataset(seed=42, n_subjects=8, trials_per_subject=16):
                            "amplitude_unit": "arbitrary", "frequencies_hz": [10, 20],
                            "feature_extraction": "extract_epoch_features:eeg",
                            "scope": "Synthetic oscillations only; no physiological task"})
+
+
+def synthetic_epoch_dataset(seed=42, n_subjects=8, trials_per_subject=16):
+    """Spatial variance patterns with independent synthetic subject identifiers."""
+    if not isinstance(n_subjects, int) or not 3 <= n_subjects <= 100:
+        raise ValueError("Use 3..100 simulated subjects")
+    if not isinstance(trials_per_subject, int) or not 4 <= trials_per_subject <= 100:
+        raise ValueError("Use 4..100 trials per simulated subject")
+    from .covariance import EpochDataset
+    rng = np.random.default_rng(seed)
+    epochs, labels, subjects = [], [], []
+    for subject in range(n_subjects):
+        gain = rng.uniform(.7, 1.3)
+        for trial in range(trials_per_subject):
+            epoch = rng.normal(size=(4, 500)) * gain
+            epoch[trial % 2] *= 3
+            epochs.append(epoch)
+            labels.append("dominant_ch1" if trial % 2 == 0 else "dominant_ch2")
+            subjects.append(f"synthetic_{subject:03d}")
+    return EpochDataset(np.array(epochs), np.array(labels), np.array(subjects), 250,
+                        "arbitrary", reference="independent simulated channels",
+                        provenance={"generator": "synthetic_epoch_dataset", "seed": seed,
+                                    "scope": "Synthetic spatial variance patterns only; no physiological task"})

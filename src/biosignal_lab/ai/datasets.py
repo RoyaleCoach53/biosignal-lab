@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 import re
 import tempfile
 from urllib.parse import urlsplit
-from urllib.request import urlopen
+from urllib.request import HTTPRedirectHandler, build_opener
 
 
 @dataclass(frozen=True)
@@ -76,6 +76,20 @@ def _hash(path, limit):
     return digest.hexdigest()
 
 
+class _HTTPSOnlyRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, response, code, message, headers, newurl):
+        destination = urlsplit(newurl)
+        if destination.scheme != "https" or not destination.hostname or destination.username or destination.password:
+            raise ValueError("Dataset redirects must retain credential-free HTTPS")
+        return super().redirect_request(request, response, code, message, headers, newurl)
+
+
+def _open_https(url, timeout):
+    # Reject downgrade before urllib can follow it, rather than merely checking
+    # the final response after an insecure request has already been transmitted.
+    return build_opener(_HTTPSOnlyRedirect()).open(url, timeout=timeout)
+
+
 def fetch_record(record: DatasetRecord, cache, *, download=False, license_accepted=False,
                  max_bytes=256 * 1024 * 1024, timeout=30):
     """Return verified cached path; download requires explicit license acceptance.
@@ -88,7 +102,10 @@ def fetch_record(record: DatasetRecord, cache, *, download=False, license_accept
         raise TypeError("record must be a DatasetRecord")
     if not isinstance(max_bytes, int) or max_bytes < 1 or not 0 < timeout <= 300:
         raise ValueError("Positive byte limit and timeout up to 300 seconds required")
-    root = Path(cache).resolve()
+    selected_root = Path(cache)
+    if any(component.is_symlink() for component in (selected_root, *selected_root.parents)):
+        raise ValueError("Dataset cache root must not traverse symlinks")
+    root = selected_root.resolve()
     destination = root / record.path
     # Resolve every component; reject symlinks, including a dangling final link.
     for component in (destination, *destination.parents):
@@ -110,7 +127,7 @@ def fetch_record(record: DatasetRecord, cache, *, download=False, license_accept
     # Stage beside destination to keep verified creation on one filesystem.
     with tempfile.TemporaryFile(dir=destination.parent) as staged:
         digest, count = sha256(), 0
-        with urlopen(record.url, timeout=timeout) as response:
+        with _open_https(record.url, timeout=timeout) as response:
             if urlsplit(response.url).scheme != "https":
                 raise ValueError("Dataset redirects must retain HTTPS")
             while block := response.read(min(1024 * 1024, max_bytes + 1 - count)):
