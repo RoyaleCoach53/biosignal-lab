@@ -1,6 +1,7 @@
 """Check local Markdown file links; this is not a biosignal validation suite."""
 
 from pathlib import Path
+from os import walk
 import re
 import sys
 from urllib.parse import unquote, urlsplit
@@ -8,12 +9,13 @@ from urllib.parse import unquote, urlsplit
 
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
-    documents = sorted(root.rglob("*.md"))
+    documents = []
+    for directory, subdirs, names in walk(root):
+        subdirs[:] = [name for name in subdirs if name not in {".git", "node_modules"}]
+        documents.extend(Path(directory) / name for name in names if name.endswith(".md"))
     failures = []
     links_checked = 0
-    for document in documents:
-        if ".git" in document.relative_to(root).parts:
-            continue
+    for document in sorted(documents):
         text = document.read_text(encoding="utf-8")
         # Repository docs use inline links with no embedded parentheses in paths.
         for target in re.findall(r"!?\[[^\]]*\]\(([^\s)]+)\)", text):
