@@ -394,7 +394,7 @@ def test_malicious_npz_declared_shape_is_rejected_before_allocation(tmp_path):
 
     stream = io.BytesIO()
     np.lib.format.write_array_header_1_0(
-        stream, {"descr": "<f8", "fortran_order": False, "shape": (1000000000000,)}
+        stream, {"descr": "<f8", "fortran_order": False, "shape": (1, 1000000000000)}
     )
     path = tmp_path / "huge.npz"
     with zipfile.ZipFile(path, "w") as target:
