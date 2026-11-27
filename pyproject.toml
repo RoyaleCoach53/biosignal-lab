@@ -20,9 +20,10 @@ app = ["streamlit>=1.35,<2", "plotly>=5.18,<7"]
 edf = ["mne>=1.6,<2"]
 engine = ["PyWavelets>=1.6,<2", "h5py>=3.11,<4"]
 ai = ["scikit-learn>=1.5,<2"]
+live = ["brainflow>=5.12,<6", "pylsl>=1.16,<2"]
 tutorial = ["mne>=1.6,<2", "matplotlib>=3.6,<4"]
 dev = ["pytest>=8", "ruff>=0.6", "build>=1.2"]
-all = ["streamlit>=1.35,<2", "plotly>=5.18,<7", "mne>=1.6,<2"]
+all = ["streamlit>=1.35,<2", "plotly>=5.18,<7", "mne>=1.6,<2", "PyWavelets>=1.6,<2", "h5py>=3.11,<4", "scikit-learn>=1.5,<2"]
 
 [project.scripts]
 biosignal-lab = "biosignal_lab.cli:main"

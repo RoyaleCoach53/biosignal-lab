@@ -63,3 +63,36 @@ protocol thresholds to pass, or mark v1.0 complete based on synthetic checks.
 Review each subsystem diff and test report before integration. Maintain this
 checkpoint as work proceeds, preserving failures, unsupported features and
 unexecuted checks alongside passing outcomes.
+
+## Recovery after interrupted execution
+
+All six worktrees and uncommitted files survived the usage interruption. The
+integration branch at recovery is `1e15458`; its completed foundation, website,
+initial Live and initial AI work has not yet been pushed. Native Git remote
+inspection confirms none of the new development branch names exists remotely.
+
+- Foundation integrated through `3c41950`; PR #6 and PR #7 source history retained.
+- Engine through `43c1a2e` fixes NPZ float64 conversion budgets, malformed declared
+  shapes and MAT preflight. Reference provenance/spectral overflow follow-up is
+  committed separately before integration.
+- AI through `1a24bec` adds training-only CSP, log-Euclidean covariance baselines,
+  secure dataset redirects and a real synthetic CLI. Dashboard extension is being
+  finished before integration.
+- Studio cache framing, spectrum validation and bounded CSV preflight are on disk;
+  tests and initial commit remain outstanding.
+- Live optional adapters and Studio frontend files remain preserved in their
+  worktrees; their final verification and commits remain outstanding.
+- Parent changes include engine UI, unified navigation/CLI routing, optional extras
+  and platform documentation. These are preserved as a recovery commit before
+  combined verification.
+
+The latest executed integration suite before interruption passed **173 tests**.
+This does not cover unmerged subsystem extensions. The saved environment draft
+includes `api.github.com`, but the running instance reports no custom allowed
+hosts; the resumed API request still returns HTTP 403. Remote reviews and CI are
+unverified. Review/apply the saved network rule in environment settings before
+retrying that operation. Git read remains usable; push has not yet been tested.
+
+Next action: finish reviewed subsystem commits, merge into this integration
+branch, verify the unified application and isolated package, update actual results,
+then push the development branches without modifying main or public releases.

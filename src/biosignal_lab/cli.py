@@ -2,6 +2,7 @@
 from __future__ import annotations
 import argparse
 import json
+import sys
 from pathlib import Path
 import pandas as pd
 from .models import AnalysisConfig
@@ -9,11 +10,15 @@ from .simulate import synthetic_recording
 from .io import read_csv, read_edf
 from .pipeline import analyze, default_config
 from .report import json_report, html_report
+from ._version import __version__
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="biosignal-lab", description="Local EEG/EMG research QC")
+    parser.add_argument("--version", action="version", version=__version__)
     sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("workflow", add_help=False, help="Validate, run or generate Python for a Studio workflow")
+    sub.add_parser("ai", add_help=False, help="Reproducible synthetic grouped-learning demonstration")
     demo = sub.add_parser("demo", help="Generate deterministic example CSV with artifact")
     demo.add_argument("--output", default="sample_eeg.csv")
     demo.add_argument("--modality", choices=["eeg", "emg"], default="eeg")
@@ -39,6 +44,13 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ["workflow"]:
+        from .studio.cli import main as workflow_main
+        return workflow_main(argv[1:])
+    if argv[:1] == ["ai"]:
+        from .ai.cli import main as ai_main
+        return ai_main(argv[1:])
     parser = _parser()
     args = parser.parse_args(argv)
     if args.command == "demo":

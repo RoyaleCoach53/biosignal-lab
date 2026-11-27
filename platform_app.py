@@ -3,6 +3,7 @@ import streamlit as st
 
 pages = [
     st.Page("app.py", title="Signal Explorer", icon="📈", default=True),
+    st.Page("engine_app.py", title="Scientific Engine", icon="🔬"),
     st.Page("live_app.py", title="Live Lab", icon="📡"),
     st.Page("ai_app.py", title="AI Lab", icon="🧮"),
     st.Page("studio_app.py", title="Studio", icon="🔗"),

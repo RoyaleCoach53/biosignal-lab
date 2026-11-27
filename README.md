@@ -1,5 +1,11 @@
 # BioSignal Lab
 
+The unreleased platform integration adds unit-aware processing, simulated live
+analysis, grouped learning, executable workflows and local projects. Start with
+the [platform guide](docs/PLATFORM_GUIDE.md), [architecture](docs/PLATFORM_ARCHITECTURE.md),
+[compatibility notes](docs/MIGRATION.md), and [release acceptance ledger](docs/PLATFORM_ACCEPTANCE.md).
+The published v0.3.0 evidence below remains historical; v1.0 acceptance is incomplete.
+
 **A local EEG and EMG signal-analysis toolkit for biomedical engineering education and research.**
 
 [![Tests and numerical verification](https://github.com/RoyaleCoach53/biosignal-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/RoyaleCoach53/biosignal-lab/actions/workflows/ci.yml)
