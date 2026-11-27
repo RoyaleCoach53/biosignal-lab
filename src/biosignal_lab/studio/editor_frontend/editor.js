@@ -391,6 +391,7 @@
         if (same(next, state.outbound.workflow)) {
           // Keep edits made locally while the accepted graph was in flight.
           resend = !same(next, state.workflow) || !same(state.positions, state.outbound.positions);
+          if (!resend) announce("Draft synchronized with Python. Scientific validation messages appear below.");
         } else {
           // A rejected structural draft must not be replayed indefinitely.
           changed = true;
