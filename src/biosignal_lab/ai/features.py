@@ -13,6 +13,8 @@ def extract_epoch_features(epochs, sfreq: float, modality: str = "eeg"):
     EEG bands require complete Nyquist coverage and a minimum two-second epoch;
     EMG frequencies describe the measured bandwidth rather than full muscle EMG.
     """
+    if np.iscomplexobj(epochs):
+        raise ValueError("Epoch features require real amplitudes")
     data = np.asarray(epochs, dtype=float)
     if data.ndim != 3 or min(data.shape) < 1 or data.shape[2] < 16:
         raise ValueError("Expected nonempty epochs x channels x samples, at least 16 samples")

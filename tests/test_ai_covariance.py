@@ -76,6 +76,15 @@ def test_csp_fit_never_sees_outer_test_epochs(monkeypatch):
         np.testing.assert_array_equal(X, data.X[data.subjects != subject])
 
 
+def test_spatial_report_distinguishes_base_and_executed_tuned_dimensions():
+    data = _spatial_data()
+    report = evaluate_epochs(data, n_components=4, cv="group", n_splits=3,
+                              param_grid={"csptransformer__n_components": [2]}, bootstrap_samples=100)
+    assert report["base_parameters"]["n_components"] == 4
+    assert report["n_features"] == 2 and len(report["features"]) == 2
+    assert all(fold["executed_parameters"]["n_components"] == 2 for fold in report["folds"])
+
+
 def test_spatial_validation_rank_deficiency_and_zero_energy():
     data = _spatial_data()
     dependent = np.repeat(data.X[:, :1], 2, axis=1)
