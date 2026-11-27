@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Local editor protocol test harness</title></head>
+<body style="margin:0;background:#0e1525"><iframe title="Studio graph editor" id="editor" src="/src/biosignal_lab/studio/editor_frontend/index.html" style="width:100%;height:1100px;border:0"></iframe>
+<script>
+const port=(kind,unit=null)=>({kind,unit,sfreq:null,modality:null});
+window.args={workflow:{schema_version:1,name:"Synthetic EEG workflow",nodes:[
+  {id:"demo",kind:"simulate",parameters:{sfreq:250,duration_s:10,n_channels:2},inputs:{}},
+  {id:"analysis",kind:"analyze",parameters:{},inputs:{signal:{node:"demo",port:"out"}}},
+  {id:"report",kind:"summary",parameters:{},inputs:{analysis:{node:"analysis",port:"out"}}},
+]},catalog:{
+  simulate:{inputs:{},outputs:{out:port("recording","uV")},description:"Seeded synthetic EEG/EMG; no human recording"},
+  analyze:{inputs:{signal:port("recording","uV")},outputs:{out:port("analysis")},description:"Offline EEG/EMG processing"},
+  summary:{inputs:{analysis:port("analysis")},outputs:{out:port("json")},description:"Machine-readable analysis summary"},
+  processed:{inputs:{analysis:port("analysis")},outputs:{out:port("recording","uV")},description:"Extract processed recording"},
+},positions:{demo:{x:0,y:30},analysis:{x:320,y:30},report:{x:640,y:30}},graph_digest:"fixture-v1",errors:[]};
+window.bridgeEvents=[];
+window.renderEditor=(args=window.args)=>document.getElementById("editor").contentWindow.postMessage({type:"streamlit:render",args},location.origin);
+window.addEventListener("message",event=>{
+  if(event.source!==document.getElementById("editor").contentWindow)return;
+  if(event.data.type==="streamlit:componentReady")window.renderEditor();
+  if(event.data.type==="streamlit:setComponentValue")window.bridgeEvents.push(event.data.value);
+  if(event.data.type==="streamlit:setFrameHeight")document.getElementById("editor").style.height=event.data.height+"px";
+});
+</script></body></html>

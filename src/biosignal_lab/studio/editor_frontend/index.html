@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>BioSignal Studio graph editor</title>
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+<main>
+  <div class="toolbar" aria-label="Graph editing tools">
+    <label>Find a node<input id="search" type="search" placeholder="Filter available algorithms"></label>
+    <label>Node type<select id="node-kind" aria-describedby="node-description"></select></label>
+    <button id="add" type="button">Add node</button>
+    <button id="undo" type="button" disabled>Undo</button>
+    <button id="redo" type="button" disabled>Redo</button>
+    <button id="layout" type="button">Arrange</button>
+    <button id="import" type="button">Import JSON</button>
+    <button id="export" type="button">Export JSON</button>
+    <input id="file" type="file" accept="application/json,.json" hidden>
+  </div>
+  <p id="node-description" class="muted"></p>
+  <div class="view-tools" aria-label="Viewport tools">
+    <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+    <output id="zoom-level" aria-label="Zoom level">100%</output>
+    <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+    <button id="fit" type="button">Fit graph</button>
+    <button id="reset-view" type="button">Reset view</button>
+    <span class="muted">Drag a title to move. Connect an output to an input.</span>
+  </div>
+  <div id="viewport" role="region" aria-label="Scientific workflow canvas" tabindex="0" aria-describedby="instructions">
+    <div id="stage"><svg id="edges" aria-label="Workflow connections"></svg><div id="nodes"></div></div>
+    <svg id="minimap" viewBox="0 0 180 110" role="img" aria-label="Workflow overview"></svg>
+    <p id="empty">Waiting for the local workflow…</p>
+  </div>
+  <p id="status" role="status" aria-label="Editor status" aria-live="polite">Editor ready. Waiting for the application.</p>
+  <div id="errors" role="alert"></div>
+  <details class="connections"><summary>Connections and keyboard instructions</summary>
+    <p id="instructions">Choose an output button, then an input button to connect. A new link replaces the existing input connection. Tab to a node title and use arrow keys to move it; Shift moves faster. Delete removes the selected node, Escape cancels a pending connection. Control/Command+Z undoes a graph edit; Control/Command+Shift+Z redoes it. Focus the canvas and use arrow keys to pan, plus/minus to zoom. The connection list below supports deletion without a pointer. Scientific validation and execution happen in Python.</p>
+    <ul id="connection-list"></ul>
+  </details>
+  <dialog id="parameters" aria-labelledby="parameters-heading">
+    <form method="dialog" id="parameters-form">
+      <h2 id="parameters-heading">Node parameters</h2>
+      <label>Parameter object (JSON)<textarea id="parameter-json" rows="10" spellcheck="false"></textarea></label>
+      <p class="muted">Data only. The Python node validates supported fields and ranges before execution.</p>
+      <p id="parameter-error" role="alert"></p>
+      <div class="dialog-actions"><button type="button" id="cancel-parameters">Cancel</button><button type="submit">Apply parameters</button></div>
+    </form>
+  </dialog>
+</main>
+<script src="editor.js"></script>
+</body>
+</html>

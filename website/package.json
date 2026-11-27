@@ -4,6 +4,7 @@
   "description": "BioSignal Lab scientific website",
   "scripts": {
     "test": "playwright test",
+    "test:studio": "playwright test --config playwright.studio.config.mjs",
     "dev": "vite",
     "build": "node scripts/poster.mjs && vite build",
     "preview": "vite preview"
