@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "name": "Simulated live acquisition to scientific report",
+  "nodes": [
+    {"id": "acquisition", "kind": "live_simulate", "parameters": {"duration_s": 4, "sfreq": 250, "n_channels": 2, "chunk_samples": 50, "frequency_hz": 10, "seed": 42}},
+    {"id": "analysis", "kind": "analyze", "inputs": {"signal": {"node": "acquisition", "port": "signal"}}},
+    {"id": "summary", "kind": "summary", "inputs": {"analysis": {"node": "analysis"}}},
+    {"id": "report", "kind": "html", "inputs": {"analysis": {"node": "analysis"}}}
+  ]
+}

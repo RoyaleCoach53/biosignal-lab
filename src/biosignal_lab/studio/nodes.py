@@ -68,11 +68,15 @@ def _csv(inputs, p, context):
         header = next(rows, [])
         if not 1 <= len(header) <= 1024:
             raise WorkflowError("Studio CSV requires 1..1024 columns")
+        if len(set(header)) != len(header) or any(not label.strip() for label in header):
+            raise WorkflowError("Studio CSV requires unique nonempty header labels")
         channels = len(header) - int(p.get("time_column") in header)
         count = 0
         for row in rows:
             if not row:
                 continue
+            if len(row) != len(header):
+                raise WorkflowError("CSV row width must match the declared header; inferred index columns are not allowed")
             count += 1
             if count * max(1, channels) > context.limits.max_signal_values:
                 raise WorkflowError("CSV exceeds configured sample-value limit before matrix allocation")
@@ -165,4 +169,9 @@ def builtin_registry(*, include_engine: bool = True) -> Registry:
             register_engine_nodes(registry)
         except ImportError:
             pass
+    try:
+        from .research_nodes import register_research_nodes
+        register_research_nodes(registry)
+    except ImportError:
+        pass
     return registry

@@ -13,6 +13,26 @@ JSON and HTML report generation, raw-signal Welch PSD, and EEG band integration.
 The engine template adds real digital filtering and anti-aliased resampling.
 Report downloads and JSON exports contain actual execution outputs.
 
+Two additional working templates connect the subsystems:
+
+- `examples/workflows/live_to_report.json` acquires deterministic virtual-device
+  blocks through BioSignal Live, measures CPU monitoring times, and feeds the
+  actual original analysis and HTML-report nodes. It does not connect to physical
+  hardware or simulate elapsed wall-clock acquisition time.
+- `examples/workflows/grouped_ai.json` generates labeled synthetic oscillation
+  trials, runs real leave-one-subject-out LDA evaluation, fits a portable linear
+  classifier, exports safe JSON coefficients, and performs actual inference.
+  Fitted predictions are identified separately from out-of-subject evaluation.
+  The task distinguishes generated oscillations; its accuracy is not evidence
+  of physiological classification or clinical performance.
+
+Live nodes are registered only when the actual Live module is available. AI
+nodes additionally require scikit-learn and the actual AI module. The
+`epoch_features` node accepts explicit event sample/class/subject metadata and
+extracts real EEG/EMG features. It rejects epochs outside the recording and
+overlapping samples assigned to different subject groups. Labels and subject
+identity are supplied by the researcher and are not independently verified.
+
 ## Reproduce without the interface
 
 ```sh
@@ -44,7 +64,8 @@ print(result.manifest_json())
 Each registered node declares typed input/output ports. Validation checks node
 identities, parameter schemas, connections, required inputs and cycles before
 execution. Port kinds include legacy microvolt recordings, engine signals with
-explicit physical units and reference, analysis results, spectra, JSON and HTML.
+explicit physical units and reference, analysis results, spectra, grouped feature
+datasets, validated portable linear models, JSON and HTML.
 Unit, sampling-frequency and modality requirements are checked against actual
 runtime data. Combining channels additionally requires identical sampling rates,
 sample counts and modality and distinct channel names. PSD outputs must contain

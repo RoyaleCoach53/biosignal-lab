@@ -1,0 +1,522 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-11-27T22:16:00.627047+00:00",
+  "host": {
+    "os": "Linux",
+    "architecture": "x86_64",
+    "python": "3.12.14"
+  },
+  "scope": "Synthetic verification only. Virtual acquisition has no physical device or human recordings; AI distinguishes generated oscillations and is not evidence of physiological classification. Timing covers this one local process. Python allocator peaks exclude some native memory and are not process RSS.",
+  "observations": {
+    "live_to_report": {
+      "workflow_sha256": "c8d2d11061e9ecce652752a3ad2d0489f7f598865b9a40b8e64d11ad0f7f0913",
+      "source_sha256": "a70f8a2e6cade88831cf6c60e2b45f3115e7a7ff4925b83905776a6585b60b18",
+      "dependencies": {
+        "biosignal-lab": "0.4.0.dev0",
+        "numpy": "2.5.5",
+        "scipy": "1.18.1",
+        "pandas": "2.3.3",
+        "mne": "1.13.2",
+        "scikit-learn": "1.9.1",
+        "PyWavelets": "1.10.0"
+      },
+      "seconds": 0.21868719899998723,
+      "python_allocator_peak_bytes": 1415478,
+      "node_count": 4,
+      "diagnostics": {
+        "scope": "Simulated device with virtual sample clock; CPU timings exclude physical acquisition and display latency.",
+        "clock": "simulated_device",
+        "sfreq": 250,
+        "channels": [
+          "LiveCh1",
+          "LiveCh2"
+        ],
+        "units": [
+          "uV",
+          "uV"
+        ],
+        "first_timestamp": 0.0,
+        "last_timestamp": 3.996,
+        "samples": 1000,
+        "blocks": 20,
+        "final": {
+          "retained_samples": 1,
+          "capacity": 1,
+          "dropped_samples": 0,
+          "overwritten_samples": 999,
+          "discontinuities": 0,
+          "discontinuity": false,
+          "filter_reset": false,
+          "warmup_samples_remaining": 0,
+          "psd_ready": true,
+          "processing_seconds": 0.002038992000052531,
+          "input_rms": [
+            14.19555027015992,
+            14.109714092903692
+          ],
+          "flat_channels": [
+            false,
+            false
+          ],
+          "clock": "simulated_device",
+          "latency_scope": "CPU processing duration only; excludes device/network/display latency"
+        },
+        "max_processing_seconds": 0.002777378000018871
+      },
+      "samples_analyzed": 1000
+    },
+    "grouped_ai": {
+      "workflow_sha256": "d144aacfbad9c317409445650ba543999933fbf90c6d407f0a33e0e9eb79fb0c",
+      "source_sha256": "a70f8a2e6cade88831cf6c60e2b45f3115e7a7ff4925b83905776a6585b60b18",
+      "dependencies": {
+        "biosignal-lab": "0.4.0.dev0",
+        "numpy": "2.5.5",
+        "scipy": "1.18.1",
+        "pandas": "2.3.3",
+        "mne": "1.13.2",
+        "scikit-learn": "1.9.1",
+        "PyWavelets": "1.10.0"
+      },
+      "seconds": 1.2124128590000964,
+      "python_allocator_peak_bytes": 23434738,
+      "node_count": 5,
+      "evaluation": {
+        "schema_version": 1,
+        "task": "subject_disjoint_classification",
+        "model": "lda",
+        "cv": "loso",
+        "seed": 42,
+        "n_samples": 32,
+        "n_features": 8,
+        "n_subjects": 4,
+        "classes": [
+          "10Hz",
+          "20Hz"
+        ],
+        "features": [
+          "ch1:rms",
+          "ch1:mav",
+          "ch1:peak_to_peak",
+          "ch1:delta_power",
+          "ch1:theta_power",
+          "ch1:alpha_power",
+          "ch1:beta_power",
+          "ch1:gamma_power"
+        ],
+        "data_sha256": "088819c5cdab01c1d29bd162c9decfa2de9ccc73e4d005a7c78e1a00b6f10014",
+        "data_fingerprint_schema": "biosignal-ai-input-v2",
+        "provenance": {
+          "amplitude_unit": "arbitrary",
+          "epoch_duration_s": 2,
+          "feature_extraction": "extract_epoch_features:eeg",
+          "frequencies_hz": [
+            10,
+            20
+          ],
+          "generator": "synthetic_feature_dataset",
+          "sampling_frequency_hz": 250,
+          "scope": "Synthetic oscillations only; no physiological task",
+          "seed": 42
+        },
+        "roc": {
+          "available": true,
+          "positive_label": "20Hz",
+          "auc": 1.0,
+          "false_positive_rate": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "true_positive_rate": [
+            0.0,
+            0.25,
+            1.0,
+            1.0
+          ],
+          "thresholds": [
+            null,
+            1.0,
+            0.9999999943787079,
+            2.05880317126795e-61
+          ]
+        },
+        "metrics": {
+          "accuracy": 1.0,
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "confusion_matrix": [
+            [
+              16,
+              0
+            ],
+            [
+              0,
+              16
+            ]
+          ],
+          "per_class": [
+            {
+              "label": "10Hz",
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 16
+            },
+            {
+              "label": "20Hz",
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 16
+            }
+          ]
+        },
+        "folds": [
+          {
+            "fold": 0,
+            "train_subjects": [
+              "synthetic_001",
+              "synthetic_002",
+              "synthetic_003"
+            ],
+            "test_subjects": [
+              "synthetic_000"
+            ],
+            "n_train": 24,
+            "n_test": 8,
+            "selected_parameters": {},
+            "metrics": {
+              "accuracy": 1.0,
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "confusion_matrix": [
+                [
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ]
+              ],
+              "per_class": [
+                {
+                  "label": "10Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                },
+                {
+                  "label": "20Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                }
+              ]
+            }
+          },
+          {
+            "fold": 1,
+            "train_subjects": [
+              "synthetic_000",
+              "synthetic_002",
+              "synthetic_003"
+            ],
+            "test_subjects": [
+              "synthetic_001"
+            ],
+            "n_train": 24,
+            "n_test": 8,
+            "selected_parameters": {},
+            "metrics": {
+              "accuracy": 1.0,
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "confusion_matrix": [
+                [
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ]
+              ],
+              "per_class": [
+                {
+                  "label": "10Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                },
+                {
+                  "label": "20Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                }
+              ]
+            }
+          },
+          {
+            "fold": 2,
+            "train_subjects": [
+              "synthetic_000",
+              "synthetic_001",
+              "synthetic_003"
+            ],
+            "test_subjects": [
+              "synthetic_002"
+            ],
+            "n_train": 24,
+            "n_test": 8,
+            "selected_parameters": {},
+            "metrics": {
+              "accuracy": 1.0,
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "confusion_matrix": [
+                [
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ]
+              ],
+              "per_class": [
+                {
+                  "label": "10Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                },
+                {
+                  "label": "20Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                }
+              ]
+            }
+          },
+          {
+            "fold": 3,
+            "train_subjects": [
+              "synthetic_000",
+              "synthetic_001",
+              "synthetic_002"
+            ],
+            "test_subjects": [
+              "synthetic_003"
+            ],
+            "n_train": 24,
+            "n_test": 8,
+            "selected_parameters": {},
+            "metrics": {
+              "accuracy": 1.0,
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "confusion_matrix": [
+                [
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ]
+              ],
+              "per_class": [
+                {
+                  "label": "10Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                },
+                {
+                  "label": "20Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                }
+              ]
+            }
+          }
+        ],
+        "per_subject": [
+          {
+            "subject": "synthetic_000",
+            "n": 8,
+            "metrics": {
+              "accuracy": 1.0,
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "confusion_matrix": [
+                [
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ]
+              ],
+              "per_class": [
+                {
+                  "label": "10Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                },
+                {
+                  "label": "20Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                }
+              ]
+            }
+          },
+          {
+            "subject": "synthetic_001",
+            "n": 8,
+            "metrics": {
+              "accuracy": 1.0,
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "confusion_matrix": [
+                [
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ]
+              ],
+              "per_class": [
+                {
+                  "label": "10Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                },
+                {
+                  "label": "20Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                }
+              ]
+            }
+          },
+          {
+            "subject": "synthetic_002",
+            "n": 8,
+            "metrics": {
+              "accuracy": 1.0,
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "confusion_matrix": [
+                [
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ]
+              ],
+              "per_class": [
+                {
+                  "label": "10Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                },
+                {
+                  "label": "20Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                }
+              ]
+            }
+          },
+          {
+            "subject": "synthetic_003",
+            "n": 8,
+            "metrics": {
+              "accuracy": 1.0,
+              "balanced_accuracy": 1.0,
+              "macro_f1": 1.0,
+              "confusion_matrix": [
+                [
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ]
+              ],
+              "per_class": [
+                {
+                  "label": "10Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                },
+                {
+                  "label": "20Hz",
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 4
+                }
+              ]
+            }
+          }
+        ],
+        "subject_mean_accuracy": 1.0,
+        "subject_bootstrap_accuracy_95ci": [
+          1.0,
+          1.0
+        ],
+        "bootstrap_samples": 200,
+        "uncertainty_note": "Percentile bootstrap of subject accuracies; small cohorts and overlapping training folds limit inference.",
+        "software": {
+          "python": "3.12.14",
+          "numpy": "2.5.5",
+          "scipy": "1.18.1",
+          "scikit-learn": "1.9.1"
+        },
+        "limitations": [
+          "Research only; no diagnostic or clinical validation.",
+          "Caller must prevent label-informed preprocessing and overlapping recordings across subjects.",
+          "Feature/schema and dataset hashes support reproducibility, not independent physiological truth."
+        ]
+      },
+      "portable_model_format": "biosignal-linear-json",
+      "predictions": 32
+    }
+  }
+}
