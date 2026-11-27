@@ -223,3 +223,55 @@ def ica_remove(signal: Signal, *, exclude, n_components=None, random_state=42, m
     return signal.transformed(
         reconstructed * factor, "ica_explicit_component_removal", parameters=parameters
     )
+
+
+def handle_bad_channels(signal: Signal, bad_channels, *, method="drop", montage=None):
+    """Explicitly drop or MNE-interpolate reviewed EEG bad channels.
+
+    Interpolation uses spherical splines on a template or supplied montage and
+    estimates missing scalp measurements; it does not recover true physiology.
+    At least four reviewed good channels must remain for interpolation.
+    """
+    bad = tuple(bad_channels)
+    if (
+        signal.modality != "eeg"
+        or not bad
+        or len(set(bad)) != len(bad)
+        or any(ch not in signal.channels for ch in bad)
+    ):
+        raise ValueError("Provide unique known EEG bad-channel labels")
+    retained = [i for i, channel in enumerate(signal.channels) if channel not in bad]
+    if method == "drop":
+        if not retained:
+            raise ValueError("Cannot drop every channel")
+        return signal.transformed(
+            signal.data[retained],
+            "drop_reviewed_bad_channels",
+            channels=tuple(signal.channels[i] for i in retained),
+            parameters={"dropped": list(bad), "original_channels": list(signal.channels)},
+        )
+    if method != "interpolate" or len(retained) < 4:
+        raise ValueError("Choose drop or interpolate; interpolation requires >=4 good channels")
+    if signal.unit not in {"V", "mV", "uV"}:
+        raise ValueError("EEG interpolation requires electrical amplitude units")
+    import mne
+    from .visualization import _montage_info
+
+    info, montage_name = _montage_info(signal, montage)
+    raw = mne.io.RawArray(signal.data.copy(), info, verbose="ERROR")
+    raw.info["bads"] = list(bad)
+    raw.interpolate_bads(
+        reset_bads=False, mode="accurate", method={"eeg": "spline"}, verbose="ERROR"
+    )
+    return signal.transformed(
+        raw.get_data(),
+        "interpolate_reviewed_bad_channels",
+        parameters={
+            "interpolated": list(bad),
+            "method": "MNE spherical spline",
+            "mne_version": mne.__version__,
+            "montage": montage_name,
+            "origin": "auto sphere fit",
+            "warning": "estimated scalp values; not recovered physiological ground truth",
+        },
+    )

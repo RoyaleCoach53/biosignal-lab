@@ -183,3 +183,94 @@ def discrete_wavelet(signal: Signal, *, wavelet="db4", level=None):
     return list(
         _checked(*pywt.wavedec(signal.data, wavelet, mode="symmetric", level=level, axis=-1))
     )
+
+
+def band_features(signal: Signal, *, bands=None, window_s=2.0, reference_band=(0.5, 45.0)):
+    """Absolute/relative observed spectral power with explicit coverage and units.
+
+    Incomplete bands and unavailable normalization ranges return None, never
+    measured zero. Relative values require positive fully observed reference power.
+    """
+    from ..models import EEG_BANDS
+
+    if bands is None:
+        if signal.modality != "eeg":
+            raise ValueError("Specify justified frequency bands for non-EEG signals")
+        bands = EEG_BANDS
+    if (
+        not isinstance(bands, dict)
+        or not bands
+        or any(not isinstance(name, str) or not name for name in bands)
+    ):
+        raise ValueError("Bands must be a nonempty mapping from labels to frequency pairs")
+    for edges in [*bands.values(), reference_band]:
+        if len(edges) != 2 or not np.all(np.isfinite(edges)) or not 0 <= edges[0] < edges[1]:
+            raise ValueError("Finite ordered nonnegative band boundaries required")
+    frequencies, power = welch_psd(signal, window_s)
+    maximum = float(frequencies[-1])
+    complete_reference = reference_band[1] <= maximum
+    totals = integrate_band(frequencies, power, *reference_band) if complete_reference else None
+    output = []
+    for i, channel in enumerate(signal.channels):
+        descriptions = {}
+        for name, (low, high) in bands.items():
+            coverage = max(0.0, min(high, maximum) - low) / (high - low)
+            absolute = (
+                float(integrate_band(frequencies, power[i], low, high)) if coverage >= 1.0 else None
+            )
+            relative = (
+                absolute / float(totals[i])
+                if absolute is not None and totals is not None and totals[i] > 0
+                else None
+            )
+            descriptions[name] = {
+                "absolute": absolute,
+                "relative": relative,
+                "coverage": coverage,
+                "range_hz": [low, high],
+            }
+        entropy = float(spectral_entropy(power[i])) if np.any(power[i] > 0) else None
+        output.append(
+            {
+                "channel": channel,
+                "power_unit": f"{signal.unit}^2",
+                "bands": descriptions,
+                "reference_range_hz": list(reference_band),
+                "reference_power": float(totals[i]) if totals is not None else None,
+                "spectral_entropy_normalized": entropy,
+                "maximum_observed_frequency_hz": maximum,
+            }
+        )
+    return output
+
+
+def coherence_matrix(signal: Signal, window_s=2.0):
+    """Pairwise magnitude-squared coherence, frequency x channel x channel.
+
+    At least two overlapping Welch segments and nonconstant channels are required.
+    Common reference/volume conduction can cause coupling without neural interaction.
+    """
+    n = _segment(signal, window_s)
+    count = len(signal.channels)
+    if count < 2:
+        raise ValueError("Pairwise coherence requires at least two channels")
+    if signal.data.shape[1] < n + (n - n // 2) or np.any(np.ptp(signal.data, axis=-1) == 0):
+        raise ValueError("Coherence requires >=2 Welch segments and nonconstant channels")
+    if (n // 2 + 1) * count * count > 20_000_000:
+        raise ValueError("Coherence matrix exceeds resource limit")
+    frequencies = np.fft.rfftfreq(n, 1 / signal.sfreq)
+    output = np.ones((len(frequencies), count, count))
+    for i in range(count):
+        for j in range(i + 1, count):
+            found, coupling = sp.coherence(
+                signal.data[i],
+                signal.data[j],
+                fs=signal.sfreq,
+                window="hann",
+                nperseg=n,
+                noverlap=n // 2,
+                detrend="constant",
+            )
+            _checked(found, coupling)
+            output[:, i, j] = output[:, j, i] = np.clip(coupling, 0, 1)
+    return frequencies, output

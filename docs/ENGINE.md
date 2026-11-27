@@ -78,6 +78,13 @@ normalization, outputs arbitrary units and rejects zero dispersion.
   are coefficients, not a calibrated PSD. Neither transform automatically removes
   boundary effects. Decomposition levels and output sizes are bounded.
 
+`band_features()` reports named-band absolute/relative powers, normalization
+range, amplitude-squared units and coverage. Incomplete bands/reference ranges
+remain unavailable; zero-power relative values are unavailable rather than zero.
+`coherence_matrix()` returns symmetric, bounded magnitude-squared coherence for
+at least two nonconstant channels and two overlapping Welch segments, with an
+explicit window and output-size limit. It matches SciPy's estimator in tests.
+
 Scalp spectral coupling can reflect volume conduction and common reference.
 It does not establish a neural source or causal network.
 
@@ -94,7 +101,12 @@ computes an event average with its trial count and epoch start time in metadata.
 `phase_locking_value()` computes pairwise temporal PLV using Hilbert phase.
 Pass suitable narrowband signals and remove filter edges first. Constant signals
 fail. `bad_channel_candidates()` flags flatline/high-variance candidates only;
-it is not a calibrated bad-channel detector.
+it is not a calibrated bad-channel detector. `handle_bad_channels()` accepts
+explicit reviewed labels and either drops them or uses MNE spherical-spline
+interpolation on a template/supplied montage. Interpolation requires at least
+four good channels, records its method and affected labels, and estimates missing
+scalp values rather than recovering physiological truth. Review electrode
+coverage, sphere-fit assumptions and acquisition reference before using it.
 
 `ica_remove()` requires MNE and scikit-learn. It fits reproducible FastICA and
 removes only explicitly supplied, reviewed component indices. No component is
@@ -240,7 +252,7 @@ From the repository root with development, MNE, scikit-learn, PyWavelets and
 h5py, MNE-BIDS, pyxdf and NeuroKit2 installed:
 
 ```sh
-python -m pytest tests/test_engine.py tests/test_engine_visualization.py tests/test_engine_interchange.py tests/test_engine_physiology.py -ra
+python -m pytest tests/test_engine.py tests/test_engine_visualization.py tests/test_engine_interchange.py tests/test_engine_physiology.py tests/test_engine_connectivity.py -ra
 python benchmarks/verify_engine.py --output local-results/engine-verification.json
 python examples/engine_workflow.py --output local-results/engine-example.npz
 ```
