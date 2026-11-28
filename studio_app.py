@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import json
-import math
 import os
 from pathlib import Path
 
@@ -13,7 +12,7 @@ import streamlit as st
 
 from biosignal_lab.models import Recording, AnalysisResults
 from biosignal_lab.studio import Workflow, Executor, Cache, builtin_registry
-from biosignal_lab.studio.editor import frontend_available, render_editor
+from biosignal_lab.studio.editor import frontend_available, render_editor, clean_view_state
 
 
 st.set_page_config(page_title="BioSignal Studio", page_icon="🧬", layout="wide")
@@ -29,6 +28,7 @@ if "studio_workflow" not in st.session_state:
     st.session_state.studio_undo = []
     st.session_state.studio_redo = []
     st.session_state.studio_cache = Cache()
+st.session_state.setdefault("studio_groups", [])
 
 
 def set_graph(value, *, history=True):
@@ -41,6 +41,8 @@ def set_graph(value, *, history=True):
 
 
 workflow = Workflow.from_dict(st.session_state.studio_workflow)
+st.session_state.studio_positions, st.session_state.studio_groups = clean_view_state(
+    workflow, st.session_state.studio_positions, st.session_state.studio_groups)
 source_root = os.environ.get("BIOSIGNAL_STUDIO_SOURCE_ROOT")
 executor = Executor(registry, cache=st.session_state.studio_cache,
                     source_root=Path(source_root) if source_root else None)
@@ -71,6 +73,7 @@ if frontend_available():
                for name, definition in registry.definitions.items()}
     event = render_editor(workflow=workflow.to_dict(), catalog=catalog,
                    positions=st.session_state.studio_positions,
+                   groups=st.session_state.studio_groups,
                    graph_digest=workflow.digest, errors=errors,
                    event_ack=st.session_state.get("studio_editor_event"),
                    key="scientific_graph_editor", default=None)
@@ -83,13 +86,8 @@ if frontend_available():
                     set_graph(candidate.to_dict())
                 positions = event.get("positions", {})
                 if isinstance(positions, dict) and len(json.dumps(positions)) < 100_000:
-                    valid_positions = {}
-                    for key, position in positions.items():
-                        if key not in {n.id for n in candidate.nodes} or not isinstance(position, dict):
-                            continue
-                        if all(isinstance(position.get(axis), (float, int)) and math.isfinite(position[axis]) for axis in ("x", "y")):
-                            valid_positions[key] = {axis: float(position[axis]) for axis in ("x", "y")}
-                    st.session_state.studio_positions = valid_positions
+                    st.session_state.studio_positions, st.session_state.studio_groups = clean_view_state(
+                        candidate, positions, event.get("groups", st.session_state.studio_groups))
                 st.session_state.pop("studio_editor_error", None)
             except (ValueError, TypeError, KeyError) as exc:
                 st.session_state.studio_editor_error = f"Editor draft rejected: {exc}"
