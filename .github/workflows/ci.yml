@@ -33,7 +33,7 @@ jobs:
       - name: Install package and all test integrations
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev,all,formats]" build
+          python -m pip install -e ".[dev,all,formats,physiology]" build
           python -m pip check
       - name: Original tests and release regressions (MNE and dashboard included)
         run: python -m pytest -ra --junitxml=ci-results/tests.xml

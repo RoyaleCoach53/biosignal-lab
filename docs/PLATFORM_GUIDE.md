@@ -15,7 +15,7 @@ python -m venv ../biosignal-venv
 source ../biosignal-venv/bin/activate
 # Windows PowerShell alternative:
 # ..\biosignal-venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev,all,formats]"
+python -m pip install -e ".[dev,all,formats,physiology]"
 python -m pip check
 python -m streamlit run platform_app.py
 ```

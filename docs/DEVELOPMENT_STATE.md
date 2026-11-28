@@ -1,5 +1,29 @@
 # Development checkpoint
 
+## Latest recovery: 28 November 2026
+
+Verified the remote integration head is `1b88179ef688d777dcfd8d5d5da6bdbc812347b2`.
+The local checkout recovered clean at `80dbc74`, with later work retained in all
+six worktrees. No source was reset. The previous combined regression report
+`local-results/resume-combined3.xml` records **326 passed**, with 20 sklearn
+warnings from intentionally single-class held-out regression folds; no skipped
+or failed tests were reported in that run.
+
+Recovered and integrated engine channel handling/coherence `90f9705`, AI evidence
+`0ac7200`, and the updated original-requirements ledger `31a4aad`. Current pending
+workstreams are finishing their existing EEGNet, scientific/parallel Studio,
+visual grouping/copy-paste, and exact-sample Live marker implementations. Final
+combined, numerical, browser, security, Docker and isolated installation checks
+must run after these reviewed commits are integrated. Do not expand a workstream
+before that verification pass is complete.
+
+The running instance still does not include `api.github.com` in its custom
+allowlist. The resumed API request failed with CONNECT 403, although the domain
+is saved in the configuration draft. Native Git reads/pushes work. Remote PR
+creation/reviews and CI remain unverified until the runtime rule is applied.
+No main merge, release, paid service or credential extraction is authorized by
+this recovery note. The full original scope remains in `REQUIREMENTS_STATUS.md`.
+
 This is an integration branch, not a v1.0 release or a claim of completed scientific validation.
 
 ## Baseline and recovery
