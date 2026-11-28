@@ -242,6 +242,15 @@ sensitivity, specificity, physiological ground truth, clinical accuracy or
 independent verification. Do not infer disease, diagnosis, blood pressure,
 oxygen saturation or a clinical decision from these outputs.
 
+ASRpy 0.0.8 was reviewed and calibration incompatibility was reproduced with
+NumPy 2.5.5; see the [ASR review and failure evidence](engine/ASR_REVIEW.md).
+ASR is not exposed as an available method and no upstream source was patched.
+
+Actual synthetic 24-bit BDF files (including uppercase extensions) now verify
+EEG/EMG label separation and physical amplitude scaling through MNE. Dedicated
+actual-format GDF fixture coverage remains incomplete; the GDF reader wrapper
+by itself does not establish that coverage.
+
 Automatic ASR, automatic artifact classification, clinically validated peripheral
 pipelines, anatomical source reconstruction and physical acquisition are not
 claimed by this package. Other modules have their own acceptance status.

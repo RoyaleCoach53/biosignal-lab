@@ -155,3 +155,60 @@ def test_actual_bids_edf_sidecars_reference_annotations_and_units(tmp_path):
         load_bids(path, max_metadata_bytes=10)
     with pytest.raises(ValueError, match="sample limit"):
         load_bids(path, max_samples=10)
+
+
+@pytest.mark.parametrize("extension", ["bdf", "BDF"])
+def test_actual_24bit_bdf_modality_and_amplitude_scaling(tmp_path, extension):
+    pytest.importorskip("mne")
+    from biosignal_lab.engine import load_mne
+
+    fs, records, labels = 100, 3, ["EEG Fz", "EMG Chin"]
+    fields = [
+        ("synthetic fixture", 80),
+        ("synthetic fixture", 80),
+        ("01.01.24", 8),
+        ("01.01.01", 8),
+        ("768", 8),
+        ("24BIT", 44),
+        (str(records), 8),
+        ("1", 8),
+        ("2", 4),
+    ]
+    # BioSemi's BDF variant has the EDF header layout with this exact version
+    # signature and little-endian signed24-bit samples (not EDF's16-bit samples).
+    header = b"\xffBIOSEMI" + "".join(value.ljust(width)[:width] for value, width in fields).encode(
+        "ascii"
+    )
+    for width, values in [
+        (16, labels),
+        (80, ["none"] * 2),
+        (8, ["uV"] * 2),
+        (8, ["-1000"] * 2),
+        (8, ["1000"] * 2),
+        (8, ["-8388608"] * 2),
+        (8, ["8388607"] * 2),
+        (80, ["none"] * 2),
+        (8, [str(fs)] * 2),
+        (32, [""] * 2),
+    ]:
+        header += "".join(value.ljust(width)[:width] for value in values).encode("ascii")
+    assert len(header) == 768
+    time = np.arange(fs * records) / fs
+    amplitude = np.array([20 * np.sin(2 * np.pi * 10 * time), 200 * np.sin(2 * np.pi * 40 * time)])
+    digital = np.rint((amplitude + 1000) * (16777215 / 2000) - 8388608).astype(np.int32)
+    path = tmp_path / f"synthetic.{extension}"
+    with path.open("wb") as output:
+        output.write(header)
+        for record in range(records):
+            for channel in range(2):
+                selected = digital[channel, record * fs : (record + 1) * fs]
+                encoded = ((selected[:, None] >> np.array([0, 8, 16])) & 255).astype(np.uint8)
+                output.write(encoded.tobytes())
+    eeg = load_mne(path, modality="eeg")
+    emg = load_mne(path, modality="emg")
+    assert eeg.channels == ("Fz",) and emg.channels == ("Chin",)
+    assert eeg.sfreq == emg.sfreq == fs and eeg.unit == emg.unit == "uV"
+    expected = (digital.astype(float) + 8388608) * (2000 / 16777215) - 1000
+    np.testing.assert_allclose(eeg.data[0], expected[0], atol=1e-10)
+    np.testing.assert_allclose(emg.data[0], expected[1], atol=1e-10)
+    assert eeg.metadata["format"] == "bdf"

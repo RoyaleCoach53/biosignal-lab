@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "scope": "Synthetic compatibility diagnostic only; no physiological or clinical evidence",
+  "fixture": {
+    "seed": 42,
+    "sfreq_hz": 250.0,
+    "duration_s": 60.0,
+    "n_channels": 4
+  },
+  "requested_method": "euclid",
+  "cutoff": 20.0,
+  "source_review": {
+    "upstream": "https://github.com/DiGyt/asrpy",
+    "license": "BSD-3-Clause",
+    "reviewed_version": "0.0.8",
+    "verified_pypi_wheel_sha256": "f0acf5f0c00513cfba60c38d5823424bcad3035f3ddee0c1272b638d4ed20384"
+  },
+  "software": {
+    "asrpy": "0.0.8",
+    "numpy": "2.5.5",
+    "scipy": "1.18.1",
+    "mne": "1.13.2"
+  },
+  "installed_asr_source_sha256": "1bbd79b4fdfb3a5427722d6822abb61c3fcd0fa9dc0197c6713f8f51a6e00328",
+  "fixture_data_sha256": "19e1d1d2983ffa10936da7a11afe87371da20f86ae1f6ca8b70976a4830c42aa",
+  "status": "incompatible",
+  "completed": false,
+  "exception_type": "TypeError",
+  "exception_message": "only 0-dimensional arrays can be converted to Python scalars",
+  "frames": [
+    {
+      "module_file": "tools/diagnose_asr.py",
+      "line": 57,
+      "function": "diagnose",
+      "code": "model.fit(raw)"
+    },
+    {
+      "module_file": "asrpy/asr.py",
+      "line": 223,
+      "function": "fit",
+      "code": "clean, sample_mask = clean_windows("
+    },
+    {
+      "module_file": "asrpy/asr.py",
+      "line": 746,
+      "function": "clean_windows",
+      "code": "mu, sig, alpha, beta = fit_eeg_distribution("
+    },
+    {
+      "module_file": "asrpy/asr_utils.py",
+      "line": 107,
+      "function": "fit_eeg_distribution",
+      "code": "rows = np.arange(0, int(np.round(n * max_width)))"
+    }
+  ]
+}
