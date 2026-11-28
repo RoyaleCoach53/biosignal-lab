@@ -50,12 +50,15 @@ required, prefix with `SITE_CHROME_EXECUTABLE=/usr/bin/chromium`. The test harne
 uses a loopback-only disposable HTTP server and real iframe protocol messages;
 it does not simulate scientific results. The latest component run passed all 22 checks
 passed in Chromium desktop and Pixel 7 emulation, including axe WCAG A/AA checks.
-Three additional actual browser-to-Python tests passed with
+Four additional actual browser-to-Python tests passed with
 `SITE_STUDIO_URL=http://127.0.0.1:8503 npm run test:studio-backend`: visual parameter
 edits produced the expected three-channel 500 Hz/12-second signal through the
 six-node engine workflow; incomplete drafts disabled execution until connected,
 then executed seven real nodes; rapid node additions survived server revision
 acknowledgements and appeared in the Python-exported nine-node workflow.
+The fourth test copied a grouped six-node workflow, executed all 12 nodes in
+Python, and verified that visual groups survived application reruns while the
+exported scientific workflow contained no layout/group fields.
 These tests start from a real local Streamlit application, download actual
 execution manifests, and verify workflow/source hashes and node timings.
 The unified application sidebar also opened Studio and loaded its six-node graph
