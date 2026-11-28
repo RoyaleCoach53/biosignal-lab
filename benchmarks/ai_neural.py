@@ -18,11 +18,12 @@ from biosignal_lab.ai import train_temporal
 from biosignal_lab.ai.demo import synthetic_epoch_dataset
 
 
-def benchmark(seed=42, max_epochs=25):
+def benchmark(seed=42, max_epochs=25, architecture="temporal_conv1d_v1"):
     import torch
     data = synthetic_epoch_dataset(seed=seed)
     tracemalloc.start()
-    model, report = train_temporal(data, seed=seed, max_epochs=max_epochs, patience=5)
+    model, report = train_temporal(data, seed=seed, max_epochs=max_epochs, patience=5,
+                                   architecture=architecture)
     _, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     metadata = {"sfreq": data.sfreq, "unit": data.unit, "channels": data.channels, "reference": data.reference}
@@ -69,13 +70,14 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-epochs", type=int, default=25)
+    parser.add_argument("--architecture", choices=["temporal_conv1d_v1", "eegnet_v1"], default="temporal_conv1d_v1")
     args = parser.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     created = False
     try:
         with args.output.open("x", encoding="utf-8") as output:
             created = True
-            report = benchmark(args.seed, args.max_epochs)
+            report = benchmark(args.seed, args.max_epochs, args.architecture)
             output.write(json.dumps(report, indent=2, allow_nan=False) + "\n")
     except BaseException:
         if created:

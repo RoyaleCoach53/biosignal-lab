@@ -26,10 +26,27 @@ def _torch():
     return torch
 
 
-def _network(channels, classes):
+def _network(channels, classes, architecture="temporal_conv1d_v1", input_samples=None):
     torch = _torch()
     if not isinstance(channels, int) or not 1 <= channels <= 128 or not isinstance(classes, int) or not 2 <= classes <= 256:
         raise ValueError("Temporal Conv1D supports 1..128 channels and 2..256 classes")
+    if architecture == "eegnet_v1":
+        if type(input_samples) is not int or not 64 <= input_samples <= 8192:
+            raise ValueError("EEGNet input length must be 64..8192 samples")
+        return torch.nn.Sequential(
+            torch.nn.Unflatten(1, (1, channels)),
+            torch.nn.ZeroPad2d((31, 32, 0, 0)),
+            torch.nn.Conv2d(1, 8, (1, 64), bias=False), torch.nn.BatchNorm2d(8),
+            torch.nn.Conv2d(8, 16, (channels, 1), groups=8, bias=False),
+            torch.nn.BatchNorm2d(16), torch.nn.ELU(), torch.nn.AvgPool2d((1, 4)),
+            torch.nn.Dropout(.5), torch.nn.ZeroPad2d((7, 8, 0, 0)),
+            torch.nn.Conv2d(16, 16, (1, 16), groups=16, bias=False),
+            torch.nn.Conv2d(16, 16, (1, 1), bias=False), torch.nn.BatchNorm2d(16),
+            torch.nn.ELU(), torch.nn.AvgPool2d((1, 8)), torch.nn.Dropout(.5),
+            torch.nn.Flatten(), torch.nn.Linear(16 * (input_samples // 32), classes),
+        )
+    if architecture != "temporal_conv1d_v1" or input_samples is not None:
+        raise ValueError("Unsupported fixed neural architecture")
     return torch.nn.Sequential(
         torch.nn.Conv1d(channels, 16, kernel_size=15, padding=7), torch.nn.ELU(),
         torch.nn.AvgPool1d(4), torch.nn.Conv1d(16, 32, kernel_size=9, padding=4),
@@ -48,6 +65,8 @@ class TemporalModel:
     reference: str
     mean: np.ndarray
     scale: np.ndarray
+    architecture: str = "temporal_conv1d_v1"
+    input_samples: int | None = None
 
     def __post_init__(self):
         if not isinstance(self.classes, (tuple, list)) or not isinstance(self.channels, (tuple, list)):
@@ -61,6 +80,12 @@ class TemporalModel:
             raise ValueError("Require explicit bounded class/channel/unit/reference strings")
         if not np.isfinite(self.sfreq) or self.sfreq <= 0:
             raise ValueError("Require positive sampling frequency")
+        if self.architecture not in {"temporal_conv1d_v1", "eegnet_v1"}:
+            raise ValueError("Unsupported fixed neural architecture")
+        if self.architecture == "eegnet_v1" and (type(self.input_samples) is not int or not 64 <= self.input_samples <= 8192):
+            raise ValueError("EEGNet requires an explicit bounded fixed input length")
+        if self.architecture == "temporal_conv1d_v1" and self.input_samples is not None:
+            raise ValueError("Temporal Conv1D uses variable length input")
         self.mean, self.scale = np.array(self.mean, dtype=float), np.array(self.scale, dtype=float)
         if self.mean.shape != (len(self.channels),) or self.scale.shape != self.mean.shape or not np.isfinite(self.mean).all() or not np.isfinite(self.scale).all() or np.any(self.scale <= 0):
             raise ValueError("Invalid training-only channel normalization")
@@ -70,6 +95,8 @@ class TemporalModel:
         if sfreq != self.sfreq or unit != self.unit or tuple(channels) != self.channels or reference != self.reference:
             raise ValueError("Inference sampling frequency, unit, channel order and reference must match training")
         X = _epochs(epochs)
+        if self.input_samples is not None and X.shape[-1] != self.input_samples:
+            raise ValueError("Inference epoch length differs from fixed training architecture")
         if X.shape[1] != len(self.channels) or not isinstance(batch_size, int) or not 1 <= batch_size <= 1024:
             raise ValueError("Invalid inference channels or batch size")
         torch = _torch()
@@ -88,7 +115,8 @@ class TemporalModel:
         return np.array(self.classes)[self.predict_proba(epochs, **metadata).argmax(axis=1)]
 
     def to_dict(self):
-        return {"schema_version": 1, "format": "biosignal-temporal-json", "architecture": "temporal_conv1d_v1",
+        return {"schema_version": 2, "format": "biosignal-temporal-json", "architecture": self.architecture,
+                "input_samples": self.input_samples,
                 "classes": list(self.classes), "channels": list(self.channels), "sfreq": self.sfreq,
                 "unit": self.unit, "reference": self.reference, "mean": self.mean.tolist(),
                 "scale": self.scale.tolist(),
@@ -108,7 +136,8 @@ def _normalize(X, mean, scale):
 
 def train_temporal(dataset: EpochDataset, *, train_subjects=None, validation_subjects=None,
                    test_subjects=None, max_epochs=30, patience=5, batch_size=16,
-                   learning_rate=.003, seed=42, memory_budget_bytes=512 * 1024 * 1024):
+                   learning_rate=.003, seed=42, memory_budget_bytes=512 * 1024 * 1024,
+                   architecture="temporal_conv1d_v1"):
     """Return (model, report) using complete disjoint training/validation/test subjects.
 
     Defaults reserve the last sorted subject for test and penultimate for
@@ -127,6 +156,11 @@ def train_temporal(dataset: EpochDataset, *, train_subjects=None, validation_sub
         raise ValueError("learning_rate must be in (0, .1]")
     if type(memory_budget_bytes) is not int or memory_budget_bytes < 1:
         raise ValueError("Require a positive memory budget")
+    if not isinstance(architecture, str) or architecture not in {"temporal_conv1d_v1", "eegnet_v1"}:
+        raise ValueError("Unknown neural architecture")
+    input_samples = dataset.X.shape[-1] if architecture == "eegnet_v1" else None
+    if input_samples is not None and not 64 <= input_samples <= 8192:
+        raise ValueError("EEGNet input length must be 64..8192 samples")
     subjects = sorted(set(dataset.subjects))
     if len(subjects) < 3:
         raise ValueError("At least three subjects required for disjoint train/validation/test")
@@ -168,7 +202,7 @@ def train_temporal(dataset: EpochDataset, *, train_subjects=None, validation_sub
         torch.use_deterministic_algorithms(True)
         with torch.random.fork_rng(devices=[]):
             torch.manual_seed(seed)
-            network = _network(dataset.X.shape[1], len(classes))
+            network = _network(dataset.X.shape[1], len(classes), architecture, input_samples)
             optimizer = torch.optim.Adam(network.parameters(), lr=learning_rate)
             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=.5, patience=max(1, patience // 2))
             loss_function = torch.nn.CrossEntropyLoss()
@@ -188,10 +222,24 @@ def train_temporal(dataset: EpochDataset, *, train_subjects=None, validation_sub
                     loss.backward()
                     torch.nn.utils.clip_grad_norm_(network.parameters(), 5., error_if_nonfinite=True)
                     optimizer.step()
+                    if architecture == "eegnet_v1":
+                        # EEGNet's spatial and dense max-norm constraints are
+                        # applied after updates, independently of test data.
+                        with torch.no_grad():
+                            for layer, limit in [(network[4], 1.), (network[-1], .25)]:
+                                weight = layer.weight
+                                axes = tuple(range(1, weight.ndim))
+                                norm = torch.linalg.vector_norm(weight, dim=axes, keepdim=True)
+                                weight.mul_(torch.clamp(limit / torch.clamp(norm, min=1e-12), max=1.))
                     total_loss += float(loss.detach()) * len(selected)
                 network.eval()
                 with torch.no_grad():
-                    validation_loss = float(loss_function(network(tensors[1][0]), tensors[1][1]))
+                    validation_total = 0.
+                    for offset in range(0, len(validation), batch_size):
+                        batch_X = tensors[1][0][offset:offset + batch_size]
+                        batch_y = tensors[1][1][offset:offset + batch_size]
+                        validation_total += float(loss_function(network(batch_X), batch_y)) * len(batch_X)
+                    validation_loss = validation_total / len(validation)
                 if not np.isfinite(validation_loss):
                     raise ValueError("Validation produced a nonfinite loss")
                 history.append({"epoch": epoch, "train_loss": total_loss / len(train),
@@ -207,10 +255,10 @@ def train_temporal(dataset: EpochDataset, *, train_subjects=None, validation_sub
                     break
             network.load_state_dict(best_state, strict=True)
             model = TemporalModel(network, tuple(classes), dataset.channels, dataset.sfreq,
-                                   dataset.unit, dataset.reference, mean, scale)
+                                   dataset.unit, dataset.reference, mean, scale, architecture, input_samples)
             metadata = {"sfreq": dataset.sfreq, "unit": dataset.unit,
                         "channels": dataset.channels, "reference": dataset.reference}
-            test_probabilities = model.predict_proba(dataset.X[test], **metadata)
+            test_probabilities = model.predict_proba(dataset.X[test], batch_size=batch_size, **metadata)
             predicted = classes[test_probabilities.argmax(axis=1)]
     finally:
         torch.use_deterministic_algorithms(old_deterministic, warn_only=old_warn_only)
@@ -220,7 +268,7 @@ def train_temporal(dataset: EpochDataset, *, train_subjects=None, validation_sub
     encoded = json.dumps(envelope, sort_keys=True, separators=(",", ":")).encode()
     fingerprint = sha256(len(encoded).to_bytes(8, "big") + encoded + dataset.X.astype("<f8").tobytes()).hexdigest()
     parameter_count = sum(value.numel() for value in network.parameters())
-    report = {"schema_version": 1, "architecture": "temporal_conv1d_v1", "seed": seed,
+    report = {"schema_version": 1, "architecture": architecture, "seed": seed,
               "data_sha256": fingerprint, "data_fingerprint_schema": "biosignal-neural-epochs-v1",
               "provenance": json.loads(dataset._provenance_json),
               "train_subjects": sorted(partitions[0]), "validation_subjects": sorted(partitions[1]),
@@ -243,7 +291,15 @@ def train_temporal(dataset: EpochDataset, *, train_subjects=None, validation_sub
                               "parameter_bytes_float32": parameter_count * 4,
                               "preprocessing_and_batch_estimated_bytes": required},
               "software": {name: version(name) for name in ("torch", "numpy", "scikit-learn")},
-              "limitations": ["Lightweight research baseline, not EEGNet or a physiological/clinical validation.",
+              "architecture_details": ({"temporal_filters": 8, "depth_multiplier": 2,
+                                         "separable_filters": 16, "temporal_kernel": 64,
+                                         "separable_kernel": 16, "dropout": .5,
+                                         "spatial_max_norm": 1., "dense_max_norm": .25,
+                                         "input_samples": input_samples,
+                                         "reference": "Lawhern et al., EEGNet, J Neural Eng 15 (2018) 056013, doi:10.1088/1741-2552/aace8c",
+                                         "implementation_note": "Explicit asymmetric same padding; torch BatchNorm defaults; no published-score reproduction claimed."}
+                                        if architecture == "eegnet_v1" else {"temporal_convolutions": [16, 32], "kernels": [15, 9]}),
+              "limitations": ["Research architecture implementation, not a physiological/clinical validation or reproduction of published accuracy.",
                               "Single subject-disjoint holdout; repeat subject protocols and independent cohorts before generalisation claims.",
                               "CPU-only training tested; GPU, edge export and quantization are unverified.",
                               "Memory budget is a preprocessing/batch estimate, not a complete torch/process RSS guarantee."]}
@@ -278,7 +334,11 @@ def load_temporal_model(path, max_bytes=8 * 1024 * 1024):
                       parse_constant=lambda _: (_ for _ in ()).throw(ValueError("Nonfinite JSON")))
     fields = {"schema_version", "format", "architecture", "classes", "channels", "sfreq",
               "unit", "reference", "mean", "scale", "weights"}
-    if not isinstance(data, dict) or set(data) != fields or type(data["schema_version"]) is not int or data["schema_version"] != 1 or data["format"] != "biosignal-temporal-json" or data["architecture"] != "temporal_conv1d_v1":
+    if not isinstance(data, dict) or type(data.get("schema_version")) is not int or data["schema_version"] not in (1, 2):
+        raise ValueError("Unsupported neural checkpoint schema")
+    if data["schema_version"] == 2:
+        fields.add("input_samples")
+    if set(data) != fields or data["format"] != "biosignal-temporal-json" or not isinstance(data["architecture"], str) or data["architecture"] not in {"temporal_conv1d_v1", "eegnet_v1"} or (data["schema_version"] == 1 and data["architecture"] != "temporal_conv1d_v1"):
         raise ValueError("Unsupported neural checkpoint schema")
     if any(not isinstance(data[key], list) or any(not isinstance(s, str) for s in data[key])
            for key in ("classes", "channels")):
@@ -288,22 +348,27 @@ def load_temporal_model(path, max_bytes=8 * 1024 * 1024):
     torch = _torch()
     # All sizes are bounded before allocation and the only architecture is local.
     with torch.random.fork_rng(devices=[]):
-        network = _network(len(data["channels"]), len(data["classes"]))
+        network = _network(len(data["channels"]), len(data["classes"]), data["architecture"], data.get("input_samples"))
     expected = network.state_dict()
     if not isinstance(data["weights"], dict) or set(data["weights"]) != set(expected):
         raise ValueError("Neural checkpoint has unexpected tensor names")
     tensors = {}
     for name, template in expected.items():
         raw_values = data["weights"][name]
-        if not isinstance(raw_values, list) or not _finite_numeric_tree(raw_values):
+        if (template.ndim > 0 and not isinstance(raw_values, list)) or not _finite_numeric_tree(raw_values):
             raise ValueError("Weights must be finite JSON numbers, excluding booleans")
-        values = np.asarray(raw_values, dtype=float)
+        if template.dtype == torch.int64 and (type(raw_values) is not int or not 0 <= raw_values <= 2**63 - 1):
+            raise ValueError("Integer tensor counters require bounded nonnegative JSON integers")
+        values = np.asarray(raw_values, dtype=np.int64 if template.dtype == torch.int64 else float)
         if values.shape != tuple(template.shape):
             raise ValueError("Neural tensor shape does not match fixed architecture")
+        if name.endswith("running_var") and np.any(values < 0):
+            raise ValueError("Batch normalization variance must be nonnegative")
         tensor = torch.tensor(values, dtype=template.dtype)
         if not torch.isfinite(tensor).all():
             raise ValueError("Weight conversion exceeds architecture precision")
         tensors[name] = tensor
     network.load_state_dict(tensors, strict=True)
     return TemporalModel(network, data["classes"], data["channels"], data["sfreq"],
-                          data["unit"], data["reference"], data["mean"], data["scale"])
+                          data["unit"], data["reference"], data["mean"], data["scale"],
+                          data["architecture"], data.get("input_samples"))
