@@ -60,3 +60,23 @@ test("rapid visual edits retain the complete final graph after Python acknowledg
   expect(workflow.nodes).toHaveLength(9);
   expect(new Set(workflow.nodes.map(node=>node.id)).size).toBe(9);
 });
+
+test("grouped graph copies survive Python reruns while exported workflows remain scientific data",async({page})=>{
+  await open(page);const frame=editor(page);
+  await frame.getByRole("button",{name:"Select all",exact:true}).click();
+  await frame.getByLabel("Group name",{exact:true}).fill("Synthetic experiment");
+  await frame.getByRole("button",{name:"Group selected",exact:true}).click();await synchronized(frame);
+  await expect(frame.getByRole("button",{name:"Select group Synthetic experiment",exact:true})).toBeVisible();
+  await frame.getByRole("button",{name:"Copy selected",exact:true}).click();
+  await frame.getByRole("button",{name:"Paste nodes",exact:true}).click();await synchronized(frame);
+  const workflow=await downloadJSON(page,"Download workflow");
+  expect(workflow.nodes).toHaveLength(12);
+  expect(Object.keys(workflow).sort()).toEqual(["name","nodes","schema_version"]);
+  expect(workflow.nodes.find(node=>node.id==="analysis_copy").inputs.signal.node).toBe("demo_copy");
+  await page.getByRole("button",{name:"Run workflow",exact:true}).click();
+  await expect(page.getByRole("heading",{name:"Execution results",exact:true})).toBeVisible();
+  expect((await downloadJSON(page,"Download execution manifest")).nodes).toHaveLength(12);
+  // Executing forces Python to render the component again with persisted view metadata.
+  await expect(frame.locator(".visual-group")).toHaveCount(2);
+  await expect(frame.getByRole("button",{name:"Select group Synthetic experiment (copy)",exact:true})).toBeVisible();
+});
