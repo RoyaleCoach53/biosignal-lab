@@ -1,0 +1,50 @@
+{
+  "source_commit": "8f462659b8e47bd37156c3c42a068cafd2e40627",
+  "mode": "docker",
+  "installed_extras": [
+    "all",
+    "formats"
+  ],
+  "optional_checks_not_claimed": [
+    "neural torch in isolated artifacts",
+    "physical acquisition/native Live extras",
+    "NeuroKit optional peripheral extra"
+  ],
+  "scope": "Current Linux host, actual isolated artifacts/container and synthetic workflows; no publication/physical hardware/independent human review",
+  "checks": {
+    "cli_installed_entrypoint": true,
+    "cli_json_html": true,
+    "container": {
+      "ai_grouped_execution": true,
+      "finite_live_capture": true,
+      "http_health_html": true,
+      "network": "none",
+      "project_create_save_recover": true,
+      "studio_execution": true,
+      "uid": 10001,
+      "unified_navigation_pages": 6
+    },
+    "engine_tone_and_resample": true,
+    "frontend_assets": true,
+    "grouped_ai_and_safe_model": true,
+    "live_simulation": true,
+    "module_inside_prefix": true,
+    "project_recovery": true,
+    "typed_workflow": true,
+    "version": "0.4.0.dev0"
+  },
+  "image_id": "sha256:bae2546769f0e9b7536d18870fbf27c28d53eb4f49788e28df025dd3b00daee4",
+  "passed": true,
+  "commands": [
+    {
+      "name": "docker-build",
+      "exit_code": 0,
+      "seconds": 73.65310105499998
+    },
+    {
+      "name": "docker-runtime",
+      "exit_code": 0,
+      "seconds": 12.561276249999992
+    }
+  ]
+}

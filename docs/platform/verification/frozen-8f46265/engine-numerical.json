@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "scope": "Synthetic analytical/reference engineering verification; no clinical or independent human-data validation",
+  "python": "3.12.14",
+  "platform": "Linux",
+  "software": {
+    "numpy": "2.5.5",
+    "scipy": "1.18.1"
+  },
+  "source_sha256": {
+    "src/biosignal_lab/engine/__init__.py": "3da6894044351c63a5f6a90f3da6a2ce82001a0814cd41b42b75fac6caacdd20",
+    "src/biosignal_lab/engine/eeg.py": "7c13bd17ec80f815a13e8a6b707ea309be6254a012351bd42a360d3b9a313e7e",
+    "src/biosignal_lab/engine/features.py": "47e12c1f1f155f66a3633de82049fbbf96d014f3bab46f22dfb307b9bb4ebbb0",
+    "src/biosignal_lab/engine/filters.py": "0e8a766a92d0418cb1b544c185f19a20a18f8e87d8b626bc5cd41539f75e8827",
+    "src/biosignal_lab/engine/interchange.py": "38c598e3e652689bcdbfe23d420302543ec81b348049f3e0ba724b9e143cf502",
+    "src/biosignal_lab/engine/io.py": "89e1e1d41e002939863f06eb2f5e9c5de2ba2dead2fd37783091b9ca2e541a19",
+    "src/biosignal_lab/engine/model.py": "3594ae122fc4213d0945b73c0fe377aadf051eb3c02b5c5f7d2c2ab240f86cd3",
+    "src/biosignal_lab/engine/physiology.py": "4aa451abc0d88c74e5e748db7f7b856668b132635eba9f8bbfb7ffcbba829d9d",
+    "src/biosignal_lab/engine/spectral.py": "5c9d8febaa94b16da6f3c22a3081fb9b990e51cadfcb56b2a9b7835e8660ed7b",
+    "src/biosignal_lab/engine/visualization.py": "e97acea2c5c65156a6996ec54e075363ddc8753e272a6d8f28b23af7c5e9fae2"
+  },
+  "checks": [
+    {
+      "name": "welch_peak_hz",
+      "measured": 10.0,
+      "target": 10.0,
+      "absolute_tolerance": 0.001,
+      "passed": true
+    },
+    {
+      "name": "welch_total_power_uV2",
+      "measured": 49.99999999999989,
+      "target": 50.0,
+      "absolute_tolerance": 0.05,
+      "passed": true
+    },
+    {
+      "name": "multitaper_total_power_uV2",
+      "measured": 50.00035050368068,
+      "target": 50.0,
+      "absolute_tolerance": 0.25,
+      "passed": true
+    },
+    {
+      "name": "anti_alias_output_rms_uV",
+      "measured": 0.0024537697746351713,
+      "target": 0.0,
+      "absolute_tolerance": 0.1,
+      "passed": true
+    },
+    {
+      "name": "chunk_max_absolute_error_uV",
+      "measured": 0.0,
+      "target": 0.0,
+      "absolute_tolerance": 1e-12,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

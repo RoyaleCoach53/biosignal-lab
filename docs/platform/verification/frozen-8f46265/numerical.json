@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "version": "0.4.0.dev0",
+  "assessment": "Numerical engineering checks on synthetic data; not clinical validation.",
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "dependencies": {
+      "numpy": "2.5.5",
+      "scipy": "1.18.1",
+      "pandas": "2.3.3",
+      "mne": "1.13.2",
+      "streamlit": "1.67.0",
+      "plotly": "6.9.0"
+    }
+  },
+  "checks": {
+    "eeg_2hz": {
+      "sfreq_hz": 250,
+      "duration_s": 60,
+      "amplitude_peak_uv": 10,
+      "expected_uv2": 50.0,
+      "measured_uv2": 50.00344049808861,
+      "percent_error": 0.006880996177216048,
+      "tolerance_percent": 3.0,
+      "passed": true,
+      "config": {
+        "modality": "eeg",
+        "highpass_hz": 0.1,
+        "lowpass_hz": null,
+        "notch_hz": 50.0,
+        "notch_quality": 30.0,
+        "window_s": 4.0,
+        "artifact_window_s": 1.0,
+        "artifact_threshold_mad": 8.0,
+        "flatline_tolerance_uv": 0.15,
+        "max_missing_fraction": 0.05,
+        "max_gap_s": 0.1
+      }
+    },
+    "eeg_10hz": {
+      "sfreq_hz": 250,
+      "duration_s": 60,
+      "amplitude_peak_uv": 10,
+      "expected_uv2": 50.0,
+      "measured_uv2": 49.99376256233559,
+      "percent_error": -0.01247487532882019,
+      "tolerance_percent": 3.0,
+      "passed": true,
+      "config": {
+        "modality": "eeg",
+        "highpass_hz": 0.1,
+        "lowpass_hz": null,
+        "notch_hz": 50.0,
+        "notch_quality": 30.0,
+        "window_s": 4.0,
+        "artifact_window_s": 1.0,
+        "artifact_threshold_mad": 8.0,
+        "flatline_tolerance_uv": 0.15,
+        "max_missing_fraction": 0.05,
+        "max_gap_s": 0.1
+      }
+    },
+    "eeg_35hz": {
+      "sfreq_hz": 250,
+      "duration_s": 60,
+      "amplitude_peak_uv": 10,
+      "expected_uv2": 50.0,
+      "measured_uv2": 49.75933750595418,
+      "percent_error": -0.48132498809164304,
+      "tolerance_percent": 3.0,
+      "passed": true,
+      "config": {
+        "modality": "eeg",
+        "highpass_hz": 0.1,
+        "lowpass_hz": null,
+        "notch_hz": 50.0,
+        "notch_quality": 30.0,
+        "window_s": 4.0,
+        "artifact_window_s": 1.0,
+        "artifact_threshold_mad": 8.0,
+        "flatline_tolerance_uv": 0.15,
+        "max_missing_fraction": 0.05,
+        "max_gap_s": 0.1
+      }
+    },
+    "eeg_42hz": {
+      "sfreq_hz": 250,
+      "duration_s": 60,
+      "amplitude_peak_uv": 10,
+      "expected_uv2": 50.0,
+      "measured_uv2": 49.02988698814988,
+      "percent_error": -1.9402260237002338,
+      "tolerance_percent": 3.0,
+      "passed": true,
+      "config": {
+        "modality": "eeg",
+        "highpass_hz": 0.1,
+        "lowpass_hz": null,
+        "notch_hz": 50.0,
+        "notch_quality": 30.0,
+        "window_s": 4.0,
+        "artifact_window_s": 1.0,
+        "artifact_threshold_mad": 8.0,
+        "flatline_tolerance_uv": 0.15,
+        "max_missing_fraction": 0.05,
+        "max_gap_s": 0.1
+      }
+    },
+    "emg_200hz_fs500": {
+      "sfreq_hz": 500,
+      "duration_s": 10,
+      "amplitude_peak_uv": 100,
+      "expected_rms_uv": 70.71067811865474,
+      "measured_rms_uv": 70.7158,
+      "median_frequency_hz": 200.0,
+      "percent_error": 0.007243434063333442,
+      "tolerance_percent": 2.0,
+      "passed": true,
+      "config": {
+        "modality": "emg",
+        "highpass_hz": 20.0,
+        "lowpass_hz": null,
+        "notch_hz": 50.0,
+        "notch_quality": 30.0,
+        "window_s": 2.0,
+        "artifact_window_s": 1.0,
+        "artifact_threshold_mad": 8.0,
+        "flatline_tolerance_uv": 0.15,
+        "max_missing_fraction": 0.05,
+        "max_gap_s": 0.1
+      },
+      "warnings": [
+        "EEG frequency-band powers are not appropriate for EMG and are omitted",
+        "EMG sampling rate <1000 Hz: broadband surface EMG (to ~450 Hz) cannot be characterized; confirm analog anti-aliasing. Spectral summaries are bandwidth-limited",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    },
+    "emg_200hz_fs2000": {
+      "sfreq_hz": 2000,
+      "duration_s": 10,
+      "amplitude_peak_uv": 100,
+      "expected_rms_uv": 70.71067811865474,
+      "measured_rms_uv": 70.7017,
+      "median_frequency_hz": 200.0,
+      "percent_error": -0.012696977166125948,
+      "tolerance_percent": 2.0,
+      "passed": true,
+      "config": {
+        "modality": "emg",
+        "highpass_hz": 20.0,
+        "lowpass_hz": 450.0,
+        "notch_hz": 50.0,
+        "notch_quality": 30.0,
+        "window_s": 2.0,
+        "artifact_window_s": 1.0,
+        "artifact_threshold_mad": 8.0,
+        "flatline_tolerance_uv": 0.15,
+        "max_missing_fraction": 0.05,
+        "max_gap_s": 0.1
+      },
+      "warnings": [
+        "EEG frequency-band powers are not appropriate for EMG and are omitted",
+        "Line-noise ratios refer to the AFTER-NOTCH signal; low residual values do not measure the original interference"
+      ]
+    },
+    "mne_welch_crosscheck": {
+      "seed": 909,
+      "nperseg": 500,
+      "noverlap": 250,
+      "window": "hann",
+      "max_absolute_error_uv2_per_hz": 7.105427357601002e-14,
+      "passed": true,
+      "qualification": "Different library interface; shared numerical dependencies are possible."
+    },
+    "white_noise_power": {
+      "seed": 100,
+      "spectral_uv2": 24.887546079631182,
+      "variance_uv2": 24.958020775400986,
+      "relative_tolerance": 0.08,
+      "passed": true
+    },
+    "notch_50hz": {
+      "residual_psd_ratio": 9.055647203933445e-06,
+      "upper_limit": 0.01,
+      "passed": true
+    },
+    "unsupported_gamma": {
+      "coverage": 0.6666666666666666,
+      "passed": true
+    },
+    "long_gap_rejected": {
+      "gap_s": 0.4,
+      "passed": true
+    },
+    "quality_controls": {
+      "burst_flag_count": 1,
+      "flatline_flag_count": 2,
+      "clean_control_flag_count": 0,
+      "passed": true
+    }
+  },
+  "passed": true,
+  "sample_inputs": {
+    "eeg_demo.csv": {
+      "channels": 2,
+      "duration_s": 10.0,
+      "artifact_candidates": 3,
+      "checksum_verified": true
+    },
+    "emg_demo.csv": {
+      "channels": 1,
+      "duration_s": 5.0,
+      "artifact_candidates": 0,
+      "checksum_verified": true
+    }
+  },
+  "runtime_8ch_60s_250hz": {
+    "repetitions": 5,
+    "warmups": 1,
+    "median_seconds": 0.02918499299994437,
+    "min_seconds": 0.021309559999963312,
+    "max_seconds": 0.033995265999919866,
+    "note": "Local timing, not a throughput guarantee."
+  }
+}

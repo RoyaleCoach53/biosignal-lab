@@ -1,0 +1,80 @@
+{
+  "source_commit": "8f462659b8e47bd37156c3c42a068cafd2e40627",
+  "recorded_at_utc": "2026-11-28T16:24:43.667887+00:00",
+  "python_tests": {
+    "tests": 358,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "warning_count": 20,
+    "warning_scope": "sklearn intentionally single-class held-out regression folds",
+    "raw_junit_sha256": "2d818ad28d8462af7f8d041d79ea73e211a839e0dd43d19af3d653c60a42a539"
+  },
+  "numerical_checks": {
+    "legacy": {
+      "passed": 12,
+      "total": 12
+    },
+    "engine": {
+      "passed": 5,
+      "total": 5
+    }
+  },
+  "browser_checks": {
+    "website": 18,
+    "studio_component": 22,
+    "actual_studio_backend": 4,
+    "scientific_scenarios": 33,
+    "production_build_passed": true,
+    "scope": "Chromium desktop and emulated mobile; no physical-device or independent usability claims",
+    "component_source_note": "No website/src or editor JS/CSS/HTML changes between recorded browser stage and frozen source; only README changed",
+    "exploratory_stale_guard_test": "Initial harness readiness assumption failed before behavior exercised; preserved for diagnosis, not counted as a pass"
+  },
+  "log_sha256": {
+    "website": "9c1d52419eb74e3c5fd49c8767bdc967d008876c34f1591ede8c9a34a755a456",
+    "studio_component": "0a8d6b4ab010ddc3fc98fb8bc93b1fee8ecc7305ca788a77ecb81a13fee6f8e0",
+    "studio_backend": "844132f453c37b89b20dcad5145d77558a99491d3b045dfefddc4db561c640d2",
+    "scenarios": "8c2787b0d96efd2dd7b606b74fdd90c9031addb68145cb4653dc483a7a7c32ee",
+    "website_build": "266539e1ae25df329565ef2d4c5322d83455f7ed4dc25bbd34d64919fe542728"
+  },
+  "notebook": {
+    "code_cells": 4,
+    "error_outputs": 0,
+    "executed_notebook_sha256": "642d056503b6ce3241056ee961d2f993b9743a15d5c6493323c98ed61e043299"
+  },
+  "security": {
+    "advisory_entries": 0,
+    "assessed_distributions": 122,
+    "skips": [
+      "editable project",
+      "CPU-tagged torch binary"
+    ],
+    "upstream_torch_version": "2.15.0",
+    "upstream_torch_advisory_entries": 0,
+    "publication_findings": 0,
+    "scope_note": "Point-in-time advisory/source checks, not full native binary or independent security audit"
+  },
+  "isolated_installations": {
+    "wheel": true,
+    "source_distribution": true,
+    "extras": [
+      "all",
+      "formats"
+    ],
+    "neural_and_physiology_not_claimed_in_isolated_artifacts": true
+  },
+  "docker": {
+    "passed": true,
+    "uid": 10001,
+    "network": "none",
+    "all_capabilities_dropped": true,
+    "unified_pages": 6
+  },
+  "passed": true,
+  "limitations": [
+    "Linux host only for current integrated artifact/container",
+    "No stable release/publication or main merge",
+    "No current integration PR/remote CI",
+    "Physical hardware, expanded real cohorts and independent review remain incomplete"
+  ]
+}
