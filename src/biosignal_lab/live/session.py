@@ -9,6 +9,9 @@ import numpy as np
 
 from .core import Device, RingBuffer
 from .processing import LiveProcessor
+from .events import EventMarker
+from .recording import save_recording
+from .resources import process_memory_usage
 
 
 class AcquisitionSession:
@@ -23,18 +26,23 @@ class AcquisitionSession:
 
     def __init__(self, device: Device, processor: LiveProcessor, max_samples: int,
                  block_samples: int = 50, buffer_seconds: float = 10., pace: bool = False,
-                 max_idle_timeouts: int = 10):
+                 max_idle_timeouts: int = 10, max_markers: int = 1000):
         if device.info != processor.info:
             raise ValueError("Device and processor metadata must match exactly")
         if any(isinstance(x, bool) or not isinstance(x, int) or x < 1 for x in (max_samples, block_samples, max_idle_timeouts)):
             raise ValueError("Positive integer capture limit and block size required")
         if not np.isfinite(buffer_seconds) or buffer_seconds <= 0:
             raise ValueError("buffer_seconds must be positive and finite")
+        if isinstance(max_markers, bool) or not isinstance(max_markers, int) or not 1 <= max_markers <= 1000:
+            raise ValueError("max_markers must be an integer from 1 to 1000")
         capacity = round(buffer_seconds * device.info.sfreq)
         self.buffer = RingBuffer(capacity, len(device.info.channels), device.info.sfreq)
+        self.raw_buffer = RingBuffer(capacity, len(device.info.channels), device.info.sfreq)
         self.device, self.processor = device, processor
         self.max_samples, self.block_samples, self.pace = max_samples, block_samples, pace
         self.max_idle_timeouts = max_idle_timeouts
+        self.max_markers = max_markers
+        self._markers: list[EventMarker] = []
         self._stop = Event()
         self._lock = RLock()
         self._thread = None
@@ -79,8 +87,17 @@ class AcquisitionSession:
                 if block.data.shape[1] > min(self.block_samples, self.max_samples-self._received):
                     raise ValueError("Device exceeded requested capture block size")
                 result = self.processor.process(block)
-                self.buffer.append(result.block)
+                incoming = tuple(getattr(self.device, "last_markers", ()))
+                for marker in incoming:
+                    if not isinstance(marker, EventMarker):
+                        raise ValueError("Acquisition events must carry validated sample-clock provenance")
+                    EventMarker.from_record(marker.to_dict(), self.device.info, block)
                 with self._lock:
+                    if len(self._markers) + len(incoming) > self.max_markers:
+                        raise ValueError("Session marker limit exceeded; no events silently discarded")
+                    self.raw_buffer.append(block)
+                    self.buffer.append(result.block)
+                    self._markers.extend(incoming)
                     self._received += block.data.shape[1]
                     self._blocks += 1
                     self._last_result = result
@@ -126,7 +143,61 @@ class AcquisitionSession:
         return self.wait(timeout)
 
     def snapshot(self):
-        return self.buffer.snapshot()
+        with self._lock:
+            return self.buffer.snapshot()
+
+    def raw_snapshot(self):
+        """Latest contiguous native-unit input window, before causal filtering."""
+        with self._lock:
+            return self.raw_buffer.snapshot()
+
+    def add_marker(self, label: str, sample: int | None = None) -> EventMarker:
+        """Annotate an actual retained input sample; never infer a host clock offset.
+
+        Omitting sample explicitly means the latest committed received sample,
+        not the physiological occurrence time of the caller's button press.
+        Missing/evicted sample indices cannot be annotated using guessed times.
+        """
+        with self._lock:
+            if len(self._markers) >= self.max_markers:
+                raise ValueError("Session marker limit exceeded")
+            block = self.raw_buffer.snapshot()
+            if block is None:
+                raise ValueError("No received sample is available for an event marker")
+            marker = EventMarker.from_block(self.device.info, block, label, sample)
+            self._markers.append(marker)
+            return marker
+
+    def markers(self) -> tuple[EventMarker, ...]:
+        with self._lock:
+            return tuple(self._markers)
+
+    def checkpoint(self, path):
+        """Save a new bounded raw window+events; never serialize a live process.
+
+        The saved window can be recovered with PlaybackDevice and a new session.
+        Historical events outside this retained contiguous window are counted
+        explicitly in the returned summary, not exported with invented samples.
+        """
+        with self._lock:
+            block = self.raw_buffer.snapshot()
+            if block is None:
+                raise ValueError("No received samples to checkpoint")
+            markers = [m.to_dict() for m in self._markers if block.start_sample <= m.sample < block.stop_sample]
+            omitted = len(self._markers) - len(markers)
+        save_recording(path, self.device.info, block, markers)
+        return {"start_sample": block.start_sample, "stop_sample": block.stop_sample,
+                "clock": self.device.info.clock, "sample_stage": "raw input before causal processing",
+                "markers_saved": len(markers), "markers_outside_retained_window": omitted,
+                "recovery": "Create PlaybackDevice and a new processor/session; active connections are not restored"}
+
+    def resource_usage(self):
+        raw = self.raw_buffer.memory_usage()
+        processed = self.buffer.memory_usage()
+        return {"raw_ring": raw, "processed_ring": processed,
+                "session_ring_array_storage_bytes": raw["array_storage_bytes"] + processed["array_storage_bytes"],
+                "array_scope": "Two fixed session rings only; processor windows, filter state, snapshots and Python objects are additional",
+                "process": process_memory_usage()}
 
     def status(self):
         with self._lock:
@@ -135,5 +206,6 @@ class AcquisitionSession:
                     "blocks": self._blocks, "read_timeouts": self._timeouts,
                     "error_type": self._error_type, "stop_requested": self._stop.is_set(),
                     "elapsed_wall_seconds": elapsed, "pace_simulation": self.pace,
+                    "markers_count": len(self._markers), "markers_limit": self.max_markers,
                     "buffer": self.buffer.diagnostics(),
                     "last_processing": None if self._last_result is None else deepcopy(self._last_result.diagnostics)}

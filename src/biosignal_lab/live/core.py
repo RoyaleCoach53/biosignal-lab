@@ -134,6 +134,12 @@ class RingBuffer:
                     "overwritten_samples": self.overwritten_samples,
                     "discontinuities": self.discontinuities}
 
+    def memory_usage(self) -> dict:
+        with self._lock:
+            return {"array_storage_bytes": self._data.nbytes + self._timestamps.nbytes,
+                    "retained_sample_value_bytes": self._size * (self.n_channels + 1) * 8,
+                    "scope": "Fixed float64 sample/timestamp arrays only; excludes Python objects, locks and snapshots"}
+
 
 class SimulatedDevice:
     """Deterministic analytical tones plus seeded noise, without real-time sleeping.

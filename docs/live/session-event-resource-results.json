@@ -1,0 +1,87 @@
+{
+  "scope": "Current-process memory observations and deterministic simulated sample-clock event/checkpoint/replay verification; no physical hardware or sensor latency",
+  "host": {
+    "os": "Linux",
+    "architecture": "x86_64",
+    "python": "3.12.14"
+  },
+  "workload": {
+    "channels": 2,
+    "sfreq_hz": 250,
+    "received_samples": 1000,
+    "retained_contiguous_samples": 500,
+    "block_samples": 50
+  },
+  "markers": [
+    {
+      "sample": 750,
+      "timestamp": 3.0,
+      "clock": "simulated_seconds",
+      "label": "explicit retained sample",
+      "source": "explicit_sample"
+    },
+    {
+      "sample": 999,
+      "timestamp": 3.996,
+      "clock": "simulated_seconds",
+      "label": "latest committed sample",
+      "source": "latest_received_sample"
+    }
+  ],
+  "checkpoint": {
+    "start_sample": 500,
+    "stop_sample": 1000,
+    "clock": "simulated_seconds",
+    "sample_stage": "raw input before causal processing",
+    "markers_saved": 2,
+    "markers_outside_retained_window": 0,
+    "recovery": "Create PlaybackDevice and a new processor/session; active connections are not restored"
+  },
+  "recovery": {
+    "state": "completed",
+    "received_samples": 500,
+    "exact_event_provenance_preserved": true
+  },
+  "resources": {
+    "raw_ring": {
+      "array_storage_bytes": 12000,
+      "retained_sample_value_bytes": 12000,
+      "scope": "Fixed float64 sample/timestamp arrays only; excludes Python objects, locks and snapshots"
+    },
+    "processed_ring": {
+      "array_storage_bytes": 12000,
+      "retained_sample_value_bytes": 12000,
+      "scope": "Fixed float64 sample/timestamp arrays only; excludes Python objects, locks and snapshots"
+    },
+    "session_ring_array_storage_bytes": 24000,
+    "array_scope": "Two fixed session rings only; processor windows, filter state, snapshots and Python objects are additional",
+    "process": {
+      "process_rss_bytes": 97964032,
+      "process_peak_rss_bytes": 97689600,
+      "current_rss_source": "Linux procfs resident pages times OS page size",
+      "peak_rss_source": "resource.RUSAGE_SELF.ru_maxrss; Linux KiB converted to bytes",
+      "scope": "Entire current Python process including other modules, threads and native libraries; not acquisition-only",
+      "host_monotonic_measurement_s": 213.129943328,
+      "clock_note": "Host monotonic observation time; no equivalence to device sample clock implied",
+      "unavailable_values": "null means unavailable; not zero memory usage"
+    }
+  },
+  "source_sha256": {
+    "src/biosignal_lab/live/__init__.py": "47854725b69bf22b9ad6fbad3d516a27521686a4d86d1837f392c9ba98091723",
+    "src/biosignal_lab/live/_json.py": "35d537fff2f578570384208351b0ac2df9b181d9550f50284f0115e64a85fa9c",
+    "src/biosignal_lab/live/adapters.py": "f3f202fd2e2a5c5218173b7cf09fc7456678626c3b191b32948f47b584556669",
+    "src/biosignal_lab/live/clock.py": "dc1e867ac62b5e2e79461abb5dfa1840bd0f227a790832e0c875acbe7102145e",
+    "src/biosignal_lab/live/core.py": "90672b2b13d5f438959fb851a45219043274101c7505e2e3647f99aa32be4c8a",
+    "src/biosignal_lab/live/events.py": "99baadbc27cf54f0bf4823b61820309a6084f534786f7df6a57e1f48710fe3f9",
+    "src/biosignal_lab/live/processing.py": "1f86e0d93d7be2ce895d25dd3eff4b5204ba8808574a76bb1f7710f28cba0c3d",
+    "src/biosignal_lab/live/recording.py": "6d271077608aaeee08e4a1092f0c6283330d25262863bacc0075ea8907631d84",
+    "src/biosignal_lab/live/resources.py": "e1a84442c09d22293ed9d2b48afb48ef77dba0e2afda222374c3e480e8c6d179",
+    "src/biosignal_lab/live/session.py": "54296cda2af18c1b3de2f89a058578d78ee89269d30c54b34d8002406919e24b",
+    "src/biosignal_lab/live/transport.py": "f96dbfd2e0b7b66636a509e633b90e8ab983144fea1888ea8643f6ade25d6f25"
+  },
+  "limitations": [
+    "Sample-clock annotation does not measure physiological event onset or host input latency",
+    "RSS belongs to the whole process, not acquisition only",
+    "Checkpoint contains the latest bounded raw contiguous window, not a full session or live process state"
+  ]
+}
