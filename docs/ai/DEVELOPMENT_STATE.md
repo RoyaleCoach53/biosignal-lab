@@ -4,7 +4,8 @@ Worktree: `/workspace/biosignal-worktrees/ai`, branch `ai/platform`.
 Parent integration must merge tested commits; this branch does not merge main,
 publish releases, or claim v0.7/v1.0 completion.
 
-Implemented and tested as of source commit `e4838e7`:
+Implemented and tested as of source commit `1754afc` (earlier evidence also retains
+its original source commit `e4838e7`):
 
 - Seven classical feature baselines with complete subject-disjoint outer folds,
   training-only scaling and optional nested grouped parameter selection.
@@ -13,17 +14,24 @@ Implemented and tested as of source commit `e4838e7`:
 - Explicit epoch features, safe linear JSON models, declared-license manifests,
   checksum caching, pre-follow HTTPS redirect checks, no-overwrite outputs.
 - Real Streamlit feature/spatial experiments and standalone synthetic AI CLI.
-- One temporal Conv1D CPU baseline with training/validation/test subject sets,
+- Temporal Conv1D and compact EEGNet CPU baselines with training/validation/test subject sets,
   deterministic training-only normalization, early stopping, scheduler, restored
   best validation checkpoint and fixed-architecture numeric JSON weights.
 - Actual neural UI training/loss/checkpoint/held-out metrics and model export.
+- EEGNet uses explicit kernels/pooling/dropout and spatial/dense max-norm
+  constraints. Validation and final test forward passes respect the configured
+  batch bound; the regression records every forward batch, not just training.
+- Safe checkpoint schema 2 records the fixed EEGNet epoch length and validates
+  integer BatchNorm counters and nonnegative variances. Schema 1 Conv1D remains
+  loadable; no executable serialization is accepted.
 - Reviewer-found fingerprint role/shape collision and loader coercion bugs fixed;
   complex amplitudes explicitly rejected. Tuned spatial metadata distinguishes
   base settings from actual executed fold parameters.
 
-Latest executed AI checks: **44 passed**, 20 sklearn warnings in the deliberately
+Latest executed AI checks: **48 passed**, 20 sklearn warnings in the deliberately
 single-class held-out fold fingerprint regression cohort. These warnings are not
-skips or failed assertions. Critical lint passed. Commands from this worktree:
+skips or failed assertions. Critical lint and dependency consistency passed.
+Commands from this worktree:
 
 ```sh
 PYTHONPATH=$PWD/src /workspace/.venvs/biosignal-lab/bin/python -m pytest -ra tests/test_ai_lab.py tests/test_ai_covariance.py tests/test_ai_neural.py
@@ -43,16 +51,22 @@ Fresh source-revision-bound reports preserve earlier reports:
   subjects, validate one, test one (16 epochs); held-out accuracy 1.0. Warm CPU
   inference median 0.250669 ms; p95 0.3230554 ms on the recorded CPU. Python-traced
   peak memory is not process RSS or total native allocations.
+- [EEGNet baseline](SYNTHETIC_EEGNET_BASELINE.json), source `1754afc`: train six
+  simulated subjects, validate one, test one (16 epochs), 25 actual training
+  epochs; selected checkpoint at epoch 25. Held-out accuracy 1.0, 1,650 model
+  parameters, JSON checkpoint 39,861 bytes. Warm CPU inference median 0.519777 ms,
+  p95 0.59929655 ms. Python-traced peak 108,443,844 bytes excludes untraced native
+  allocations and is not RSS. CPU fit and test took 8.196637176 seconds.
 
-Both demonstrations deliberately use separable synthetic inputs. Neither score
+These demonstrations deliberately use separable synthetic inputs. No score
 establishes physiological task accuracy or scientific/clinical validity.
 
-Next independent work: add a documented compact EEGNet architecture if feasible
-within the existing disjoint-partition/safe-checkpoint system, then run actual
-training and failure tests. Otherwise extend local feature dataset evaluation
-without adding fabricated human-task claims. Parent must integrate latest branch,
-run full platform regression, and retain incomplete milestones in the global
-acceptance report.
+Next action: parent integrates `1754afc` and this evidence/checkpoint commit into
+the development integration branch, then completes combined verification. No
+additional architecture or deployment scope is being opened before those final
+checks. The optional ONNX/ONNX Runtime packages were installed during exploration
+but are unused and unverified; they are not part of these implementation claims
+or required extras. Do not report ONNX deployment as complete.
 
 Remaining gates: real licensed task cohorts and evaluation, broader deep models,
 cross-cohort robustness, independent scientific review, training resume state,
