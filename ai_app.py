@@ -17,16 +17,17 @@ with st.sidebar:
     st.header("Synthetic experiment")
     representations = ["Spectral tone features", "Spatial covariance"]
     if importlib.util.find_spec("torch") is not None:
-        representations.append("Temporal Conv1D")
+        representations.extend(["Temporal Conv1D", "EEGNet"])
     representation = st.selectbox("Representation", representations)
     models = (["lda", "logistic", "svm", "random_forest", "knn", "gradient_boosting", "qda"]
               if representation == "Spectral tone features" else ["temporal_conv1d_v1"]
-              if representation == "Temporal Conv1D" else ["csp_lda", "log_euclidean"])
+              if representation == "Temporal Conv1D" else ["eegnet_v1"]
+              if representation == "EEGNet" else ["csp_lda", "log_euclidean"])
     model_name = st.selectbox("Classifier", models)
     n_subjects = st.slider("Simulated subjects", 3, 20, 8)
     n_trials = st.slider("Trials per subject", 4, 40, 16, 2)
     seed = int(st.number_input("Random seed", min_value=0, max_value=999999, value=42))
-    max_epochs = st.slider("Maximum training epochs", 1, 50, 15) if representation == "Temporal Conv1D" else 15
+    max_epochs = st.slider("Maximum training epochs", 1, 50, 15) if representation in {"Temporal Conv1D", "EEGNet"} else 15
     nested = st.checkbox("Nested grouped hyperparameter search", value=False,
                          help="Available for logistic regression, CSP/LDA and covariance geometry; outer test subjects never select parameters.")
     run = st.button("Run grouped evaluation", type="primary")
@@ -52,7 +53,8 @@ if run:
                     report["data_scope"] = "Synthetic spatial covariance patterns; no physiological generalisation claim."
                 else:
                     dataset = synthetic_epoch_dataset(seed, n_subjects, n_trials)
-                    neural_model, report = train_temporal(dataset, seed=seed, max_epochs=max_epochs, patience=3)
+                    neural_model, report = train_temporal(dataset, seed=seed, max_epochs=max_epochs, patience=3,
+                                                          architecture=model_name)
                     report["model"] = report["architecture"]
                     report["metrics"] = report["test_metrics"]
                     report["n_subjects"] = len(report["test_subjects"])
@@ -63,7 +65,7 @@ if run:
                     st.session_state["ai_neural_model"] = neural_model.to_dict()
                 st.session_state["ai_report"] = report
                 st.session_state["ai_linear_model"] = train_linear(dataset, model_name, seed).to_dict() if model_name in {"lda", "logistic"} else None
-                if representation != "Temporal Conv1D":
+                if representation not in {"Temporal Conv1D", "EEGNet"}:
                     st.session_state["ai_neural_model"] = None
     except (ValueError, ImportError, RuntimeError) as exc:
         st.error(f"Experiment could not run: {exc}")
@@ -78,7 +80,7 @@ if "ai_report" in st.session_state:
     cols[1].metric("Balanced accuracy", f"{report['metrics']['balanced_accuracy']:.3f}")
     cols[2].metric("Macro F1", f"{report['metrics']['macro_f1']:.3f}")
     cols[3].metric("Held-out subjects", report["n_subjects"])
-    st.subheader("Out-of-fold confusion matrix")
+    st.subheader("Held-out confusion matrix")
     st.dataframe(pd.DataFrame(report["metrics"]["confusion_matrix"],
                              index=report["classes"], columns=report["classes"]), width="stretch")
     st.caption("Rows are true labels; columns are predicted labels.")

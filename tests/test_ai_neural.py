@@ -95,18 +95,71 @@ def test_temporal_checkpoint_rejects_unknown_tensor_names_and_numeric_coercion(t
         load_temporal_model(path)
 
 
-def test_ai_dashboard_executes_actual_temporal_training():
+@pytest.mark.parametrize("representation,architecture", [("Temporal Conv1D", "temporal_conv1d_v1"),
+                                                        ("EEGNet", "eegnet_v1")])
+def test_ai_dashboard_executes_actual_temporal_training(representation, architecture):
     pytest.importorskip("streamlit")
     from pathlib import Path
     from streamlit.testing.v1 import AppTest
     app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "ai_app.py"), default_timeout=60).run()
-    next(select for select in app.selectbox if select.label == "Representation").set_value("Temporal Conv1D").run()
+    next(select for select in app.selectbox if select.label == "Representation").set_value(representation).run()
     next(slider for slider in app.slider if slider.label == "Maximum training epochs").set_value(2).run()
     next(slider for slider in app.slider if slider.label == "Simulated subjects").set_value(4).run()
     next(button for button in app.button if button.label == "Run grouped evaluation").click().run()
     assert not app.exception
     report = app.session_state["ai_report"]
-    assert report["model"] == "temporal_conv1d_v1"
+    assert report["model"] == architecture
     assert report["epochs_executed"] == 2
     assert report["n_train"] == 32 and report["n_validation"] == 16 and report["n_test"] == 16
     assert app.session_state["ai_neural_model"]["format"] == "biosignal-temporal-json"
+
+
+def test_eegnet_actual_training_spatial_constraint_and_safe_checkpoint(tmp_path):
+    data = synthetic_epoch_dataset(n_subjects=4, trials_per_subject=8)
+    model, report = train_temporal(data, architecture="eegnet_v1", max_epochs=3,
+                                   patience=2, batch_size=4)
+    assert report["architecture"] == "eegnet_v1" and report["epochs_executed"] >= 1
+    spatial = model.network[4].weight.detach()
+    dense = model.network[-1].weight.detach()
+    assert torch.linalg.vector_norm(spatial, dim=(1, 2, 3)).max() <= 1.000001
+    assert torch.linalg.vector_norm(dense, dim=1).max() <= .250001
+    probability = model.predict_proba(data.X, **_metadata(data))
+    assert probability.shape == (32, 2)
+    np.testing.assert_allclose(probability.sum(axis=1), 1, atol=1e-6)
+    path = tmp_path / "eegnet.json"
+    save_temporal_model(model, path)
+    restored = load_temporal_model(path)
+    np.testing.assert_array_equal(probability, restored.predict_proba(data.X, **_metadata(data)))
+    with pytest.raises(ValueError, match="epoch length"):
+        restored.predict_proba(data.X[:, :, :-1], **_metadata(data))
+    payload = json.loads(path.read_text())
+    payload["weights"]["3.num_batches_tracked"] = 1.5
+    path.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match="Integer tensor counters"):
+        load_temporal_model(path)
+
+
+def test_neural_validation_and_test_forward_batches_respect_limit(monkeypatch):
+    import biosignal_lab.ai.neural as module
+    data = synthetic_epoch_dataset(n_subjects=4, trials_per_subject=8)
+    observed = []
+    original = module._network
+
+    def checked(*args, **kwargs):
+        model = original(*args, **kwargs)
+        model.register_forward_pre_hook(lambda module, inputs: observed.append(len(inputs[0])))
+        return model
+
+    monkeypatch.setattr(module, "_network", checked)
+    train_temporal(data, max_epochs=1, batch_size=3)
+    assert max(observed) <= 3
+
+
+def test_neural_cli_generates_actual_safe_weights_and_holdout_report(tmp_path):
+    from biosignal_lab.ai.cli import main
+    output = tmp_path / "neural"
+    assert main(["neural-demo", "--output", str(output), "--subjects", "3",
+                 "--max-epochs", "1", "--architecture", "eegnet_v1"]) == 0
+    report = json.loads((output / "evaluation.json").read_text())
+    assert report["architecture"] == "eegnet_v1" and report["epochs_executed"] == 1
+    assert load_temporal_model(output / "model.json").architecture == "eegnet_v1"

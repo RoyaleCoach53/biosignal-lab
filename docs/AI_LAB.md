@@ -114,12 +114,20 @@ multiclass models. Files are created exclusively; no default overwrite occurs.
 This narrow format does not sign models, certify their provenance or provide a
 sandbox for third-party code.
 
-## Optional temporal neural baseline
+## Optional temporal neural baselines
 
-`train_temporal(EpochDataset(...))` trains one documented lightweight temporal
-Conv1D network. It is a baseline with two temporal convolutions (16 then 32
-features), ELU activations, average pooling and a linear class head. It is not
-EEGNet, and no published model's accuracy is claimed. There are no bundled weights.
+`train_temporal(EpochDataset(...))` trains a documented lightweight temporal
+Conv1D network by default: two temporal convolutions (16 then 32 features), ELU
+activations, average pooling and a linear class head. Set
+`architecture="eegnet_v1"` for a compact EEGNet implementation with eight temporal
+filters (kernel 64), depth multiplier two, 16 separable filters (kernel 16),
+pooling by four/eight and dropout 0.5. Spatial and dense weights have max-norm
+constraints of 1 and 0.25. Padding is explicitly asymmetric to preserve temporal
+length; BatchNorm uses torch defaults. The architecture follows Lawhern et al.,
+*EEGNet*, J. Neural Eng. 15 (2018) 056013,
+[doi:10.1088/1741-2552/aace8c](https://doi.org/10.1088/1741-2552/aace8c).
+This implementation and its synthetic tests do not reproduce that paper's task
+performance. No published model's accuracy or pretrained weights are claimed.
 
 Install a compatible official PyTorch build for the intended device. For a CPU
 environment using standard PyPI for other dependencies:
@@ -162,13 +170,17 @@ probabilities = restored.predict_proba(
 
 Inference requires matching sampling frequency, unit, channel order and reference;
 no unit conversion or resampling is silently applied. The temporal checkpoint is
-strict bounded numeric JSON for one fixed local architecture. Shape, names,
+strict bounded numeric JSON for two fixed local architectures. Shape, names,
 metadata, finite values and float precision are checked. Neither `torch.load`
 nor pickle nor executable import strings are accepted. Checkpoints are created
 exclusively and preserve existing files. Only model weights and normalization are
 exported; resuming optimizer state mid-training is not implemented. Within the
 tested CPU/software environment, same-seed training histories and predictions are
 identical; cross-device or cross-version bit identity is not promised.
+Schema version 2 records the architecture and fixed EEGNet epoch length;
+version 1 Conv1D checkpoints remain loadable. EEGNet requires 64..8192 samples
+per epoch and inference must match its training epoch length exactly. Integer
+BatchNorm counters and nonnegative running variances are validated explicitly.
 
 The preprocessing/batch estimate is checked before copies and normalization;
 it is not a complete process/torch allocator memory guarantee. Global torch
@@ -181,6 +193,8 @@ actual synthetic holdout inference and makes no physiological task claim:
 ```sh
 python -m pytest -ra tests/test_ai_neural.py
 python benchmarks/ai_neural.py --output local-results/neural-new-run.json
+python benchmarks/ai_neural.py --architecture eegnet_v1 --output local-results/eegnet-new-run.json
+python -m biosignal_lab.ai.cli neural-demo --architecture eegnet_v1 --max-epochs 25 --output local-results/eegnet-new-experiment
 ```
 
 ## Dataset manifest and cache
@@ -218,11 +232,11 @@ specific to that execution environment.
 Implemented: seven feature-based classical estimators, binary CSP/LDA and
 log-Euclidean covariance classification, grouped/nested evaluation, explicit
 feature extraction, strict JSON linear inference, manifest/cache integrity,
-one temporal Conv1D train/validation/test baseline with strict JSON weights,
+temporal Conv1D and EEGNet train/validation/test baselines with strict JSON weights,
 synthetic browser workflows, and analytical/security/regression tests.
 
 Incomplete v0.7/v1.0 gates: affine-invariant Riemannian approaches, additional deep architectures
-(including EEGNet, recurrent, attention and temporal convolutional networks), real motor imagery/P300/SSVEP/blink/EMG
+(including recurrent, attention and temporal convolutional networks), real motor imagery/P300/SSVEP/blink/EMG
 task cohorts and their licenses, preprocessing fit checks beyond the caller-supplied
 feature boundary, independent cohorts/review, imbalance interventions, training
 optimizer-resume checkpoints, experiment database, robustness studies,
