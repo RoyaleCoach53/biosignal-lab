@@ -1,0 +1,231 @@
+{
+  "observed_at_utc": "2026-11-28T10:04:09.797397+00:00",
+  "method": "Public GitHub conversation, checks and workflow summary pages; no authenticated API or log access",
+  "pull_requests": {
+    "6": {
+      "url": "https://github.com/RoyaleCoach53/biosignal-lab/pull/6",
+      "head_sha": "e740502d1be013647bf4ec7e0233c1f65b795c97",
+      "check_jobs": [
+        {
+          "name": "physionet",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543647/job/140453221511?pr=6",
+          "workflow": "Real EEG validation and security on: pull_request"
+        },
+        {
+          "name": "Clean first use / ubuntu-latest",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543692/job/140453222029?pr=6",
+          "workflow": "Clean installation and first use on: pull_request"
+        },
+        {
+          "name": "Clean first use / windows-latest",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543692/job/140453221602?pr=6",
+          "workflow": "Clean installation and first use on: pull_request"
+        },
+        {
+          "name": "Markdown links (not application or scientific tests)",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543725/job/140453221850?pr=6",
+          "workflow": "Documentation only on: pull_request"
+        },
+        {
+          "name": "ubuntu-latest / Python 3.10",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543890/job/140453222427?pr=6",
+          "workflow": "Tests and numerical verification on: pull_request"
+        },
+        {
+          "name": "ubuntu-latest / Python 3.12",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543890/job/140453222015?pr=6",
+          "workflow": "Tests and numerical verification on: pull_request"
+        },
+        {
+          "name": "windows-latest / Python 3.10",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543890/job/140453222423?pr=6",
+          "workflow": "Tests and numerical verification on: pull_request"
+        },
+        {
+          "name": "windows-latest / Python 3.12",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543890/job/140453222398?pr=6",
+          "workflow": "Tests and numerical verification on: pull_request"
+        }
+      ],
+      "job_count": 8,
+      "success_count": 8,
+      "reviewers_visible": "No reviews",
+      "checks_html_sha256": "e50a4412467a50f690a7710ee06865003c86d6cb2444be3495e234d63b6dbf19"
+    },
+    "7": {
+      "url": "https://github.com/RoyaleCoach53/biosignal-lab/pull/7",
+      "head_sha": "ef1760feff943b455a905268b0592b03661c9f82",
+      "check_jobs": [
+        {
+          "name": "validate",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531308/job/138613677678?pr=7",
+          "workflow": "Website preview checks on: pull_request"
+        },
+        {
+          "name": "ubuntu-latest / Python 3.10",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531356/job/138613677889?pr=7",
+          "workflow": "Tests and numerical verification on: pull_request"
+        },
+        {
+          "name": "ubuntu-latest / Python 3.12",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531356/job/138613678332?pr=7",
+          "workflow": "Tests and numerical verification on: pull_request"
+        },
+        {
+          "name": "windows-latest / Python 3.10",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531356/job/138613678487?pr=7",
+          "workflow": "Tests and numerical verification on: pull_request"
+        },
+        {
+          "name": "windows-latest / Python 3.12",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531356/job/138613678299?pr=7",
+          "workflow": "Tests and numerical verification on: pull_request"
+        },
+        {
+          "name": "physionet",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531565/job/138613677079?pr=7",
+          "workflow": "Real EEG validation and security on: pull_request"
+        },
+        {
+          "name": "Markdown links (not application or scientific tests)",
+          "status_labels": [
+            "This job succeeded"
+          ],
+          "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531850/job/138613677763?pr=7",
+          "workflow": "Documentation only on: pull_request"
+        }
+      ],
+      "job_count": 7,
+      "success_count": 7,
+      "reviewers_visible": "No reviews",
+      "checks_html_sha256": "2d5871f1fd2a18c7819b86eeb529245fc9d7b1515dc67dc1541ad3a6c00dfe63"
+    }
+  },
+  "workflow_summaries": [
+    {
+      "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531308",
+      "status": "Success",
+      "duration": "1m 20s",
+      "artifact_count": "\u2013",
+      "commit_links": [],
+      "logs_require_signin": true,
+      "node20_deprecation_warning": true
+    },
+    {
+      "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531356",
+      "status": "Success",
+      "duration": "2m 54s",
+      "artifact_count": "4",
+      "commit_links": [],
+      "logs_require_signin": true,
+      "node20_deprecation_warning": true
+    },
+    {
+      "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531565",
+      "status": "Success",
+      "duration": "1m 19s",
+      "artifact_count": "1",
+      "commit_links": [],
+      "logs_require_signin": true,
+      "node20_deprecation_warning": true
+    },
+    {
+      "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45441531850",
+      "status": "Success",
+      "duration": "20s",
+      "artifact_count": "\u2013",
+      "commit_links": [],
+      "logs_require_signin": true,
+      "node20_deprecation_warning": true
+    },
+    {
+      "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543647",
+      "status": "Success",
+      "duration": "1m 28s",
+      "artifact_count": "1",
+      "commit_links": [],
+      "logs_require_signin": true,
+      "node20_deprecation_warning": true
+    },
+    {
+      "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543692",
+      "status": "Success",
+      "duration": "1m 14s",
+      "artifact_count": "2",
+      "commit_links": [],
+      "logs_require_signin": true,
+      "node20_deprecation_warning": true
+    },
+    {
+      "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543725",
+      "status": "Success",
+      "duration": "11s",
+      "artifact_count": "\u2013",
+      "commit_links": [],
+      "logs_require_signin": true,
+      "node20_deprecation_warning": true
+    },
+    {
+      "url": "https://github.com/RoyaleCoach53/biosignal-lab/actions/runs/45983543890",
+      "status": "Success",
+      "duration": "2m 30s",
+      "artifact_count": "4",
+      "commit_links": [],
+      "logs_require_signin": true,
+      "node20_deprecation_warning": true
+    }
+  ],
+  "integration": {
+    "branch": "integration/research-platform",
+    "pull_request_observed": false,
+    "workflow_runs_observed": false,
+    "api_request": "CONNECT 403; saved domain rule not applied to runtime"
+  },
+  "limitations": [
+    "Prior PR results apply only to their exact recorded heads",
+    "Public summaries do not establish detailed assertion counts or artifact contents",
+    "Both existing PRs have no reviews; no maintainer approval inferred"
+  ]
+}

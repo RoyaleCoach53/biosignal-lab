@@ -11,10 +11,13 @@ COPY examples/workflows /opt/biosignal/examples/workflows
 COPY .streamlit /opt/biosignal/.streamlit
 RUN --mount=type=secret,id=build_ca,required=false \
     if [ -f /run/secrets/build_ca ]; then export PIP_CERT=/run/secrets/build_ca; fi; \
-    python -m pip install --no-cache-dir '.[all,formats]' \
+    python -m pip install --no-cache-dir --upgrade 'pip>=26.3' \
+    && python -m pip install --no-cache-dir '.[all,formats]' \
     && python -m pip check \
     && useradd --create-home --uid 10001 biosignal
-RUN chmod -R a+rX /opt/biosignal
+RUN chmod -R a+rX /opt/biosignal \
+    && mkdir -p /opt/biosignal/local-results \
+    && chown biosignal:biosignal /opt/biosignal/local-results
 USER biosignal
 EXPOSE 8501
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD python -c "import urllib.request; assert urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=3).read() == b'ok'"

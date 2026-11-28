@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=77", "wheel"]
+requires = ["setuptools>=84.1", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -23,7 +23,7 @@ ai = ["scikit-learn>=1.5,<2"]
 live = ["brainflow>=5.12,<6", "pylsl>=1.16,<2", "pyserial>=3.5,<4", "websockets>=15,<18"]
 neural = ["torch>=2.4,<3", "scikit-learn>=1.5,<2"]
 formats = ["mne-bids>=0.15,<1", "pyxdf>=1.16,<2"]
-physiology = ["neurokit2>=0.2.10,<1", "mne>=1.6,<2"]
+physiology = ["neurokit2==0.2.12", "mne>=1.6,<2"]
 notebooks = ["nbformat>=5.10,<6", "nbclient>=0.10,<1", "ipykernel>=6,<8"]
 tutorial = ["mne>=1.6,<2", "matplotlib>=3.6,<4"]
 dev = ["pytest>=8", "ruff>=0.6", "build>=1.2"]
