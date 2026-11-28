@@ -84,3 +84,54 @@ independent user evaluation, and production-host measurements remain unrun.
 The public site deliberately uses a finite, disclosed synthetic catalogue. It
 does not host human recordings, upload endpoints, arbitrary Python execution,
 new AI training services, or physical acquisition controls.
+
+## Integrated Studio verification
+
+The integrated application now includes a separate offline visual Studio
+component and Python execution service. Final checks on the integration checkout
+passed the production website build, all 33 scientific scenario checks, all 18
+website desktop/mobile browser checks, all 22 Studio component browser checks,
+and all four actual Studio browser-to-Python checks.
+
+The final backend run used source HEAD
+`3f72d11862b54a29306a628134d14695d6bd4a81` before and after execution; dependency
+and container configuration updates were still being prepared separately. This
+binds the evidence to that application source, not to untested later commits.
+
+```sh
+# Repository root, using the installed Python environment:
+PYTHONPATH=src python website/scripts/scenarios.py
+PYTHONPATH=src python -m pytest website/test/test_scenarios.py -ra
+python -m streamlit run studio_app.py --server.headless true --server.port 8503
+
+# website directory, with the actual local Studio service running:
+npm run build
+SITE_CHROME_EXECUTABLE=/usr/bin/chromium npm test -- --workers=2
+SITE_CHROME_EXECUTABLE=/usr/bin/chromium npm run test:studio -- --workers=2
+SITE_STUDIO_URL=http://127.0.0.1:8503 SITE_CHROME_EXECUTABLE=/usr/bin/chromium npm run test:studio-backend
+```
+
+The component tests exercise actual iframe messages and exported graph JSON,
+including typed connections, cycle rejection, graph parameter edits, safe
+imports, keyboard/pointer movement, multi-selection, copy/paste with fresh IDs
+and internal connections, grouping, group movement, undo/redo, and safe rendering
+of server errors. Visual groups and positions travel separately from strict
+scientific workflow JSON. Rapid edits wait for server revision acknowledgements
+before further graph updates are sent.
+
+The actual backend tests confirmed that visual edits reached Python and produced
+a three-channel 500 Hz, 12-second signal through the six-node pipeline; missing
+input connections disabled execution until repaired; rapid edits survived
+reruns; and copying a six-node visual group executed 12 real processing nodes.
+Downloaded manifests contained workflow/source hashes, dependencies, and actual
+node timings. These tests do not substitute for external hardware or research
+validation.
+
+An initial concurrent verification attempt failed during browser cleanup because
+the runners shared an artifact directory. Each configuration now uses a separate
+`test-results` subdirectory. The final isolated reruns passed; no application
+assertions were disabled. Final logs were retained outside the checkout as
+`/tmp/biosignal-final-scenarios.log`, `/tmp/biosignal-final-website-build.log`,
+`/tmp/biosignal-final-site-tests-isolated.log`,
+`/tmp/biosignal-final-component-tests-isolated.log`, and
+`/tmp/biosignal-final-backend-tests.log`.
