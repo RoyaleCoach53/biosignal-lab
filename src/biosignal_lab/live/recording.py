@@ -11,6 +11,7 @@ import numpy as np
 
 from .core import SampleBlock, StreamInfo
 from ._json import decode_json
+from .events import EventMarker
 
 
 def recording_bytes(info: StreamInfo, block: SampleBlock, markers: list[dict] | None = None,
@@ -21,8 +22,7 @@ def recording_bytes(info: StreamInfo, block: SampleBlock, markers: list[dict] | 
     if not isinstance(markers, list) or len(markers) > 1000:
         raise ValueError("At most 1000 event markers are supported")
     for marker in markers:
-        if not isinstance(marker, dict) or set(marker) != {"sample", "label"} or isinstance(marker["sample"], bool) or not isinstance(marker["sample"], int) or not block.start_sample <= marker["sample"] < block.stop_sample or not isinstance(marker["label"], str) or not 1 <= len(marker["label"]) <= 256:
-            raise ValueError("Marker requires an in-range integer sample and label of 1..256 characters")
+        EventMarker.from_record(marker, info, block)
     metadata = {"schema": "biosignal-live-1", "stream": asdict(info),
                 "start_sample": int(block.start_sample), "markers": markers,
                 "scope": "Research recording; units and device clock retained, no automatic clock alignment"}
@@ -95,6 +95,7 @@ class PlaybackDevice:
         self.info, self._block, self.markers = load_recording(path)
         self._cursor = 0
         self._closed = False
+        self.last_markers: tuple[EventMarker, ...] = ()
 
     def read(self, n_samples: int) -> SampleBlock:
         if self._closed:
@@ -104,9 +105,13 @@ class PlaybackDevice:
         begin = self._cursor
         end = min(begin + n_samples, self._block.data.shape[1])
         if begin == end:
+            self.last_markers = ()
             raise EOFError("End of recording")
         self._cursor = end
-        return SampleBlock(self._block.data[:, begin:end], self._block.timestamps[begin:end], self._block.start_sample + begin)
+        block = SampleBlock(self._block.data[:, begin:end], self._block.timestamps[begin:end], self._block.start_sample + begin)
+        self.last_markers = tuple(EventMarker.from_record(marker, self.info, self._block)
+                                  for marker in self.markers if block.start_sample <= marker["sample"] < block.stop_sample)
+        return block
 
     def close(self):
         self._closed = True

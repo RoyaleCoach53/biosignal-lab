@@ -161,6 +161,54 @@ session cannot be restarted. Reconnect with a new device, processor and session.
 The dashboard uses finite synchronous capture; it does not leave background
 sessions running when a page reruns.
 
+## Sample-clock events, memory observations and recovery
+
+`session.add_marker(label, sample=...)` binds an event annotation to the exact
+timestamp of an actual retained raw sample. Missing or evicted samples raise an
+error. Omitting `sample` explicitly means the latest committed received sample;
+it does not estimate when a physiological event or a host button press occurred.
+`EventMarker` preserves `sample`, `timestamp`, `clock`, `label` and `source`.
+Labels are limited to 256 characters and marker history to `max_markers`
+(1–1000). Concurrent marker addition is locked. The marker clock must match
+stream metadata and its timestamp must equal the referenced sample exactly;
+no interpolation or host/device clock equivalence is assumed.
+
+`session.markers()` returns immutable event objects. Recording archives still
+accept the original `{sample, label}` contract; playback promotes these legacy
+references to actual recorded timestamps and marks the source
+`legacy_sample_reference`. New full-provenance markers survive save/load/replay.
+`PlaybackDevice.last_markers` contains only events in its most recent returned
+sample interval. Acquisition sessions import these events without retiming them.
+Timestamp/clock mismatches, excessive markers or invalid event schemas fail
+explicitly. The existing 16,000-byte archive metadata budget may be reached
+before the maximum event count; exports fail rather than truncate events.
+
+`session.checkpoint(new_path)` exclusively saves the current bounded contiguous
+**raw input window**, including its markers, before causal filtering. It returns
+the sample interval and a count of historical markers outside the retained
+window. Those older events remain available from `markers()` but cannot be
+attached to nonexistent checkpoint samples. This is not a complete long-duration
+session log. Recover with `PlaybackDevice(path)`, a new matching `LiveProcessor`
+and a new `AcquisitionSession`; active processes, filter state and hardware
+connections are not resumed. Cancellation checkpoints include only committed
+received samples, never an uncommitted read completed after stop was requested.
+
+`RingBuffer.memory_usage()` reports actual allocated NumPy sample/timestamp
+array bytes and retained logical sample-value bytes. Sessions retain separate
+bounded raw and processed rings; `session.resource_usage()` sums their exact
+array storage, excluding processor windows, filter state, snapshots and Python
+objects. The accompanying `process_memory_usage()` reports the **whole current
+process** current RSS from Linux procfs and peak RSS from platform-documented
+`resource` units (Linux KiB converted to bytes; macOS already bytes). Unsupported
+observations remain `null`. RSS includes unrelated modules, threads and native
+libraries and must not be called acquisition-only allocation. The measurement
+time uses host monotonic seconds, explicitly separate from the device clock.
+Procfs and `getrusage` are separate kernel observations with different sampling
+and accounting behavior; their values can differ, and no ordering assertion is
+imposed or manufactured. An actual source-hashed
+[event/recovery/resource run](session-event-resource-results.json) preserves the
+observed numbers, exact 24,000-byte two-ring allocation and sample-clock markers.
+
 For a visual live simulation, enable **Animate finite capture in wall time**.
 The dashboard updates actual rolling multichannel traces and post-warmup spectra
 while pacing the virtual source to its nominal sampling rate. The run remains

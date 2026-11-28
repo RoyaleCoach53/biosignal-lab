@@ -9,8 +9,11 @@ from .transport import SerialDevice, TCPDevice, UDPDevice, WebSocketDevice, enco
 from .clock import ClockAlignment
 from .adapters import BrainFlowDevice, LSLDevice
 from .session import AcquisitionSession
+from .events import EventMarker
+from .resources import process_memory_usage
 
 __all__ = ["Device", "RingBuffer", "SampleBlock", "SimulatedDevice", "StreamInfo",
            "LiveProcessor", "LiveResult", "PlaybackDevice", "load_recording",
            "recording_bytes", "save_recording", "TCPDevice", "encode_frame", "ClockAlignment",
-           "BrainFlowDevice", "LSLDevice", "SerialDevice", "UDPDevice", "WebSocketDevice", "AcquisitionSession"]
+           "BrainFlowDevice", "LSLDevice", "SerialDevice", "UDPDevice", "WebSocketDevice", "AcquisitionSession",
+           "EventMarker", "process_memory_usage"]
