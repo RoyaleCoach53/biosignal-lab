@@ -135,3 +135,26 @@ assertions were disabled. Final logs were retained outside the checkout as
 `/tmp/biosignal-final-site-tests-isolated.log`,
 `/tmp/biosignal-final-component-tests-isolated.log`, and
 `/tmp/biosignal-final-backend-tests.log`.
+
+## Stale-output browser regression
+
+A separate actual-browser regression passed against frozen application source
+`8f462659b8e47bd37156c3c42a068cafd2e40627`, without changing application code. It
+first downloaded and verified the Python-accepted synthetic CSV workflow, ran it
+successfully, added an incomplete node, and verified that execution was disabled
+and previous results/manifests disappeared. After undoing that edit and running
+successfully again, it deleted the synthetic CSV and reran the exact same
+workflow. The application displayed the failure and exposed neither previous
+results nor a previous execution manifest. The final targeted result was one
+test passed in 8.4 seconds; log: `/tmp/biosignal-stale-regression-tests.log`.
+
+An earlier exploratory script failed before exercising those behaviors because
+it set the iframe file input without waiting for the component's initialized
+catalog. Its log remains at `/tmp/biosignal-frozen-stale-browser.log`; that attempt
+is not counted as passing evidence. The committed regression waits for a visible
+initialized node control and checks the workflow downloaded from Python before
+testing output validity. The extra test requires an explicit synthetic source
+directory shared by `SITE_STUDIO_SOURCE_ROOT` in the test process and
+`BIOSIGNAL_STUDIO_SOURCE_ROOT` in the server. CI configures that directory; local
+runs without it report this test as skipped. No scientific-output assertions
+were removed or disabled.

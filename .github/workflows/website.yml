@@ -43,7 +43,10 @@ jobs:
         env:
           STREAMLIT_BROWSER_GATHER_USAGE_STATS: 'false'
           SITE_STUDIO_URL: 'http://127.0.0.1:8503'
+          BIOSIGNAL_STUDIO_SOURCE_ROOT: '/tmp/biosignal-studio-test-inputs'
+          SITE_STUDIO_SOURCE_ROOT: '/tmp/biosignal-studio-test-inputs'
         run: |
+          mkdir -p "$SITE_STUDIO_SOURCE_ROOT"
           python -m streamlit run ../studio_app.py --server.headless true --server.address 127.0.0.1 --server.port 8503 > /tmp/biosignal-studio.log 2>&1 &
           studio_pid=$!
           trap 'kill "$studio_pid" 2>/dev/null || true' EXIT
