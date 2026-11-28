@@ -2,6 +2,33 @@
 
 ## Latest recovery: 28 November 2026
 
+All interrupted implementation work is now committed and integrated, including
+EEGNet `1754afc`/`860fbeb`, engine `6c8568d`, Live events/resources `10f1e6b`,
+visual groups/copy-paste `bf5ee2a`, and scientific/parallel Studio `84ef05b`.
+The Studio catalogue contains 41 real registered nodes with the installed optional
+dependencies. All worktrees are clean. Source expansion is paused for the final
+combined regression, numerical, browser, security, Docker and package checks.
+
+Public GitHub pages independently verify PR #6's eight and PR #7's seven checks
+at their exact original heads, both open and without reviews. Integration PR/CI
+still do not exist. API authentication remains blocked by the unapplied domain
+rule; the public-web read does not fix that permission. See
+`docs/platform/REMOTE_REVIEW.json` for authoritative URLs and scope.
+
+Dependency review identified and remediated an upstream setuptools constraint
+conflict. The physiology extra is now verified NeuroKit2 0.2.12, with patched
+setuptools 84.2.1 and a build-system minimum of 84.1. Its five regressions and
+dependency consistency pass. The refreshed audit reports zero findings for the
+122 distributions it assessed; editable source and the CPU-tagged torch binary
+are skipped, with an additional zero-finding query for upstream torch 2.15.0.
+These limitations remain explicit in `docs/platform/SECURITY_REVIEW.md`.
+
+Final implementation handoff counts: 48 AI tests, 39 Live tests, 51 Studio tests;
+33 scientific website scenarios, 18 site browser, 22 component browser and four
+actual browser-to-Python tests passed at their documented source snapshots.
+These are not summed into a final combined total. That total must come from the
+new merged-tree test run below, followed by clean wheel/sdist and container tests.
+
 Verified the remote integration head is `1b88179ef688d777dcfd8d5d5da6bdbc812347b2`.
 The local checkout recovered clean at `80dbc74`, with later work retained in all
 six worktrees. No source was reset. The previous combined regression report
