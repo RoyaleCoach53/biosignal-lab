@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir:"./test", testMatch:"studio-editor.spec.mjs", fullyParallel:true,
+  outputDir:"test-results/studio-editor",
   use:{baseURL:"http://127.0.0.1:4174",trace:"retain-on-failure",
     launchOptions:process.env.SITE_CHROME_EXECUTABLE?{executablePath:process.env.SITE_CHROME_EXECUTABLE}:undefined},
   projects:[
