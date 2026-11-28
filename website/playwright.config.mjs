@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir:"./test",
   testMatch:"site.spec.mjs",
+  outputDir:"test-results/site",
   fullyParallel:true,
   use:{baseURL:process.env.SITE_TEST_URL || "http://127.0.0.1:4173", trace:"retain-on-failure",
     launchOptions:process.env.SITE_CHROME_EXECUTABLE?{executablePath:process.env.SITE_CHROME_EXECUTABLE}:undefined},
