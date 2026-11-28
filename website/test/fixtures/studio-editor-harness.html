@@ -21,7 +21,7 @@ window.addEventListener("message",event=>{
   if(event.data.type==="streamlit:setComponentValue"){
     window.bridgeEvents.push(event.data.value);
     if(window.autoAcknowledge){
-      window.args={...window.args,workflow:event.data.value.workflow,positions:event.data.value.positions,
+      window.args={...window.args,workflow:event.data.value.workflow,positions:event.data.value.positions,groups:event.data.value.groups,
         event_ack:event.data.value.event_id,graph_digest:`ack-${window.bridgeEvents.length}`};
       window.renderEditor();
     }

@@ -21,6 +21,15 @@
     <input id="file" type="file" accept="application/json,.json" hidden>
   </div>
   <p id="node-description" class="muted"></p>
+  <div class="selection-tools" aria-label="Selection and grouping tools">
+    <span id="selection-count" aria-live="polite">0 nodes selected</span>
+    <button id="select-all" type="button">Select all</button>
+    <button id="copy" type="button" disabled>Copy selected</button>
+    <button id="paste" type="button" disabled>Paste nodes</button>
+    <label>Group name<input id="group-name" type="text" maxlength="100" placeholder="Optional label"></label>
+    <button id="group" type="button" disabled>Group selected</button>
+    <button id="ungroup" type="button" disabled>Ungroup selected</button>
+  </div>
   <div class="view-tools" aria-label="Viewport tools">
     <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
     <output id="zoom-level" aria-label="Zoom level">100%</output>
@@ -30,14 +39,14 @@
     <span class="muted">Drag a title to move. Connect an output to an input.</span>
   </div>
   <div id="viewport" role="region" aria-label="Scientific workflow canvas" tabindex="0" aria-describedby="instructions">
-    <div id="stage"><svg id="edges" aria-label="Workflow connections"></svg><div id="nodes"></div></div>
+    <div id="stage"><div id="groups"></div><svg id="edges" aria-label="Workflow connections"></svg><div id="nodes"></div></div>
     <svg id="minimap" viewBox="0 0 180 110" role="img" aria-label="Workflow overview"></svg>
     <p id="empty">Waiting for the local workflow…</p>
   </div>
   <p id="status" role="status" aria-label="Editor status" aria-live="polite">Editor ready. Waiting for the application.</p>
   <div id="errors" role="alert"></div>
   <details class="connections"><summary>Connections and keyboard instructions</summary>
-    <p id="instructions">Choose an output button, then an input button to connect. A new link replaces the existing input connection. Tab to a node title and use arrow keys to move it; Shift moves faster. Delete removes the selected node, Escape cancels a pending connection. Control/Command+Z undoes a graph edit; Control/Command+Shift+Z redoes it. Focus the canvas and use arrow keys to pan, plus/minus to zoom. The connection list below supports deletion without a pointer. Scientific validation and execution happen in Python.</p>
+    <p id="instructions">Choose an output button, then an input button to connect. A new link replaces the existing input connection. Shift-click or Control/Command-click node titles to select multiple nodes. Tab to a node title and use arrows to move selected nodes; Shift moves faster. Delete removes the selection. Control/Command+A selects all; Control/Command+C copies the selection inside this editor; Control/Command+V pastes it with new IDs and only internal connections; Control/Command+G groups selected nodes and Shift+Control/Command+G ungroups them. Escape cancels a pending connection and clears selection. Control/Command+Z undoes a graph edit; Control/Command+Shift+Z redoes it. Focus the canvas and use arrows to pan, plus/minus to zoom. The connection list supports deletion without a pointer. Groups are visual metadata; Python executes the scientific graph unchanged.</p>
     <ul id="connection-list"></ul>
   </details>
   <dialog id="parameters" aria-labelledby="parameters-heading">

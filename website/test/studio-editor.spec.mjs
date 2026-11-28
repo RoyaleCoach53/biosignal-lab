@@ -139,3 +139,65 @@ test("imports repository-style defaults and rejects duplicate keys or numeric ov
   await frame.getByRole("button",{name:"Apply parameters",exact:true}).click();
   await expect(frame.locator("#parameter-error")).toContainText("Duplicate JSON field");
 });
+
+test("multi-selection copies internal edges with fresh IDs and excludes external dependencies",async({page})=>{
+  await open(page);const frame=editor(page);
+  await frame.getByRole("button",{name:"Move node demo",exact:true}).click();
+  await frame.getByRole("button",{name:"Move node analysis",exact:true}).click({modifiers:["Shift"]});
+  await expect(frame.locator("#selection-count")).toHaveText("2 nodes selected");
+  await page.keyboard.press("Control+c");await page.keyboard.press("Control+v");
+  await expect.poll(async()=> (await latest(page))?.workflow.nodes.length).toBe(5);
+  const first=(await latest(page)).workflow;
+  expect(first.nodes.find(node=>node.id==="analysis_copy").inputs.signal).toEqual({node:"demo_copy",port:"out"});
+  expect(first.nodes.find(node=>node.id==="demo_copy").parameters).toEqual(first.nodes.find(node=>node.id==="demo").parameters);
+  await frame.getByRole("button",{name:"Paste nodes",exact:true}).click();
+  await expect.poll(async()=> (await latest(page))?.workflow.nodes.length).toBe(7);
+  expect((await latest(page)).workflow.nodes.find(node=>node.id==="analysis_copy2").inputs.signal.node).toBe("demo_copy2");
+  // Copying only the consumer deliberately drops its external source edge.
+  await frame.getByRole("button",{name:"Move node report",exact:true}).focus();
+  await frame.getByRole("button",{name:"Copy selected",exact:true}).click();
+  await frame.getByRole("button",{name:"Paste nodes",exact:true}).click();
+  await expect.poll(async()=> (await latest(page))?.workflow.nodes.length).toBe(8);
+  expect((await latest(page)).workflow.nodes.find(node=>node.id==="report_copy").inputs).toEqual({});
+});
+
+test("visual groups persist separately, move together, and support copy, undo and ungroup",async({page})=>{
+  await open(page);const frame=editor(page);
+  const initial=await page.evaluate(()=>structuredClone(window.args.workflow));
+  await frame.getByRole("button",{name:"Select all",exact:true}).click();
+  await frame.getByLabel("Group name",{exact:true}).fill("EEG <pilot>");
+  await frame.getByRole("button",{name:"Group selected",exact:true}).click();
+  await expect.poll(async()=> (await latest(page))?.groups.length).toBe(1);
+  expect((await latest(page)).workflow).toEqual(initial);
+  expect((await latest(page)).groups[0]).toEqual({id:"group",name:"EEG <pilot>",nodes:["demo","analysis","report"]});
+  await expect(frame.locator(".visual-group img")).toHaveCount(0);
+  await expect(frame.getByRole("button",{name:"Select group EEG <pilot>",exact:true})).toBeVisible();
+  const before=(await latest(page)).positions;
+  const title=frame.getByRole("button",{name:"Select group EEG <pilot>",exact:true}),bounds=await title.boundingBox();
+  const x=bounds.x+bounds.width/2,y=bounds.y+bounds.height/2;
+  await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+35,y+35,{steps:6});await page.mouse.up();
+  await expect.poll(async()=> (await latest(page))?.positions.demo.x).toBeGreaterThan(before.demo.x);
+  const moved=(await latest(page)).positions;
+  expect(moved.demo.x-before.demo.x).toBeCloseTo(moved.analysis.x-before.analysis.x,5);
+  expect(moved.report.y-before.report.y).toBeCloseTo(moved.analysis.y-before.analysis.y,5);
+  await frame.getByRole("button",{name:"Copy selected",exact:true}).click();
+  await frame.getByRole("button",{name:"Paste nodes",exact:true}).click();
+  await expect.poll(async()=> (await latest(page))?.groups.length).toBe(2);
+  expect((await latest(page)).groups[1].nodes).toEqual(["demo_copy","analysis_copy","report_copy"]);
+  await frame.getByRole("button",{name:"Ungroup selected",exact:true}).click();
+  await expect.poll(async()=> (await latest(page))?.groups.length).toBe(1);
+  await frame.getByRole("button",{name:"Undo",exact:true}).click();
+  await expect.poll(async()=> (await latest(page))?.groups.length).toBe(2);
+});
+
+test("keyboard selection and grouping shortcuts do not alter workflow schema",async({page})=>{
+  await open(page);const frame=editor(page);
+  await frame.getByRole("region",{name:"Scientific workflow canvas"}).focus();await page.keyboard.press("Control+a");
+  await expect(frame.locator("#selection-count")).toHaveText("3 nodes selected");
+  await page.keyboard.press("Control+g");
+  await expect.poll(async()=> (await latest(page))?.groups.length).toBe(1);
+  expect(Object.keys((await latest(page)).workflow).sort()).toEqual(["name","nodes","schema_version"]);
+  await page.keyboard.press("Control+Shift+g");
+  await expect.poll(async()=> (await latest(page))?.groups.length).toBe(0);
+  await page.keyboard.press("Escape");await expect(frame.locator("#selection-count")).toHaveText("0 nodes selected");
+});

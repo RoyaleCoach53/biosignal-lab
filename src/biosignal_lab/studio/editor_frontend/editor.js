@@ -6,15 +6,16 @@
   const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
   const ns = "http://www.w3.org/2000/svg";
   const width = 238, portStart = 66, portStep = 34;
-  const state = {workflow: null, catalog: {}, positions: {}, digest: "", disabled: false,
-    selected: null, pending: null, undo: [], redo: [], outbound: null, view: {x: 30, y: 30, zoom: 1}};
-  let counter = 0, gesture = null, parameterNode = null;
+  const state = {workflow: null, catalog: {}, positions: {}, groups: [], digest: "", disabled: false,
+    selected: null, selection: new Set(), clipboard: null, pasteCount: 0,
+    pending: null, undo: [], redo: [], outbound: null, view: {x: 30, y: 30, zoom: 1}};
+  let counter = 0, gesture = null, parameterNode = null, preserveFocusSelection = false;
   function message(type, extra = {}) {
     window.parent.postMessage({isStreamlitMessage: true, type, ...extra}, "*");
   }
   function announce(text) { $("status").textContent = text; }
   function frameHeight() { message("streamlit:setFrameHeight", {height: Math.ceil(document.documentElement.scrollHeight)}); }
-  function snapshot() { return clone({workflow: state.workflow, positions: state.positions}); }
+  function snapshot() { return clone({workflow: state.workflow, positions: state.positions, groups: state.groups}); }
   function remember() {
     state.undo.push(snapshot());
     if (state.undo.length > 50) state.undo.shift();
@@ -32,7 +33,7 @@
     state.outbound = {id: eventId, ...snapshot()};
     message("streamlit:setComponentValue", {dataType: "json", value: {
       event_id: eventId, graph_digest: state.digest,
-      workflow: clone(state.workflow), positions: clone(state.positions),
+      workflow: clone(state.workflow), positions: clone(state.positions), groups: clone(state.groups),
     }});
   }
   function validateWorkflow(raw) {
@@ -138,6 +139,116 @@
     return {x: position.x + (side === "outputs" ? width : 0), y: position.y + portStart + index * portStep + portStep / 2};
   }
   function nodeHeight(node) { return portStart + Math.max(1, ports(node, "inputs").length, ports(node, "outputs").length) * portStep + 43; }
+  function cleanGroups(groups) {
+    if (!Array.isArray(groups)) return [];
+    const available = new Set(state.workflow.nodes.map(node => node.id)), ids = new Set(), members = new Set(), result = [];
+    for (const group of groups.slice(0, 128)) {
+      if (!group || typeof group !== "object" || !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(group.id) || ids.has(group.id) ||
+          typeof group.name !== "string" || !group.name.trim() || group.name.length > 100 || !Array.isArray(group.nodes)) continue;
+      const nodes = group.nodes.filter(id => available.has(id) && !members.has(id));
+      const unique = [...new Set(nodes)].slice(0, 128);
+      if (!unique.length) continue;
+      ids.add(group.id); unique.forEach(id => members.add(id)); result.push({id: group.id, name: group.name, nodes: unique});
+    }
+    return result;
+  }
+  function groupBounds(group) {
+    const nodes = group.nodes.map(id => state.workflow.nodes.find(node => node.id === id)).filter(Boolean);
+    if (!nodes.length) return null;
+    const x = Math.min(...nodes.map(node => state.positions[node.id].x)) - 18;
+    const y = Math.min(...nodes.map(node => state.positions[node.id].y)) - 45;
+    return {x, y, width: Math.max(...nodes.map(node => state.positions[node.id].x + width)) - x + 18,
+      height: Math.max(...nodes.map(node => state.positions[node.id].y + nodeHeight(node))) - y + 18};
+  }
+  function selectionUI() {
+    document.querySelectorAll(".node").forEach(item => {
+      const selected = state.selection.has(item.dataset.id);
+      item.classList.toggle("selected", selected); item.querySelector(".node-title").setAttribute("aria-pressed", String(selected));
+    });
+    $("selection-count").textContent = `${state.selection.size} node${state.selection.size === 1 ? "" : "s"} selected`;
+    $("copy").disabled = state.disabled || !state.selection.size;
+    $("paste").disabled = state.disabled || !state.clipboard;
+    $("group").disabled = state.disabled || state.selection.size < 2;
+    $("ungroup").disabled = state.disabled || !state.groups.some(group => group.nodes.some(id => state.selection.has(id)));
+    $("select-all").disabled = state.disabled || !state.workflow;
+  }
+  function choose(id, toggle = false) {
+    if (toggle) {if (state.selection.has(id)) state.selection.delete(id); else state.selection.add(id);}
+    else state.selection = new Set([id]);
+    state.selected = state.selection.has(id) ? id : state.selection.values().next().value || null;
+    selectionUI();
+  }
+  function selectAll() {
+    if (!state.workflow || state.disabled) return;
+    state.selection = new Set(state.workflow.nodes.map(node => node.id));
+    state.selected = state.workflow.nodes[0].id; selectionUI(); announce(`Selected ${state.selection.size} nodes.`);
+  }
+  function beginDrag(event, active, ids) {
+    if (state.disabled || event.button !== 0) return;
+    event.stopPropagation();
+    gesture = {kind: "nodes", id: active, ids: [...ids], x: event.clientX, y: event.clientY,
+      originals: Object.fromEntries([...ids].map(id => [id, clone(state.positions[id])])), before: snapshot(), moved: false};
+    $("viewport").setPointerCapture(event.pointerId);
+  }
+  function copySelected() {
+    if (state.disabled || !state.selection.size) return;
+    const ids = state.selection;
+    state.clipboard = {nodes: state.workflow.nodes.filter(node => ids.has(node.id)).map(node => ({...clone(node),
+      inputs: Object.fromEntries(Object.entries(node.inputs).filter(([, source]) => ids.has(source.node)))})),
+      positions: Object.fromEntries([...ids].map(id => [id, clone(state.positions[id])])),
+      groups: state.groups.map(group => ({...clone(group), nodes: group.nodes.filter(id => ids.has(id))})).filter(group => group.nodes.length > 1)};
+    state.pasteCount = 0; selectionUI(); announce(`Copied ${ids.size} nodes inside this editor. External input connections are excluded.`);
+  }
+  function freshId(stem, used) {
+    const base = stem.slice(0, 52); let id = `${base}_copy`, index = 1;
+    while (used.has(id)) id = `${base}_copy${++index}`;
+    used.add(id); return id;
+  }
+  function pasteSelected() {
+    if (state.disabled || !state.clipboard) return;
+    if (state.clipboard.nodes.some(node => !Object.hasOwn(state.catalog, node.kind))) {announce("The clipboard contains algorithms unavailable in this registry."); return;}
+    if (state.workflow.nodes.length + state.clipboard.nodes.length > 128) {announce("Pasting would exceed the 128-node limit."); return;}
+    const used = new Set(state.workflow.nodes.map(node => node.id)), mapping = new Map();
+    state.clipboard.nodes.forEach(node => mapping.set(node.id, freshId(node.id, used)));
+    const copied = state.clipboard.nodes.map(node => ({...clone(node), id: mapping.get(node.id),
+      inputs: Object.fromEntries(Object.entries(node.inputs).map(([port, source]) => [port, {...source, node: mapping.get(source.node)}]))}));
+    remember(); state.pasteCount++;
+    const offset = 45 * state.pasteCount;
+    state.clipboard.nodes.forEach(node => {const p = state.clipboard.positions[node.id]; state.positions[mapping.get(node.id)] = {x: p.x + offset, y: p.y + offset};});
+    state.workflow.nodes.push(...copied);
+    const groupIds = new Set(state.groups.map(group => group.id));
+    state.clipboard.groups.forEach(group => state.groups.push({id: freshId(group.id, groupIds), name: `${group.name.slice(0, 93)} (copy)`, nodes: group.nodes.map(id => mapping.get(id))}));
+    state.selection = new Set(copied.map(node => node.id)); state.selected = copied[0].id;
+    emit(`Pasted ${copied.length} nodes with fresh IDs and internal connections. Configure any missing external inputs before execution.`);
+  }
+  function groupSelected() {
+    if (state.disabled || state.selection.size < 2) return;
+    if (state.groups.length >= 128) {announce("The editor supports at most 128 visual groups."); return;}
+    remember();
+    const used = new Set(state.groups.map(group => group.id)); let id = "group", index = 1;
+    while (used.has(id)) id = `group_${++index}`;
+    const name = $("group-name").value.trim() || `Group ${index}`;
+    state.groups = state.groups.map(group => ({...group, nodes: group.nodes.filter(node => !state.selection.has(node))})).filter(group => group.nodes.length);
+    state.groups.push({id, name, nodes: [...state.selection]});
+    emit(`Created visual group ${name}. Scientific connections are unchanged.`);
+    fit();
+  }
+  function ungroupSelected() {
+    if (state.disabled || !state.groups.some(group => group.nodes.some(id => state.selection.has(id)))) return;
+    remember(); state.groups = state.groups.map(group => ({...group, nodes: group.nodes.filter(id => !state.selection.has(id))})).filter(group => group.nodes.length);
+    emit("Removed selected nodes from visual groups. Scientific connections are unchanged.");
+  }
+  function renderGroups() {
+    $("groups").replaceChildren();
+    state.groups.forEach(group => {
+      const bounds = groupBounds(group); if (!bounds) return;
+      const box = element("div", "visual-group"); box.dataset.group = group.id;
+      Object.entries(bounds).forEach(([key, value]) => {box.style[key === "x" ? "left" : key === "y" ? "top" : key] = `${value}px`;});
+      const title = control(group.name, () => {state.selection = new Set(group.nodes); state.selected = group.nodes[0]; selectionUI(); announce(`Selected visual group ${group.name}.`);}, {className: "group-title", label: `Select group ${group.name}`});
+      title.addEventListener("pointerdown", event => {state.selection = new Set(group.nodes); state.selected = group.nodes[0]; selectionUI(); beginDrag(event, group.nodes[0], group.nodes);});
+      box.append(title); $("groups").append(box);
+    });
+  }
   function graphEdges() {
     return state.workflow.nodes.flatMap(node => Object.entries(node.inputs).map(([input, source]) => ({node, input, source})));
   }
@@ -190,13 +301,17 @@
     } else button.append(dot, text);
     return button;
   }
-  function deleteNode(id) {
+  function deleteNode(id) { deleteNodes([id]); }
+  function deleteNodes(ids) {
     if (state.disabled) return;
-    if (state.workflow.nodes.length === 1) { announce("Keep at least one node in a workflow."); return; }
+    const removed = new Set(ids);
+    if (state.workflow.nodes.every(node => removed.has(node.id))) { announce("Keep at least one node in a workflow."); return; }
     remember();
-    state.workflow.nodes = state.workflow.nodes.filter(node => node.id !== id);
-    for (const node of state.workflow.nodes) for (const [input, source] of Object.entries(node.inputs)) if (source.node === id) delete node.inputs[input];
-    delete state.positions[id]; state.selected = null; state.pending = null; emit(`Deleted ${id} and its connections.`);
+    state.workflow.nodes = state.workflow.nodes.filter(node => !removed.has(node.id));
+    for (const node of state.workflow.nodes) for (const [input, source] of Object.entries(node.inputs)) if (removed.has(source.node)) delete node.inputs[input];
+    removed.forEach(id => {delete state.positions[id]; state.selection.delete(id);});
+    state.groups = cleanGroups(state.groups);
+    state.selected = state.selection.values().next().value || null; state.pending = null; emit(`Deleted ${removed.size} nodes and their connections.`);
   }
   function editParameters(node) {
     parameterNode = node.id;
@@ -208,31 +323,35 @@
   function renderGraph() {
     if (!state.workflow) return;
     $("empty").hidden = true;
-    $("nodes").replaceChildren(); $("edges").replaceChildren(); $("connection-list").replaceChildren();
+    $("nodes").replaceChildren(); $("edges").replaceChildren(); $("connection-list").replaceChildren(); renderGroups();
     state.workflow.nodes.forEach(node => {
-      const box = element("article", `node${state.selected === node.id ? " selected" : ""}`);
+      const box = element("article", `node${state.selection.has(node.id) ? " selected" : ""}`);
       box.dataset.id = node.id;
       box.style.left = `${state.positions[node.id].x}px`; box.style.top = `${state.positions[node.id].y}px`;
       box.setAttribute("aria-label", `Node ${node.id}, ${node.kind}`);
-      const title = control(node.id, () => {state.selected = node.id; renderGraph(); focusTitle(node.id);}, {className: "node-title", label: `Move node ${node.id}`});
+      const title = control(node.id, event => {if (event.detail === 0) choose(node.id, event.shiftKey || event.ctrlKey || event.metaKey); focusTitle(node.id, true);}, {className: "node-title", label: `Move node ${node.id}`});
       title.addEventListener("focus", () => {
+        if (preserveFocusSelection) return;
         state.selected = node.id;
-        document.querySelectorAll(".node").forEach(item => item.classList.toggle("selected", item.dataset.id === node.id));
+        if (!state.selection.has(node.id)) state.selection = new Set([node.id]);
+        selectionUI();
       });
       title.addEventListener("pointerdown", event => {
         if (state.disabled || event.button !== 0) return;
-        event.stopPropagation();
-        state.selected = node.id;
-        gesture = {kind: "node", id: node.id, x: event.clientX, y: event.clientY, original: clone(state.positions[node.id]), before: snapshot(), moved: false};
-        $("viewport").setPointerCapture(event.pointerId);
+        event.preventDefault(); event.stopPropagation();
+        if (event.shiftKey || event.ctrlKey || event.metaKey) choose(node.id, true);
+        else if (!state.selection.has(node.id)) choose(node.id);
+        focusTitle(node.id, true);
+        if (state.selection.has(node.id)) beginDrag(event, node.id, state.selection);
       });
       title.addEventListener("keydown", event => {
         const vectors = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]};
         if (!vectors[event.key] || state.disabled) return;
         event.preventDefault(); event.stopPropagation(); remember();
         const step = event.shiftKey ? 40 : 10, vector = vectors[event.key];
-        state.positions[node.id].x += vector[0] * step; state.positions[node.id].y += vector[1] * step;
-        emit(`Moved ${node.id}.`); focusTitle(node.id);
+        const selected = state.selection.has(node.id) ? state.selection : new Set([node.id]);
+        selected.forEach(id => {state.positions[id].x += vector[0] * step; state.positions[id].y += vector[1] * step;});
+        emit(`Moved ${selected.size} selected nodes.`); focusTitle(node.id);
       });
       box.append(title, element("div", "node-subtitle", node.kind));
       const inputs = ports(node, "inputs"), outputs = ports(node, "outputs");
@@ -262,9 +381,13 @@
     });
     $("undo").disabled = state.disabled || !state.undo.length; $("redo").disabled = state.disabled || !state.redo.length;
     ["add", "layout", "import"].forEach(id => {$(id).disabled = state.disabled;});
-    applyView(); frameHeight();
+    selectionUI(); applyView(); frameHeight();
   }
-  function focusTitle(id) { [...document.querySelectorAll(".node")].find(node => node.dataset.id === id)?.querySelector(".node-title").focus({preventScroll: true}); }
+  function focusTitle(id, preserve = false) {
+    preserveFocusSelection = preserve;
+    [...document.querySelectorAll(".node")].find(node => node.dataset.id === id)?.querySelector(".node-title").focus({preventScroll: true});
+    preserveFocusSelection = false;
+  }
   function applyView() {
     const {x, y, zoom} = state.view;
     $("stage").style.transform = `translate(${x}px,${y}px) scale(${zoom})`;
@@ -280,7 +403,8 @@
     const minX = Math.min(...points.map(p => p.x)), minY = Math.min(...points.map(p => p.y));
     const graphW = Math.max(...points.map(p => p.x + p.width)) - minX, graphH = Math.max(...points.map(p => p.y + p.height)) - minY;
     const scale = Math.min(164 / Math.max(graphW, 1), 94 / Math.max(graphH, 1));
-    points.forEach(p => $("minimap").append(svg("rect", {x: 8 + (p.x - minX) * scale, y: 8 + (p.y - minY) * scale, width: p.width * scale, height: p.height * scale, rx: 2, fill: p.id === state.selected ? "#80dfdb" : "#6b84b5"})));
+    state.groups.forEach(group => {const b = groupBounds(group); if (b) $("minimap").append(svg("rect", {x: 8 + (b.x - minX) * scale, y: 8 + (b.y - minY) * scale, width: b.width * scale, height: b.height * scale, fill: "none", stroke: "#b8a8ec", "stroke-width": .6}));});
+    points.forEach(p => $("minimap").append(svg("rect", {x: 8 + (p.x - minX) * scale, y: 8 + (p.y - minY) * scale, width: p.width * scale, height: p.height * scale, rx: 2, fill: state.selection.has(p.id) ? "#80dfdb" : "#6b84b5"})));
     const v = state.view, area = $("viewport");
     $("minimap").append(svg("rect", {x: 8 + (-v.x / v.zoom - minX) * scale, y: 8 + (-v.y / v.zoom - minY) * scale, width: area.clientWidth / v.zoom * scale, height: area.clientHeight / v.zoom * scale, fill: "none", stroke: "#f0d6a0", "stroke-width": 1}));
   }
@@ -295,9 +419,10 @@
   function fit() {
     if (!state.workflow) return;
     const xs = state.workflow.nodes.map(node => state.positions[node.id].x), ys = state.workflow.nodes.map(node => state.positions[node.id].y);
-    const left = Math.min(...xs), top = Math.min(...ys);
-    const right = Math.max(...state.workflow.nodes.map(node => state.positions[node.id].x + width));
-    const bottom = Math.max(...state.workflow.nodes.map(node => state.positions[node.id].y + nodeHeight(node)));
+    const groups = state.groups.map(groupBounds).filter(Boolean);
+    const left = Math.min(...xs, ...groups.map(group => group.x)), top = Math.min(...ys, ...groups.map(group => group.y));
+    const right = Math.max(...state.workflow.nodes.map(node => state.positions[node.id].x + width), ...groups.map(group => group.x + group.width));
+    const bottom = Math.max(...state.workflow.nodes.map(node => state.positions[node.id].y + nodeHeight(node)), ...groups.map(group => group.y + group.height));
     state.view.zoom = Math.max(.25, Math.min(1.2, ($("viewport").clientWidth - 60) / (right - left), ($("viewport").clientHeight - 60) / (bottom - top)));
     state.view.x = 30 - left * state.view.zoom; state.view.y = 30 - top * state.view.zoom; applyView();
   }
@@ -312,6 +437,8 @@
   }
   function describe() { $("node-description").textContent = state.catalog[$("node-kind").value]?.description || "No matching node types."; }
   $("search").addEventListener("input", catalogue); $("node-kind").addEventListener("change", describe);
+  $("select-all").addEventListener("click", selectAll); $("copy").addEventListener("click", copySelected); $("paste").addEventListener("click", pasteSelected);
+  $("group").addEventListener("click", groupSelected); $("ungroup").addEventListener("click", ungroupSelected);
   $("add").addEventListener("click", () => {
     const kind = $("node-kind").value;
     if (!state.workflow || state.disabled || !Object.hasOwn(state.catalog, kind)) return;
@@ -321,13 +448,14 @@
     while (state.workflow.nodes.some(node => node.id === id)) id = `${stem}_${++index}`;
     remember(); state.workflow.nodes.push({id, kind, parameters: {}, inputs: {}});
     state.positions[id] = {x: (80 - state.view.x) / state.view.zoom, y: (80 - state.view.y) / state.view.zoom};
-    state.selected = id; emit(`Added ${id}. Configure its parameters and required inputs before execution.`); focusTitle(id);
+    state.selected = id; state.selection = new Set([id]); emit(`Added ${id}. Configure its parameters and required inputs before execution.`); focusTitle(id);
   });
   function history(direction) {
     const from = direction === "undo" ? state.undo : state.redo, to = direction === "undo" ? state.redo : state.undo;
     if (state.disabled || !from.length) return;
     to.push(snapshot()); const previous = from.pop();
-    state.workflow = previous.workflow; state.positions = previous.positions; state.pending = null;
+    state.workflow = previous.workflow; state.positions = previous.positions; state.groups = previous.groups || []; state.pending = null;
+    state.selection = new Set([...state.selection].filter(id => state.workflow.nodes.some(node => node.id === id)));
     if (!state.workflow.nodes.some(node => node.id === state.selected)) state.selected = null;
     emit(direction === "undo" ? "Graph edit undone." : "Graph edit redone.");
   }
@@ -368,7 +496,7 @@
       const file = $("file").files[0]; if (!file || state.disabled) return;
       if (file.size > 1000000) throw new Error("Workflow import must be below 1 MB.");
       const workflow = validateWorkflow(strictJSON(await file.text()));
-      remember(); state.workflow = workflow; ensurePositions(); state.pending = null; state.selected = null;
+      remember(); state.workflow = workflow; ensurePositions(); state.groups = []; state.pending = null; state.selected = null; state.selection.clear();
       emit("Imported workflow data. Nothing has been executed."); fit();
     } catch (error) {announce(`Import rejected: ${error.message}`);}
   });
@@ -382,7 +510,7 @@
   $("fit").addEventListener("click", fit); $("reset-view").addEventListener("click", () => {state.view = {x: 30, y: 30, zoom: 1}; applyView();});
   $("viewport").addEventListener("wheel", event => {if (event.ctrlKey || event.metaKey) {event.preventDefault(); zoom(state.view.zoom * Math.exp(-event.deltaY * .003), event.clientX, event.clientY);}}, {passive: false});
   $("viewport").addEventListener("pointerdown", event => {
-    if (event.button !== 0 || event.target.closest(".node,.edge-target")) return;
+    if (event.button !== 0 || event.target.closest(".node,.edge-target,.group-title")) return;
     gesture = {kind: "pan", x: event.clientX, y: event.clientY, original: {...state.view}};
     $("viewport").classList.add("panning"); $("viewport").setPointerCapture(event.pointerId);
   });
@@ -392,23 +520,30 @@
     if (gesture.kind === "pan") {state.view.x = gesture.original.x + dx; state.view.y = gesture.original.y + dy; applyView(); return;}
     if (Math.abs(dx) + Math.abs(dy) < 3 && !gesture.moved) return;
     gesture.moved = true;
-    state.positions[gesture.id] = {x: Math.max(-10000, Math.min(10000, gesture.original.x + dx / state.view.zoom)), y: Math.max(-10000, Math.min(10000, gesture.original.y + dy / state.view.zoom))};
+    gesture.ids.forEach(id => {const original = gesture.originals[id]; state.positions[id] = {x: Math.max(-10000, Math.min(10000, original.x + dx / state.view.zoom)), y: Math.max(-10000, Math.min(10000, original.y + dy / state.view.zoom))};});
     renderGraph();
   });
   function endGesture(event) {
     const finished = gesture; gesture = null; $("viewport").classList.remove("panning");
     if ($("viewport").hasPointerCapture(event.pointerId)) $("viewport").releasePointerCapture(event.pointerId);
-    if (finished?.kind === "node" && finished.moved) {
+    if (finished?.kind === "nodes" && finished.moved) {
       state.undo.push(finished.before); if (state.undo.length > 50) state.undo.shift(); state.redo = [];
-      emit(`Moved ${finished.id}.`); focusTitle(finished.id);
+      emit(`Moved ${finished.ids.length} selected nodes.`); focusTitle(finished.id);
     }
   }
   $("viewport").addEventListener("pointerup", endGesture); $("viewport").addEventListener("pointercancel", endGesture);
   document.addEventListener("keydown", event => {
     if (event.target.matches("input,textarea,select") || $("parameters").open) return;
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {event.preventDefault(); history(event.shiftKey ? "redo" : "undo"); return;}
-    if (event.key === "Escape") {state.pending = null; renderGraph(); announce("Connection cancelled.");}
-    if (["Delete", "Backspace"].includes(event.key) && state.selected && !event.target.matches(".edge-target")) {event.preventDefault(); deleteNode(state.selected);}
+    if (event.ctrlKey || event.metaKey) {
+      const key = event.key.toLowerCase();
+      if (key === "a") {event.preventDefault(); selectAll(); return;}
+      if (key === "c" && state.selection.size) {event.preventDefault(); copySelected(); return;}
+      if (key === "v" && state.clipboard) {event.preventDefault(); pasteSelected(); return;}
+      if (key === "g") {event.preventDefault(); if (event.shiftKey) ungroupSelected(); else groupSelected(); return;}
+    }
+    if (event.key === "Escape") {state.pending = null; state.selection.clear(); state.selected = null; renderGraph(); announce("Connection cancelled and selection cleared.");}
+    if (["Delete", "Backspace"].includes(event.key) && state.selection.size && !event.target.matches(".edge-target")) {event.preventDefault(); deleteNodes([...state.selection]);}
     if (event.target === $("viewport")) {
       const vectors = {ArrowLeft: [40, 0], ArrowRight: [-40, 0], ArrowUp: [0, 40], ArrowDown: [0, -40]};
       if (vectors[event.key]) {event.preventDefault(); state.view.x += vectors[event.key][0]; state.view.y += vectors[event.key][1]; applyView();}
@@ -430,7 +565,7 @@
       if (acknowledged) {
         if (same(next, state.outbound.workflow)) {
           // Keep edits made locally while the accepted graph was in flight.
-          resend = !same(next, state.workflow) || !same(state.positions, state.outbound.positions);
+          resend = !same(next, state.workflow) || !same(state.positions, state.outbound.positions) || !same(state.groups, state.outbound.groups);
           if (!resend) announce("Draft synchronized with Python. Scientific validation messages appear below.");
         } else {
           // A rejected structural draft must not be replayed indefinitely.
@@ -444,7 +579,8 @@
       }
       state.digest = digest;
       state.disabled = !!args.disabled;
-      if (changed) {state.workflow = next; ensurePositions(args.positions || {}); state.undo = []; state.redo = []; state.pending = null; state.selected = null;}
+      if (changed) {state.workflow = next; ensurePositions(args.positions || {}); state.groups = cleanGroups(args.groups || []); state.undo = []; state.redo = []; state.pending = null; state.selected = null; state.selection.clear();}
+      else if (!state.outbound && !resend && Array.isArray(args.groups)) state.groups = cleanGroups(args.groups);
       $("errors").replaceChildren();
       if (Array.isArray(args.errors)) args.errors.slice(0, 20).forEach(error => $("errors").append(element("p", "", String(error))));
       catalogue(); renderGraph();
