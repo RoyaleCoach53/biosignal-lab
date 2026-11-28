@@ -13,7 +13,7 @@ def _json_value(value):
         return {str(k): _json_value(v) for k, v in value.items()}
     if isinstance(value, (list, tuple, np.ndarray)):
         return [_json_value(v) for v in value]
-    if isinstance(value, (np.integer, np.floating)):
+    if isinstance(value, (np.integer, np.floating, np.bool_)):
         value = value.item()
     if isinstance(value, float) and not np.isfinite(value):
         return None
