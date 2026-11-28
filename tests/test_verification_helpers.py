@@ -60,3 +60,28 @@ def test_smoke_requires_one_complete_result_record():
     with pytest.raises(ValueError, match="one complete"):
         verification.smoke_result("Process exited without performing functional checks")
     assert verification.smoke_result('diagnostic\nVERIFICATION_JSON={"version":"test"}') == {"version": "test"}
+
+
+def test_docker_runtime_mount_is_readable_without_exposing_logs(tmp_path, monkeypatch):
+    import stat
+    smoke = tmp_path / "private-checkout-helper.py"
+    smoke.write_text("# public helper")
+    smoke.chmod(0o600)
+    output = tmp_path / "results"
+    output.mkdir()
+    calls = []
+    class FakeCommands:
+        def __init__(self):
+            self.output = output
+        def run(self, name, arguments, **kwargs):
+            calls.append(arguments)
+            return 'VERIFICATION_JSON={"synthetic":true}'
+    monkeypatch.setattr(verification.subprocess, "check_output", lambda *a, **k: "sha256:test\n")
+    result = verification.verify_docker(tmp_path, "a" * 40, None, FakeCommands(), smoke)
+    staged = output / "runtime_smoke.container.py"
+    assert staged.read_bytes() == smoke.read_bytes()
+    assert stat.S_IMODE(staged.stat().st_mode) == 0o444
+    assert stat.S_IMODE(smoke.stat().st_mode) == 0o600
+    assert calls[1][calls[1].index("--network") + 1] == "none"
+    assert str(staged) + ":/tmp/runtime_smoke.py:ro" in calls[1]
+    assert result["checks"]["synthetic"] is True

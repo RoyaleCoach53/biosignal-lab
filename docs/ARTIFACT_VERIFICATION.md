@@ -107,10 +107,11 @@ SHA-256 of the preserved **executed external helper files**:
 
 The portable repository versions intentionally differ: they accept source,
 interpreter, approved CA and cache paths, create venvs using the selected
-interpreter, record their own hashes and report failures explicitly. Three
+interpreter, record their own hashes and report failures explicitly. Four
 lightweight regression tests in `tests/test_verification_helpers.py` exercise
 dirty-source rejection, failed-command exit-status preservation and the
-requirement for a complete functional result record. Critical Ruff and helper
+requirement for a complete functional result record, and readable nonroot helper
+mounts without widening repository/log permissions. Critical Ruff and helper
 compilation checks also passed. The heavy artifact/container run was **not
 repeated merely to relocate/refactor these helpers**; the old run's evidence is
 not relabelled as execution of a different helper revision.

@@ -94,9 +94,16 @@ def verify_docker(source, expected, ca_bundle, commands, smoke):
     if ca_bundle is not None:
         arguments += ["--secret", "id=build_ca,src=" + str(ca_bundle)]
     commands.run("docker-build", [*arguments, "-t", tag, "."], cwd=source)
+    # Managed checkouts may use owner-only file permissions. Mount a public,
+    # read-only copy so the container's nonroot user can read the helper without
+    # changing repository permissions or making private output logs readable.
+    staged_smoke = commands.output / "runtime_smoke.container.py"
+    with staged_smoke.open("xb") as stream:
+        stream.write(smoke.read_bytes())
+    staged_smoke.chmod(0o444)
     text = commands.run("docker-runtime", ["docker", "run", "--rm", "--network", "none",
                         "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
-                        "-v", str(smoke) + ":/tmp/runtime_smoke.py:ro", tag,
+                        "-v", str(staged_smoke) + ":/tmp/runtime_smoke.py:ro", tag,
                         "python", "/tmp/runtime_smoke.py", "--container"])
     image = subprocess.check_output(["docker", "image", "inspect", tag,
                                      "--format", "{{.Id}}"], text=True).strip()
