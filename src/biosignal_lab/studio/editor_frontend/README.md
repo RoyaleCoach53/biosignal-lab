@@ -59,6 +59,15 @@ acknowledgements and appeared in the Python-exported nine-node workflow.
 The fourth test copied a grouped six-node workflow, executed all 12 nodes in
 Python, and verified that visual groups survived application reruns while the
 exported scientific workflow contained no layout/group fields.
+An additional targeted browser regression passed against application source
+`8f462659b8e47bd37156c3c42a068cafd2e40627`: changing a successful workflow to an
+incomplete draft hid prior results and disabled execution; restoring it reran
+successfully; deleting its synthetic CSV source made a subsequent run of the
+same workflow fail without retaining prior results or a prior execution manifest.
+This test requires `SITE_STUDIO_SOURCE_ROOT` to match the server's
+`BIOSIGNAL_STUDIO_SOURCE_ROOT`; CI provides a temporary synthetic-only directory.
+Without that explicit file-access configuration, the extra test is reported as
+skipped, while the four source-independent backend checks can still run.
 These tests start from a real local Streamlit application, download actual
 execution manifests, and verify workflow/source hashes and node timings.
 The unified application sidebar also opened Studio and loaded its six-node graph
