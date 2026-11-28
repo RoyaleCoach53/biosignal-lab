@@ -26,10 +26,13 @@ def main(argv=None):
                                         help="New directory for manifest and JSON/HTML outputs; existing directories are preserved")
             command_parser.add_argument("--source-root", type=Path,
                                         help="Explicitly allow CSV reads within this directory")
+            command_parser.add_argument("--workers", type=int, default=1, choices=range(1, 5),
+                                        help="Overlap reviewed pure nodes with 1..4 workers; default serial")
     args = parser.parse_args(argv)
     try:
         workflow = read_workflow(args.workflow)
-        executor = Executor(builtin_registry(), source_root=getattr(args, "source_root", None))
+        executor = Executor(builtin_registry(), source_root=getattr(args, "source_root", None),
+                            max_workers=getattr(args, "workers", 1))
         order = executor.validate(workflow)
         if args.command == "validate":
             print(json.dumps({"valid": True, "workflow_sha256": workflow.digest,

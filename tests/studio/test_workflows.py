@@ -124,6 +124,8 @@ def test_cache_keys_include_data_parameters_and_detach_mutable_arrays():
     workflow = Workflow((Node("demo", "simulate", {"seed": 1}),))
     first = executor.execute(workflow)
     original = first.outputs["demo"]["out"].data_uv.copy()
+    assert not first.outputs["demo"]["out"].data_uv.flags.writeable
+    first.outputs["demo"]["out"].data_uv.setflags(write=True)
     first.outputs["demo"]["out"].data_uv[:] = 999
     second = executor.execute(workflow)
     np.testing.assert_array_equal(second.outputs["demo"]["out"].data_uv, original)
@@ -253,6 +255,38 @@ def test_editor_renders_and_executes_real_workflow():
     assert not app.exception
     result = app.session_state["studio_result"]
     assert result.outputs["summary"]["out"]["n_samples"] == 2500
+
+
+def test_failed_rerun_cannot_display_previous_successful_file_outputs(tmp_path, monkeypatch):
+    pytest.importorskip("streamlit")
+    from streamlit.testing.v1 import AppTest
+    monkeypatch.setenv("BIOSIGNAL_STUDIO_SOURCE_ROOT", str(tmp_path))
+    source = tmp_path / "signal.csv"
+    np.savetxt(source, np.sin(np.arange(500) / 100 * 2 * np.pi * 10)[:, None], header="A", comments="")
+    workflow = Workflow((Node("source", "csv", {"path": source.name, "sfreq": 100}),
+                         Node("analysis", "analyze", inputs={"signal": Connection("source")})))
+    app = AppTest.from_file(str(ROOT / "studio_app.py"), default_timeout=60).run()
+    app.session_state["studio_workflow"] = workflow.to_dict()
+    app.run()
+    next(button for button in app.button if button.label == "Run workflow").click().run()
+    assert not app.exception and app.session_state["studio_result"].manifest["workflow_sha256"] == workflow.digest
+    source.unlink()
+    next(button for button in app.button if button.label == "Run workflow").click().run()
+    assert not app.exception and app.session_state["studio_last_run"]["status"] == "failed"
+    with pytest.raises(KeyError):
+        app.session_state["studio_result"]
+
+
+def test_edited_workflow_hash_invalidates_visible_execution_outputs():
+    pytest.importorskip("streamlit")
+    from streamlit.testing.v1 import AppTest
+    app = AppTest.from_file(str(ROOT / "studio_app.py"), default_timeout=60).run()
+    next(button for button in app.button if button.label == "Run workflow").click().run()
+    app.session_state["studio_workflow"] = Workflow((Node("new", "simulate", {"seed": 9}),)).to_dict()
+    app.run()
+    assert not app.exception
+    with pytest.raises(KeyError):
+        app.session_state["studio_result"]
 
 
 def test_engine_signal_filter_resample_and_cache_preserve_metadata():

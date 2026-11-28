@@ -45,7 +45,8 @@ st.session_state.studio_positions, st.session_state.studio_groups = clean_view_s
     workflow, st.session_state.studio_positions, st.session_state.studio_groups)
 source_root = os.environ.get("BIOSIGNAL_STUDIO_SOURCE_ROOT")
 executor = Executor(registry, cache=st.session_state.studio_cache,
-                    source_root=Path(source_root) if source_root else None)
+                    source_root=Path(source_root) if source_root else None,
+                    max_workers=st.session_state.get("studio_workers", 1))
 errors = []
 try:
     executor.validate(workflow)
@@ -149,22 +150,38 @@ with st.expander("Import workflow JSON"):
 
 for error in errors:
     st.error(error)
+with st.expander("Execution options and reproducibility"):
+    st.number_input("Parallel workers", min_value=1, max_value=4, value=1, step=1, key="studio_workers")
+    st.caption("Default execution is serial. Additional workers overlap only reviewed pure nodes. Acquisition, report timestamps and unmarked plugins remain serial.")
+    st.code(workflow.digest, language=None)
 if st.button("Run workflow", type="primary", disabled=bool(errors)):
+    # A failed rerun must never leave a previous successful result visible.
+    st.session_state.pop("studio_result", None)
+    st.session_state.studio_last_run = {"workflow_sha256": workflow.digest, "status": "running"}
     with st.status("Executing scientific workflow", expanded=True) as status:
         try:
             result = executor.execute(workflow, progress=lambda node, state: status.write(f"{node}: {state}"))
             st.session_state.studio_result = result
+            st.session_state.studio_last_run["status"] = "completed"
             status.update(label=f"Completed {len(result.manifest['nodes'])} nodes", state="complete")
         except Exception as exc:
+            st.session_state.studio_last_run["status"] = "failed"
             status.update(label="Workflow failed", state="error")
             st.error(str(exc))
 
+if ("studio_result" in st.session_state
+        and st.session_state.studio_result.manifest.get("workflow_sha256") != workflow.digest):
+    st.session_state.pop("studio_result", None)
+    st.warning("Previous output belongs to a different workflow. Run the current workflow to generate results.")
 if "studio_result" in st.session_state:
     result = st.session_state.studio_result
     st.subheader("Execution results")
+    st.caption(f"Current execution workflow SHA-256: {result.manifest['workflow_sha256']}")
     st.download_button("Download execution manifest", result.manifest_json(), "execution-manifest.json", "application/json")
     node_id = st.selectbox("Inspect node output", list(result.outputs))
+    selected_node = next(node for node in workflow.nodes if node.id == node_id)
     for port, value in result.outputs[node_id].items():
+        port_kind = registry[selected_node.kind].outputs[port].kind
         st.markdown(f"**{port}**")
         if isinstance(value, Recording):
             st.write(f"{len(value.channels)} channels · {value.sfreq:g} Hz · {value.duration_s:g} seconds · µV")
@@ -178,18 +195,30 @@ if "studio_result" in st.session_state:
         elif isinstance(value, dict) and "frequencies" in value and "power" in value:
             st.line_chart(pd.DataFrame(value["power"].T, index=value["frequencies"], columns=value["channels"]))
             st.caption(f"Frequency (Hz); power spectral density ({value['unit']})")
-        elif isinstance(value, str):
+        elif isinstance(value, str) and port_kind == "html":
             st.download_button("Download HTML report", value, f"{node_id}-{port}.html", "text/html")
             st.caption("HTML is downloaded rather than embedded in the editor.")
         elif hasattr(value, "data") and hasattr(value, "sfreq"):
             st.write({"channels": value.channels, "sfreq": value.sfreq, "unit": value.unit,
-                      "modality": value.modality, "reference": value.reference, "history": value.history})
+                      "modality": getattr(value, "modality", value.metadata.get("modality")),
+                      "reference": value.reference, "history": getattr(value, "history", ()),
+                      "shape": list(value.data.shape)})
+            if value.data.ndim == 3:
+                st.line_chart(pd.DataFrame(value.data[0].T, index=value.times, columns=value.channels))
+                st.caption("First epoch preview; all epochs are retained for actual averaging/execution.")
         elif hasattr(value, "X") and hasattr(value, "subjects"):
             st.write({"samples": value.X.shape[0], "features": value.X.shape[1],
                       "subjects": len(np.unique(value.subjects)), "feature_names": value.feature_names,
                       "provenance": value.provenance})
-            st.dataframe(pd.DataFrame(value.X, columns=value.feature_names))
+            if value.X.ndim == 2:
+                st.dataframe(pd.DataFrame(value.X, columns=value.feature_names))
+            else:
+                st.write({"epochs_shape": list(value.X.shape), "sfreq": value.sfreq,
+                          "unit": value.unit, "reference": value.reference})
+                st.line_chart(pd.DataFrame(value.X[0].T, columns=value.channels))
         elif hasattr(value, "to_dict"):
             st.json(value.to_dict())
         else:
             st.json(value)
+            st.download_button("Download JSON output", json.dumps(value, indent=2, allow_nan=False),
+                               f"{node_id}-{port}.json", "application/json", key=f"json-{node_id}-{port}")
