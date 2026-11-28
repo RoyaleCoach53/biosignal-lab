@@ -142,6 +142,47 @@ def _epoch_features(i, p, c):
     return {"out": dataset}
 
 
+def _covariance_demo(i, p, c):
+    from ..ai.demo import synthetic_epoch_dataset
+    parameters = {"n_subjects": 4, "trials_per_subject": 8} | p
+    if parameters["n_subjects"] * parameters["trials_per_subject"] * 4 * 500 > c.limits.max_signal_values:
+        raise WorkflowError("Synthetic covariance epochs exceed value limit before allocation")
+    return {"out": synthetic_epoch_dataset(**parameters)}
+
+
+def _epoch_dataset(i, p, c):
+    from ..ai import EpochDataset
+    signal, events = i["signal"], p["events"]
+    count = round(p.get("duration_s", 2) * signal.sfreq)
+    if count < 16 or len(events) * count * len(signal.channels) > c.limits.max_signal_values:
+        raise WorkflowError("Epoch dataset allocation is too short or exceeds configured value limit")
+    if any(event["sample"] + count > signal.data.shape[1] for event in events):
+        raise WorkflowError("Epoch extends beyond recording")
+    ordered = sorted(events, key=lambda event: event["sample"])
+    for first, second in zip(ordered, ordered[1:]):
+        if second["sample"] < first["sample"] + count and first["subject"] != second["subject"]:
+            raise WorkflowError("Overlapping samples cannot be assigned to different subject groups")
+    epochs = np.stack([signal.data[:, event["sample"]:event["sample"] + count] for event in events])
+    dataset = EpochDataset(epochs, np.array([e["label"] for e in events]), np.array([e["subject"] for e in events]),
+                           signal.sfreq, signal.unit, signal.channels, signal.reference or "unspecified",
+                           {"signal_metadata": dict(signal.metadata), "signal_history": list(signal.history), "events": events,
+                            "scope": "Event classes and subject identities are explicitly supplied by the researcher, not inferred or independently verified."})
+    return {"out": dataset}
+
+
+def _csp_validate(p):
+    _parameters(p, {"model": ("csp_lda", "log_euclidean"), "n_components": "integer", "regularization": "number",
+                    "cv": ("loso", "group"), "n_splits": "integer", "seed": "integer", "bootstrap_samples": "integer"})
+    _ai_evaluate_validate({key: value for key, value in p.items() if key not in {"model", "n_components", "regularization"}})
+    if not 2 <= p.get("n_components", 2) <= 16 or not 0 < p.get("regularization", .01) <= 1:
+        raise ValueError("Use 2..16 CSP components and covariance shrinkage in (0,1]")
+
+
+def _csp_evaluate(i, p, c):
+    from ..ai import evaluate_epochs
+    return {"out": evaluate_epochs(i["dataset"], **({"n_components": 2, "n_splits": 4, "bootstrap_samples": 200} | p))}
+
+
 def register_research_nodes(registry):
     if find_spec("biosignal_lab.live") is not None:
         # Import validates availability of the actual implementation before exposure.
@@ -174,3 +215,15 @@ def register_research_nodes(registry):
                    description="Actual portable model prediction with exact feature-name/order checks"),
     ]:
         registry.register(definition, trusted=True)
+    for definition in [
+        Definition("ai_covariance_demo", {}, {"out": Port("epoch_dataset")}, _covariance_demo, _ai_demo_validate,
+                   description="Seeded multichannel variance classes with synthetic subjects; no motor-imagery or physiological claim"),
+        Definition("csp_evaluate", {"dataset": Port("epoch_dataset")}, {"out": Port("json")},
+                   _csp_evaluate, _csp_validate, pure=False,
+                   description="Actual training-only CSP+LDA or log-Euclidean covariance evaluation in subject-disjoint folds"),
+    ]:
+        registry.register(definition, trusted=True)
+    if find_spec("biosignal_lab.engine") is not None:
+        registry.register(Definition("epoch_dataset", {"signal": Port("signal")}, {"out": Port("epoch_dataset")},
+                                     _epoch_dataset, _epoch_validate,
+                                     description="Create labeled multichannel epoch dataset with explicit subject/event/unit/reference metadata"), trusted=True)

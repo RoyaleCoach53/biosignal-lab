@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Mapping
+from concurrent.futures import ThreadPoolExecutor, wait, FIRST_EXCEPTION
 import copy
 from dataclasses import dataclass, fields, is_dataclass
 import hashlib
@@ -53,6 +54,7 @@ class Definition:
     revision: str = "1"
     pure: bool = True
     description: str = ""
+    parallel_safe: bool = False
 
 
 class Registry:
@@ -84,6 +86,7 @@ class Limits:
     max_output_bytes: int = 128_000_000
     max_seconds: float = 60.0
     max_source_bytes: int = 32_000_000
+    max_parallel_input_bytes: int = 32_000_000
 
     def __post_init__(self):
         for item in fields(self):
@@ -108,6 +111,28 @@ class Context:
         if path.stat().st_size > self.limits.max_source_bytes:
             raise WorkflowError("Source exceeds configured byte limit")
         return path
+
+
+class _Cancellation:
+    """A caller's event plus local failure cancellation, without mutating the caller."""
+    def __init__(self, external=None):
+        self._external = external
+        self._local = threading.Event()
+
+    def is_set(self):
+        return self._local.is_set() or (self._external is not None and self._external.is_set())
+
+    def set(self):
+        self._local.set()
+
+    def wait(self, timeout=None):
+        deadline = None if timeout is None else time.monotonic() + timeout
+        while not self.is_set():
+            remaining = .05 if deadline is None else min(.05, deadline - time.monotonic())
+            if remaining <= 0:
+                return self.is_set()
+            self._local.wait(remaining)
+        return True
 
 
 def _hash_value(hasher, value):
@@ -199,6 +224,20 @@ def detached(value):
     return copy.deepcopy(value)
 
 
+def _readonly_arrays(value):
+    if isinstance(value, np.ndarray):
+        value.setflags(write=False)
+    elif is_dataclass(value):
+        for item in fields(value):
+            _readonly_arrays(getattr(value, item.name))
+    elif isinstance(value, Mapping):
+        for item in value.values():
+            _readonly_arrays(item)
+    elif isinstance(value, (tuple, list)):
+        for item in value:
+            _readonly_arrays(item)
+
+
 def _port_check(value, port: Port):
     kind = port.kind
     if kind == "recording":
@@ -224,6 +263,22 @@ def _port_check(value, port: Port):
         if not isinstance(value, LinearModel):
             raise WorkflowError("Expected validated portable LinearModel")
         unit = sfreq = modality = None
+    elif kind == "epoch_dataset":
+        from ..ai import EpochDataset
+        if not isinstance(value, EpochDataset):
+            raise WorkflowError("Expected validated EpochDataset")
+        unit, sfreq, modality = value.unit, value.sfreq, None
+    elif kind == "epochs":
+        from ..engine import Epochs
+        if not isinstance(value, Epochs):
+            raise WorkflowError("Expected engine Epochs")
+        if (value.data.ndim != 3 or not np.isfinite(value.data).all()
+                or value.times.ndim != 1 or value.data.shape[2] != len(value.times)
+                or value.events.ndim != 1 or len(value.events) != value.data.shape[0]
+                or value.data.shape[1] != len(value.channels) or not np.isfinite(value.times).all()
+                or not np.all(np.diff(value.times) > 0) or not np.isfinite(value.sfreq) or value.sfreq <= 0):
+            raise WorkflowError("Invalid epoch shape, support or nonfinite numerical output")
+        unit, sfreq, modality = value.unit, value.sfreq, value.metadata.get("modality")
     elif kind == "spectrum":
         if not isinstance(value, dict) or not {"frequencies", "power", "unit", "sfreq", "channels"} <= set(value):
             raise WorkflowError("Expected spectrum")
@@ -268,6 +323,7 @@ class Cache:
         self.max_bytes = max_bytes
         self._entries = OrderedDict()
         self._bytes = 0
+        self._execution_lock = threading.Lock()
 
     def get(self, key):
         if key not in self._entries:
@@ -298,11 +354,15 @@ class ExecutionResult:
 
 class Executor:
     def __init__(self, registry: Registry, *, limits: Limits | None = None,
-                 cache: Cache | None = None, source_root: Path | None = None):
+                 cache: Cache | None = None, source_root: Path | None = None,
+                 max_workers: int = 1):
+        if type(max_workers) is not int or not 1 <= max_workers <= 4:
+            raise ValueError("max_workers must be an integer in 1..4")
         self.registry = registry
         self.limits = limits or Limits()
         self.cache = cache or Cache()
         self.source_root = source_root
+        self.max_workers = max_workers
 
     def validate(self, workflow: Workflow) -> list:
         if len(workflow.nodes) > self.limits.max_nodes:
@@ -347,10 +407,19 @@ class Executor:
 
     def execute(self, workflow: Workflow, *, cancel: threading.Event | None = None,
                 progress: Callable[[str, str], Any] | None = None) -> ExecutionResult:
+        if not self.cache._execution_lock.acquire(blocking=False):
+            raise RuntimeError("A Cache can belong to only one active workflow execution")
+        try:
+            return self._execute(workflow, cancel=cancel, progress=progress)
+        finally:
+            self.cache._execution_lock.release()
+
+    def _execute(self, workflow: Workflow, *, cancel: threading.Event | None = None,
+                 progress: Callable[[str, str], Any] | None = None) -> ExecutionResult:
         # Snapshot mutable parameter objects so callbacks cannot change the graph.
         workflow = Workflow.from_json(workflow.to_json())
         order = self.validate(workflow)
-        context = Context(self.limits, cancel or threading.Event(), self.source_root)
+        context = Context(self.limits, _Cancellation(cancel), self.source_root)
         started = time.perf_counter()
         outputs, records = {}, []
         used_bytes = 0
@@ -361,62 +430,141 @@ class Executor:
                 dependencies[package] = version(package)
             except PackageNotFoundError:
                 pass
-        for node in order:
+        pending = list(order)
+        records_by_id = {}
+        definitions = {node.id: self.registry[node.kind] for node in order}
+
+        def check_control():
             if context.cancel.is_set():
                 raise ExecutionCancelled("Workflow cancelled between nodes")
             if time.perf_counter() - started > self.limits.max_seconds:
                 raise WorkflowError("Workflow exceeded cooperative time limit")
-            definition = self.registry[node.kind]
-            inputs = {port: outputs[link.node][link.port] for port, link in node.inputs.items()}
-            tick = time.perf_counter()
+
+        def notify(node_id, state):
             if progress:
-                progress(node.id, "running")
-            try:
-                for port, value in inputs.items():
-                    _port_check(value, definition.inputs[port])
-                key = fingerprint({"kind": node.kind, "revision": definition.revision,
-                                   "parameters": node.parameters, "inputs": inputs,
-                                   "dependencies": dependencies, "source_sha256": source_hash,
-                                   "definition_sha256": definition_fingerprint(definition)})
-                value = self.cache.get(key) if definition.pure else None
-                cached = value is not None
-                if not cached:
-                    # Nodes receive detached values: mutations cannot corrupt upstream outputs.
-                    value = definition.run(detached(inputs), detached(node.parameters), context)
-                if not isinstance(value, dict) or set(value) != set(definition.outputs):
-                    raise WorkflowError("Node returned incorrect output ports")
-                for port, item in value.items():
-                    _port_check(item, definition.outputs[port])
-                    if isinstance(item, Recording) and item.data_uv.size > self.limits.max_signal_values:
-                        raise WorkflowError("Signal exceeds configured sample-value limit")
-                    if definition.outputs[port].kind == "signal" and item.data.size > self.limits.max_signal_values:
-                        raise WorkflowError("Signal exceeds configured sample-value limit")
-                    if definition.outputs[port].kind == "dataset" and item.X.size > self.limits.max_signal_values:
-                        raise WorkflowError("Feature dataset exceeds configured value limit")
-                used_bytes += data_bytes(value)
-                if used_bytes > self.limits.max_output_bytes:
-                    raise WorkflowError("Workflow exceeds retained-output byte limit")
-                if context.cancel.is_set():
-                    raise ExecutionCancelled("Workflow cancelled after current node")
-                if time.perf_counter() - started > self.limits.max_seconds:
-                    raise WorkflowError("Workflow exceeded cooperative time limit")
-                if definition.pure and not cached:
-                    self.cache.put(key, value)
-                outputs[node.id] = value
-                records.append({"node": node.id, "kind": node.kind, "revision": definition.revision,
-                                "input_sha256": fingerprint(inputs), "output_sha256": fingerprint(value),
-                                "cache_hit": cached, "seconds": time.perf_counter() - tick})
-                if progress:
-                    progress(node.id, "cached" if cached else "completed")
-            except ExecutionCancelled:
-                raise
-            except Exception as exc:
-                if progress:
-                    progress(node.id, "failed")
-                raise NodeExecutionError(node.id, exc) from exc
+                progress(node_id, state)
+
+        def admit(ticket, value):
+            nonlocal used_bytes
+            node, definition, inputs, key, cached, tick = ticket
+            check_control()
+            if not isinstance(value, dict) or set(value) != set(definition.outputs):
+                raise WorkflowError("Node returned incorrect output ports")
+            for port, item in value.items():
+                contract = definition.outputs[port]
+                _port_check(item, contract)
+                values = (item.data_uv.size if isinstance(item, Recording) else
+                          item.data.size if contract.kind in {"signal", "epochs"} else
+                          item.X.size if contract.kind in {"dataset", "epoch_dataset"} else 0)
+                if values > self.limits.max_signal_values:
+                    raise WorkflowError("Node output exceeds configured sample-value limit")
+            size = data_bytes(value)
+            if used_bytes + size > self.limits.max_output_bytes:
+                raise WorkflowError("Workflow exceeds retained-output byte limit")
+            # Main thread owns detached results; workers cannot retain aliases.
+            value = detached(value)
+            _readonly_arrays(value)
+            if definition.pure and not cached:
+                self.cache.put(key, value)
+            used_bytes += size
+            outputs[node.id] = value
+            records_by_id[node.id] = {"node": node.id, "kind": node.kind, "revision": definition.revision,
+                                      "input_sha256": fingerprint(inputs), "output_sha256": fingerprint(value),
+                                      "cache_hit": cached, "seconds": time.perf_counter() - tick}
+            notify(node.id, "cached" if cached else "completed")
+
+        # Only reviewed pure definitions may overlap. Unmarked plugins and
+        # side-effecting operations form serial barriers; default remains serial.
+        pool = ThreadPoolExecutor(max_workers=self.max_workers) if self.max_workers > 1 else None
+        try:
+            while pending:
+                check_control()
+                ready = [node for node in pending if all(link.node in outputs for link in node.inputs.values())]
+                first = ready[0]  # validate() guarantees an acyclic graph.
+                batch = [first]
+                first_definition = definitions[first.id]
+                if pool and first_definition.pure and first_definition.parallel_safe:
+                    copied_bytes = sum(data_bytes(outputs[link.node][link.port]) for link in first.inputs.values())
+                    for candidate in ready[1:]:
+                        definition = definitions[candidate.id]
+                        if len(batch) >= self.max_workers or not definition.pure or not definition.parallel_safe:
+                            break  # Unreviewed or side-effecting nodes are serial barriers.
+                        extra = sum(data_bytes(outputs[link.node][link.port]) for link in candidate.inputs.values())
+                        if (len(batch) < self.max_workers and definition.pure and definition.parallel_safe
+                                and copied_bytes + extra <= self.limits.max_parallel_input_bytes):
+                            batch.append(candidate)
+                            copied_bytes += extra
+                tickets, results, futures = [], {}, {}
+                for node in batch:
+                    definition = definitions[node.id]
+                    inputs = {port: outputs[link.node][link.port] for port, link in node.inputs.items()}
+                    tick = time.perf_counter()
+                    notify(node.id, "running")
+                    try:
+                        check_control()
+                        for port, value in inputs.items():
+                            _port_check(value, definition.inputs[port])
+                        key = fingerprint({"kind": node.kind, "revision": definition.revision,
+                                           "parameters": node.parameters, "inputs": inputs,
+                                           "dependencies": dependencies, "source_sha256": source_hash,
+                                           "definition_sha256": definition_fingerprint(definition)})
+                        cached_value = self.cache.get(key) if definition.pure else None
+                        cached = cached_value is not None
+                        ticket = (node, definition, inputs, key, cached, tick)
+                        tickets.append(ticket)
+                        if cached:
+                            results[node.id] = cached_value
+                        elif pool and len(batch) > 1:
+                            # All snapshotting/cache access/callbacks happen here,
+                            # not on worker threads. Plugin code receives copies.
+                            futures[node.id] = pool.submit(definition.run, detached(inputs), detached(node.parameters), context)
+                        else:
+                            results[node.id] = definition.run(detached(inputs), detached(node.parameters), context)
+                    except ExecutionCancelled:
+                        raise
+                    except Exception as exc:
+                        notify(node.id, "failed")
+                        raise NodeExecutionError(node.id, exc) from exc
+                if futures:
+                    remaining = max(0, self.limits.max_seconds - (time.perf_counter() - started))
+                    completed, incomplete = wait(futures.values(), timeout=remaining, return_when=FIRST_EXCEPTION)
+                    failures = [(node_id, future.exception()) for node_id, future in futures.items()
+                                if future in completed and future.exception() is not None]
+                    if failures:
+                        context.cancel.set()  # Wake cooperative siblings before shutdown waits.
+                        node_id, cause = failures[0]
+                        notify(node_id, "failed")
+                        if isinstance(cause, ExecutionCancelled):
+                            raise cause
+                        raise NodeExecutionError(node_id, cause) from cause
+                    if incomplete:
+                        context.cancel.set()
+                        raise WorkflowError("Workflow exceeded cooperative time limit")
+                for ticket in tickets:
+                    node = ticket[0]
+                    try:
+                        value = futures[node.id].result() if node.id in futures else results[node.id]
+                        admit(ticket, value)
+                        pending.remove(node)
+                    except ExecutionCancelled:
+                        raise
+                    except Exception as exc:
+                        notify(node.id, "failed")
+                        raise NodeExecutionError(node.id, exc) from exc
+        except BaseException:
+            context.cancel.set()
+            raise
+        finally:
+            # Already-running native calls finish before returning; cancellation
+            # is cooperative and never leaves hidden workers behind.
+            if pool:
+                pool.shutdown(wait=True, cancel_futures=True)
+        records = [records_by_id[node.id] for node in order]
+        outputs = {node.id: outputs[node.id] for node in order}
         return ExecutionResult(outputs, {"schema_version": 1, "workflow": workflow.to_dict(),
                                "workflow_sha256": workflow.digest, "dependencies": dependencies,
                                "source_sha256": source_hash,
                                "nodes": records, "retained_output_bytes": used_bytes,
+                               "max_workers": self.max_workers,
                                "seconds": time.perf_counter() - started,
                                "scope": "Local scientific execution; no clinical validation; no raw data embedded."})

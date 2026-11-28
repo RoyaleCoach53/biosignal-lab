@@ -116,8 +116,24 @@ Cancellation uses a `threading.Event` supplied to `execute(cancel=...)`; it is
 checked between nodes and after the current node. It cannot interrupt a native
 function mid-call. The current graphical Run button executes synchronously;
 cooperative cancellation is exposed through the SDK, not a nonfunctional UI
-button. Execution is sequential. Parallel scheduling and durable resumable
-execution are not yet implemented.
+button. Default execution is serial. Opt in with `Executor(..., max_workers=2)`
+or CLI `run ... --workers 2` (bounded to four workers). Only explicitly reviewed
+pure definitions with `parallel_safe=True` may overlap. Plugins default to serial;
+unreviewed and side-effecting ready nodes are exclusive serial barriers. The
+main thread handles snapshots, caches, output admission and progress callbacks;
+workers receive detached data. Result arrays are admitted as detached read-only
+copies, and manifests preserve deterministic topological node ordering.
+
+The summed copies for parallel input batches default to at most 32 MB. Wider
+batches fall back to smaller/serial batches rather than violating that allowance.
+Retained output limits apply across the entire graph. These bounds do not count
+every temporary native-library allocation. A worker failure or deadline signals
+local cancellation to cooperative siblings before joining all running workers.
+The caller's cancellation event is not modified by an internal failure. Already
+running native calls must return before execution can finish; hard preemption is
+not claimed. One `Cache` can belong to only one active execution; concurrent or
+reentrant use of the same cache fails clearly. Direct cache access is not a
+general-purpose thread-safe API. Durable resumable execution remains incomplete.
 
 Custom `Definition` objects require explicit `Registry.register(..., trusted=True)`.
 No installed entry points or untrusted workflow fields trigger automatic plugin
@@ -133,6 +149,24 @@ undo/redo, JSON import/export, generated Python, graph validation, live node
 progress, intermediate inspection, and real JSON/HTML report downloads. The
 optional bundled visual component supplies the richer canvas; its browser
 verification is reported separately from executor verification.
+
+The additional real scientific catalogue includes FFT amplitude, complex STFT,
+PSD spectrograms, DPSS multitaper PSD, spectral entropy, custom band integration,
+bipolar reference, PLV, bad-channel candidates, event epochs/baseline/averaging,
+EMG descriptors/activation candidates, explicit-reviewed MNE ICA, and optional
+PyWavelets CWT. CWT outputs are labeled coefficients rather than calibrated PSD.
+Large JSON transforms are checked against a 200,000-value budget before their
+core allocation. ICA requires `reviewed=true` and an explicit component list;
+reaching its convergence limit fails execution. No component is automatically
+labeled an artifact. Actual CSP+LDA and log-Euclidean covariance nodes use
+training-only spatial transformations inside subject-disjoint folds; the
+`ai_covariance_demo` source produces synthetic variance classes, not motor imagery.
+
+Visible results show their workflow SHA-256. Editing the scientific graph clears
+outdated outputs. A failed rerun clears prior successful outputs before attempting
+execution, so changed file inputs cannot leave stale reports presented as current.
+Visual grouping/layout are bounded side-channel state and do not alter scientific
+workflow hashes or executable JSON.
 
 This work does not establish the entire v0.8 or v1.0 acceptance gate. Third-party
 plugin compatibility, external hardware, independent scientific review, real

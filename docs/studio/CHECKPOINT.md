@@ -75,3 +75,38 @@ suite plus actual unified-navigation/browser flows, and retain the external
 physical hardware, scientific review and real-user gates as incomplete. Durable
 execution, parallel DAG scheduling, plugin compatibility certification and all
 requested advanced research node families remain unimplemented.
+
+## Final scientific catalogue and concurrency follow-up
+
+Focused suite now **51 passed, no skips** (3.69 s in this run), including two
+actual Streamlit success-to-failure/edit stale-result regressions. Critical Ruff
+checks pass. Engine/Live/AI imports were appended from their completed worktrees;
+parent must run its final merged-package gate before packaging/publication.
+
+Added actual FFT, complex STFT, density spectrogram, DPSS multitaper PSD, spectral
+entropy, band integration, bipolar reference, PLV, bad-channel candidates,
+epoch/baseline/ERP, EMG descriptors/activation candidates, explicit-reviewed ICA,
+CWT coefficients, subject-grouped CSP/LDA and log-Euclidean covariance nodes.
+Large JSON transforms check allocation bounds; wavelet coefficients are never
+represented as calibrated PSD. Explicit labeled epoch datasets retain units,
+reference and subject/event metadata. No physical hardware or clinical results
+are claimed.
+
+Optional parallel execution is complete for reviewed pure definitions, bounded to
+four workers; default remains serial. Deterministic topological manifests,
+main-thread callbacks/cache/admission, detached read-only output arrays, serial
+barriers, 32 MB parallel-input-copy allowance, shared retained-output limits,
+per-cache execution ownership and cooperative sibling failure/deadline cancellation
+are regression-tested. Internal failures do not mutate the caller's event.
+Cleanup joins all workers; native calls cannot be forcibly preempted. Cache reuse
+is an in-process retry aid, not durable resumable execution. The earlier
+checkpoint statement that all parallel scheduling is incomplete is superseded.
+
+Visual groups/layout use separately validated view-state metadata. Scientific
+workflow hashes exclude layout. Failed reruns clear old outputs before attempting
+execution, and displayed results must match the current scientific graph hash.
+
+Exact next action: parent integrate this final commit, freeze source, run the
+combined packaging/Docker/security/regression gates and publication checks. Do
+not expand this workstream before those final combined checks. External physical
+hardware, independent methods review and real user evaluation remain incomplete.

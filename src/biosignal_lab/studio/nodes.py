@@ -162,6 +162,7 @@ def builtin_registry(*, include_engine: bool = True) -> Registry:
                    _combine, _empty, description="Concatenate channels after sampling/unit/modality checks"),
     ]
     for definition in definitions:
+        definition = replace(definition, parallel_safe=definition.pure)
         registry.register(definition, trusted=True)
     if include_engine:
         try:

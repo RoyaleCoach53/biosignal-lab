@@ -1,6 +1,7 @@
 """Studio adapters for the real additive scientific engine."""
 from __future__ import annotations
 
+from dataclasses import replace
 import math
 
 from ..engine import Signal, FilterSpec, filter_signal, resample_signal, welch_psd, common_average_reference
@@ -69,4 +70,6 @@ def register_engine_nodes(registry):
                                              "history": list(i["signal"].history)}}, _empty,
                    description="Inspect physical units, reference and complete engine transformation history"),
     ]:
-        registry.register(definition, trusted=True)
+        registry.register(replace(definition, parallel_safe=True), trusted=True)
+    from .scientific_nodes import register_scientific_nodes
+    register_scientific_nodes(registry)
